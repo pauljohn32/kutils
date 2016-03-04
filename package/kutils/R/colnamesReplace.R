@@ -1,19 +1,17 @@
-
 ##' Replace column names with new names from a named vector
 ##'
-##' .. content for \details{} ..
-##' @title
-##' @param dat
-##' @param newname
-##' @return
-##' @author Paul Johnson
+##' Imagine some beautiful writing here
+##' @param dat a data frame
+##' @param newname A named vector of the form c(oldname1 = "newname1", oldname2 = "newname")
+##' @return a data frame
+##' @author Paul Johnson <pauljohn@@ku.edu>
 colnamesReplace <- function(dat, newname){
     if (is.null(names(newname))){
         stop("The newname vector should be a named vector, using the oldnames as the names")
     }
     oldname <- colnames(dat)
     if(any(newname[oldname] != oldname)){
-        cat(paste("replaceNames Diagnostic: These names are to be replaced:\n"))
+        cat(paste("colnamesReplace Diagnostic: These names are to be replaced:\n"))
         res <- ifelse (oldname %in% names(newname), newname[oldname], oldname)
         print(c("oldname", "newname"))
         print(cbind(oldname, res))
@@ -24,4 +22,3 @@ colnamesReplace <- function(dat, newname){
         return(dat)
     }
 }
-
