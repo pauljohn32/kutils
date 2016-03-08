@@ -9,7 +9,7 @@ KRAN <- "http://rweb.crmda.ku.edu/kran"
 
 options(repos = c(KRAN, CRAN))
 
-## Da Function
+## El Function
 updatePackages <- function(ask = FALSE, checkBuilt = TRUE){
     pkgdeps <- function(pkg, which = c("Depends", "Imports", "LinkingTo")){
         library(tools)
@@ -21,15 +21,12 @@ updatePackages <- function(ask = FALSE, checkBuilt = TRUE){
     installedPackages <- rownames(installed.packages())
     targets <- lapply(installedPackages, pkgdeps)
     targets <- unique(targets)
-    targets <- targets[lapply(targets,length)>0]
-
-## Put in thing here that checks to see if packages are already installed!
-    ## Haven't tested the next three lines, not sure if it works correctly
+    targets <- unlist(targets[lapply(targets,length)>0])
+    
     alreadyHave <- targets %in% installedPackages
-    if (sum(!alreadyHave) > 0) install.packages(targets[!alreadyHave])
+    lapply(targets[!alreadyHave], install.packages)
     print(targets[!alreadyHave])
     
-    lapply(targets, install.packages)
     update.packages(ask = FALSE, checkBuilt = TRUE)
     targets
 }
