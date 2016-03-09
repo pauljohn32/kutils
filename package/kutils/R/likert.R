@@ -14,10 +14,10 @@
 ##'     be transposed.
 ##' @return character vector
 ##' @author Paul Johnson <pauljohn@@ku.edu>
-##' @import xtable
+##' @importFrom xtable xtable print.xtable
 ##' @export
 ##' @examples
-##'  vvector <- c("Strongly Disagree", "Disagree", "Neutral",
+##' vvector <- c("Strongly Disagree", "Disagree", "Neutral",
 ##'               "Agree", "Strongly Agree")
 ##' set.seed(2342234)
 ##' N <- 142

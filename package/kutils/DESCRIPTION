@@ -9,4 +9,6 @@ Description: Some stuff we use all the time in CRMDA.  This will be
     a testing package for new functions that may eventually be 
     moved elsewhere.
 License: GPL-2
+Imports:
+    xtable
 RoxygenNote: 5.0.1
