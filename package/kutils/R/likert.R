@@ -10,22 +10,21 @@
 ##' @return character vector
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' examples
- vvector <- c("Strongly Disagree", "Disagree", "Neutral",
-              "Agree", "Strongly Agree")
-set.seed(2342234)
-N <- 142
-scales <-
-    data.frame(Vegas = factor(sample(1:5, N, replace = TRUE), labels = vvector),
-               NewYork = factor(sample(1:5, N, replace = TRUE), labels = vvector),
-               Paris = factor(sample(1:5, N, replace = TRUE), labels = vvector),
-               Berlin = factor(sample(1:5, N, replace = TRUE), labels = vvector))
-
-(mySummary1 <- likert(c("Vegas", "NewYork", "Paris"), scales))
-
-(mySummary2 <- likert(c("Vegas", "NewYork", "Paris"), scales,
-                    labels = c("SD", "D", "N", "A", "SA")))
-
-
+##'  vvector <- c("Strongly Disagree", "Disagree", "Neutral",
+##'               "Agree", "Strongly Agree")
+##' set.seed(2342234)
+##' N <- 142
+##' scales <-
+##'     data.frame(Vegas = factor(sample(1:5, N, replace = TRUE), labels = vvector),
+##'                NewYork = factor(sample(1:5, N, replace = TRUE), labels = vvector),
+##'                Paris = factor(sample(1:5, N, replace = TRUE), labels = vvector),
+##'                Berlin = factor(sample(1:5, N, replace = TRUE), labels = vvector))
+##' 
+##' (mySummary1 <- likert(c("Vegas", "NewYork", "Paris"), scales))
+##' 
+##' (mySummary2 <- likert(c("Vegas", "NewYork", "Paris"), scales,
+##'                     labels = c("SD", "D", "N", "A", "SA")))
+##'
 likert <-  function(vlist, data, labels, outdir, fn, rows = TRUE){
     require(xtable)
     ## xxx <- lapply(data[ , vlist], table)
