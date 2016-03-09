@@ -14,6 +14,7 @@
 ##'     be transposed.
 ##' @return character vector
 ##' @author Paul Johnson <pauljohn@@ku.edu>
+##' @import xtable
 ##' @export
 ##' @examples
 ##'  vvector <- c("Strongly Disagree", "Disagree", "Neutral",
@@ -32,7 +33,6 @@
 ##'                     labels = c("SD", "D", "N", "A", "SA")))
 ##'
 likert <-  function(vlist, data, labels, outdir, fn, rows = TRUE){
-    require(xtable)
     ## xxx <- lapply(data[ , vlist], table)
     ## t(sapply(data[, vlist], table))
     ## TODO: Insert check that variables have same levels

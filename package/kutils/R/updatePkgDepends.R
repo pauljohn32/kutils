@@ -5,6 +5,7 @@
 ##' @param checkBuilt If TRUE, packages built under earlier versions of R are to be considered 'old'
 ##' @return A vector of packages being inserted to complete update
 ##' @author Kenna Whitley <kennamarie@@ku.edu>
+##' @importFrom tools package_dependencies
 ##' @export
 ##' @examples
 ##' options(repos = c("http://rweb.crmda.ku.edu/kran", "http://rweb.crmda.ku.edu/cran"))
@@ -13,7 +14,6 @@
 ##'
 updatePackages <- function(ask = FALSE, checkBuilt = TRUE){
     pkgdeps <- function(pkg, which = c("Depends", "Imports", "LinkingTo")){
-        library(tools)
         deps <- package_dependencies(pkg, db = available.packages(), which = c("Depends", "Imports", "LinkingTo"), recursive = TRUE)
         grab <- sapply(deps[[1]], packageDescription, fields = "Priority")
         deps <- c(deps[[1]][is.na(grab)])
@@ -31,4 +31,3 @@ updatePackages <- function(ask = FALSE, checkBuilt = TRUE){
     update.packages(ask = FALSE, checkBuilt = TRUE)
     targets
 }
-
