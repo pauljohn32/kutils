@@ -8,7 +8,6 @@
 ##' @param missings A vector representing missing values. These are
 ##' done differently for numeric and factor variables in the key file.
 ##' @return A (hopefully) cleaned column of data
-##' @export
 ##' @author Paul Johnson
 assignMissing <- function(dfn, varname, missings){
     if (is.factor(dfn[ , varname]) | is.character(dfn[ , varname])){

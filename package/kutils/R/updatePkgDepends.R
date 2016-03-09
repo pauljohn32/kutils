@@ -5,6 +5,8 @@
 ##' @param checkBuilt If TRUE, packages built under earlier versions of R are to be considered 'old'
 ##' @return 
 ##' @author Kenna Whitley <kennamarie@ku.edu>
+##' @export
+##' updatePackages(ask = FALSE)
 updatePackages <- function(ask = FALSE, checkBuilt = TRUE){
     pkgdeps <- function(pkg, which = c("Depends", "Imports", "LinkingTo")){
         library(tools)
@@ -26,4 +28,3 @@ updatePackages <- function(ask = FALSE, checkBuilt = TRUE){
     targets
 }
 
-updatePackages()

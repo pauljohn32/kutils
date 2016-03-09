@@ -9,7 +9,7 @@
 ##' @param data A data frame
 ##' @return character vector
 ##' @author Paul Johnson <pauljohn@@ku.edu>
-##' @export
+##' @import xtable
 ##' @examples
 ##'  vvector <- c("Strongly Disagree", "Disagree", "Neutral",
 ##'               "Agree", "Strongly Agree")
@@ -27,7 +27,6 @@
 ##'                     labels = c("SD", "D", "N", "A", "SA")))
 ##'
 likert <-  function(vlist, data, labels, outdir, fn, rows = TRUE){
-    require(xtable)
     ## xxx <- lapply(data[ , vlist], table)
     ## t(sapply(data[, vlist], table))
     ## TODO: Insert check that variables have same levels
@@ -63,8 +62,9 @@ likert <-  function(vlist, data, labels, outdir, fn, rows = TRUE){
     freqTab <- rbind(freqTab, varCountSums)
     rownames(freqTab)[NROW(freqTab)] <- "Sum"
         
-##    print(xtable(freqTab, digits = 0), type = "html", file = paste0(outdir, "varCount-1.html"))
+##    print(xtable::xtable(freqTab, digits = 0), type = "html", file = paste0(outdir, "varCount-1.html"))
 
     freqTab
 }
     
+NULL

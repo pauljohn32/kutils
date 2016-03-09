@@ -7,7 +7,6 @@
 ##' @param dframe A data frame
 ##' @param pm "proportion bogus data" to be tolerated.
 ##' @return a data frame, invisibly
-##' @export
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 deleteBogusRows <- function (dframe, pm = 0.9){
     rowna <- apply(dframe, 1, function(x){sum(is.na(x))})
