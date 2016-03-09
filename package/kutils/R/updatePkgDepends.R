@@ -3,10 +3,14 @@
 ##' Beneficial to dictate which repositories you'd like to use before running function
 ##' @param ask Whether to ask user to select packages or not
 ##' @param checkBuilt If TRUE, packages built under earlier versions of R are to be considered 'old'
-##' @return 
-##' @author Kenna Whitley <kennamarie@ku.edu>
+##' @return A vector of packages being inserted to complete update
+##' @author Kenna Whitley <kennamarie@@ku.edu>
 ##' @export
-##' updatePackages(ask = FALSE)
+##' @examples
+##' options(repos = c("http://rweb.crmda.ku.edu/kran", "http://rweb.crmda.ku.edu/cran"))
+##' ## not run
+##' ##updatePackages(ask = FALSE)
+##'
 updatePackages <- function(ask = FALSE, checkBuilt = TRUE){
     pkgdeps <- function(pkg, which = c("Depends", "Imports", "LinkingTo")){
         library(tools)

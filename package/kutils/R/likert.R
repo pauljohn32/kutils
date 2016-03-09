@@ -3,10 +3,15 @@
 
 ##' Percentage tables for Likert Scale variables
 ##'
-##' Creates a table with columns for allowed values
-##' and rows for variables.
+##' Creates a table with columns for allowed values and rows for
+##' variables.
 ##' @param vlist A vector of variable names
 ##' @param data A data frame
+##' @param labels A vector of values to replace existing levels
+##' @param outdir Output directory
+##' @param fn file name for output: not used yet
+##' @param rows Currently unused indicator for whether output should
+##'     be transposed.
 ##' @return character vector
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @export
