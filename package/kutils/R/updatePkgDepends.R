@@ -1,7 +1,7 @@
-##' Gather, install, and update packages and their dependencies
+##' Install and update packages and their dependencies
 ##'
-##' Beneficial to dictate which repositories you'd like to use before running function
-##' @param ask Whether to ask user to select packages or not
+##' Checks installed packages for package dependencies, updates packages, and installs/updates packages dependencies
+##' @param ask If TRUE, asks user to select packages to update
 ##' @param checkBuilt If TRUE, packages built under earlier versions of R are to be considered 'old'
 ##' @return A vector of packages being inserted to complete update
 ##' @author Kenna Whitley <kennamarie@@ku.edu>
