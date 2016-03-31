@@ -4,6 +4,7 @@
 ##' @param dat a data frame
 ##' @param newname A named vector of the form c(oldname1 = "newname1", oldname2 = "newname")
 ##' @return a data frame
+##' @export
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 colnamesReplace <- function(dat, newname){
     if (is.null(names(newname))){
