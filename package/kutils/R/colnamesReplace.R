@@ -3,10 +3,11 @@
 ##' Imagine some beautiful writing here
 ##' @param dat a data frame
 ##' @param newname A named vector of the form c(oldname1 = "newname1", oldname2 = "newname")
+##' @param lowercase should new names be converted to lower case?
 ##' @return a data frame
 ##' @export
 ##' @author Paul Johnson <pauljohn@@ku.edu>
-colnamesReplace <- function(dat, newname){
+colnamesReplace <- function(dat, newname, lowercase = FALSE){
     if (is.null(names(newname))){
         stop("The newname vector should be a named vector, using the oldnames as the names")
     }
@@ -16,10 +17,11 @@ colnamesReplace <- function(dat, newname){
         res <- ifelse (oldname %in% names(newname), newname[oldname], oldname)
         print(c("oldname", "newname"))
         print(cbind(oldname, res))
-        colnames(dat) <- tolower(res)
+        colnames(dat) <- if (lowercase) tolower(res) else res
         return(dat)
     } else{
         cat(paste("replaceNames Diagnostic:  No column names were altered"))
         return(dat)
     }
 }
+
