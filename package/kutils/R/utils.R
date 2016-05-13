@@ -1,9 +1,10 @@
-##' delete trailing slash
+##' Delete trailing slash
 ##'
 ##' Windows file.exists fails if "/" is on end of file name
 ##' @param name A path
 ##' @return Same path with trailing "/" removed.
-##' @author Paul Johnson
+##' @export 
+##' @author Paul Johnson <pauljohn@@ku.edu>
 dts <- function(name) gsub("/$", "", name)
 
 
@@ -14,6 +15,7 @@ dts <- function(name) gsub("/$", "", name)
 ##' @param dat a data frame
 ##' @param varname a variable name
 ##' @return The "floored column". sets variable type to integer
+##' @export
 ##' @author Paul Johnson
 floorvar <- function(dat, varname){
     if (!varname %in% colnames(dat)){
@@ -23,3 +25,28 @@ floorvar <- function(dat, varname){
     }
     as.integer(newvar)
 }
+
+
+
+##' How many stars would we need for this p value
+##'
+##' Regression table makers need to know how many stars
+##' to attach to parameter estimates. This takes
+##' p values and returns a required number of asterixes.
+##' @param pval P value
+##' @param alpha alpha vector
+##' @return a character vector of asterixes, same length as pval 
+##' @author Paul Johnson <pauljohn@@ku.edu>
+##' @export
+##' @examples
+##' stars(0.06)
+##' stars(0.021)
+##' stars(0.001)
+stars <- function(pval, alpha = c(0.05, 0.01, 0.001)) {
+    ##xxx <- sum(abs(pval) < alpha)
+    ## handle a vector of pvals
+    nstars <- sapply(pval, function(x) sum(abs(x) < alpha))
+    ## paste0("", rep("*", xxx), collapse = "")
+    sapply(nstars, function(y) paste0("", rep("*", y), collapse = ""))
+}
+ 

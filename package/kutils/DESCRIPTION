@@ -1,12 +1,14 @@
 Package: kutils
 Type: Package
 Title: Project Management Tools 
-Version: 0.01
-Date: 2016-03-03
+Version: 0.04
+Date: 2016-04-28
 Author: Paul Johnson <pauljohn@ku.edu> Kenna Whitley <pauljohn@ku.edu? 
 Maintainer: Kenna Whitley <yourfault@somewhere.net>
 Description: Some stuff we use all the time in CRMDA.  This will be
     a testing package for new functions that may eventually be 
     moved elsewhere.
 License: GPL-2
+Imports:
+    xtable
 RoxygenNote: 5.0.1
