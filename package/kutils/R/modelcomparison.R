@@ -1,21 +1,21 @@
-##' .. content for \description{} (no empty lines) ..
+##' Generate "storage" data.frame
 ##'
-##' .. content for \details{} ..
-##' @title Generating "storage" (data.frame) to store global fit indices of models, while user don't have specify the arguments here, they are all set up through the CFAModComptab function
+##' Generating "storage" (data.frame) to store global fit indices of models,
+##' while user don't have specify the arguments here, they are all set up
+##' through the CFAModComptab function
 ##' @param est, different estimates will generate storages with different column
 ##' @param namesOfRow the name of each row in storage
 ##' @return a data.frame that can store the results (fittness info) for models
-##' @author Po-Yi Chen
+##' @author Po-Yi Chen <poyichen@@ku.edu>
 storageGen <- function(est, namesOfRow){
 
-    ## if (length(modList1) != length(namesofRow)){stop("the names of models are more or less than the model u fit!")}
     numOFrow <- length(namesOfRow)
 
     ## tell lavaan what kinds of fit indices it should extract for different estimators and establish the corresponding data.frame storage
     ## currently only allow three kinds of estimators, ML, MLR, WLSMV
     if(est == "ML"){
-
-        fit.measures <-  c("chisq", "df", "deltaChisq", "pvalue", "deltaDf", "nestPvalue", "rmsea", "cfi", "tli", "srmr", "aic", "bic")
+        fit.measures <-  c("chisq", "df", "deltaChisq", "pvalue", "deltaDf", "nestPvalue",
+                           "rmsea", "cfi", "tli", "srmr", "aic", "bic")
         resultStorage <- as.data.frame(matrix(999, numOFrow, length(fit.measures)))
         colnames(resultStorage) <- fit.measures
         rownames(resultStorage) <- namesOfRow
@@ -23,14 +23,19 @@ storageGen <- function(est, namesOfRow){
     } else if (est == "MLR"){
 
         ## note: fit.measures here mean the colnames of the final outPutStorage
-        fit.measures <- c("chisq.scaled", "df.scaled", "pvalue", "deltaChisq", "deltaDf",  "nestPvalue", "cfi.scaled", "rmsea.scaled", "tli.scaled", "srmr", "aic", "bic")
+        fit.measures <- c("chisq.scaled", "df.scaled", "pvalue",
+                          "deltaChisq", "deltaDf", "nestPvalue",
+                          "cfi.scaled", "rmsea.scaled", "tli.scaled",
+                          "srmr", "aic", "bic")
         resultStorage <- as.data.frame(matrix(999, numOFrow, length(fit.measures)))
         colnames(resultStorage) <- fit.measures
         rownames(resultStorage) <- namesOfRow
 
     } else if (est == "WLSMV"){
 
-        fit.measures <- c("chisq.scaled", "df.scaled", "pvalue", "deltaChisq", "deltaDf",  "nestPvalue", "cfi.scaled", "rmsea.scaled", "tli.scaled", "srmr_mplus", "aic", "bic")
+        fit.measures <- c("chisq.scaled", "df.scaled", "pvalue", "deltaChisq",
+                          "deltaDf",  "nestPvalue", "cfi.scaled", "rmsea.scaled",
+                          "tli.scaled", "srmr_mplus", "aic", "bic")
         resultStorage <- as.data.frame(matrix(999, numOFrow, length(fit.measures)))
         colnames(resultStorage) <- fit.measures
         rownames(resultStorage) <- namesOfRow
@@ -40,16 +45,17 @@ storageGen <- function(est, namesOfRow){
     resultStorage
 }
 
-##' .. content for \description{} (no empty lines) ..
+##' Checking whether the models put in nesModPairs & nonNestMod are legal or not
 ##'
-##' .. content for \details{} ..
-##' @title checking whether the models put in nesModPairs & nonNestMod are legal or not
-##' Specifically, models must be lavaan, cfa objects; the df.nested should > df.baseline; when conducting nested model comparison, estimator of two models  must be identical
-##' model comparison
-##' @param nestModPairs
-##' @param nonNestMod
-##' @return NA
-##' @author Po-Yi Chen
+##' Checking whether the models put in nesModPairs & nonNestMod are
+##' legal or not Specifically, models must be lavaan, cfa objects; the
+##' df.nested should > df.baseline; when conducting nested model
+##' comparison, estimator of two models must be identical model
+##' comparison
+##' @param nestModPairs list of objects representing nested models
+##' @param nonNestMod list of objects to be compared as non-nested models
+##' @return No return
+##' @author Po-Yi Chen <poyichen@@ku.edu>
 modelcheck <- function(nestModPairs, nonNestMod){
 
     classCheck <- function(x){
@@ -81,24 +87,26 @@ modelcheck <- function(nestModPairs, nonNestMod){
             }
         }
     }
+    NULL
 }
 
 
-##' .. content for \description{} (no empty lines) ..
+##' Add stars
 ##'
-##' .. content for \details{} ..
-##' @title adding stars to the chisq and deltal chisq statistic according to their level of significant,
-##' @param store, the storage of fit indices of all models fit indices inside
-##' @param globStar, if globStar = TRUE, three stars will be added aside to the global chisq if p <.001, two stars for p <.01, one star for p< .05
-##' @param nestStar, if nestStar = TRUE, three stars will be added aside to the delta  chisq if p <.001, two stars for p <.01, one star for p< .05
-##' @return store,
+##' Adding stars to the chisq and deltal chisq statistic according to their level of significance.
+##' @param store the storage of fit indices of all models fit indices
+##'     inside
+##' @param globStar if globStar = TRUE, three stars will be added
+##'     aside to the global chisq if p <.001, two stars for p <.01,
+##'     one star for p< .05
+##' @param nestStar if nestStar = TRUE, three stars will be added
+##'     aside to the delta chisq if p <.001, two stars for p <.01, one
+##'     star for p< .05
+##' @return storage data frame
 ##' @author Po-Yi Chen
 pValRePresent <- function(store, globStar = TRUE, nestStar = TRUE){
-
     for (i in 1:length(store[,"pvalue"])){
-
         if(is.numeric(store[i,"pvalue"])){
-
             if(store[i,"pvalue"] < 0.001 && globStar == TRUE){
 
                 store[i,"chisq"] <- paste0(as.character(store[i,"chisq"]), "***")
@@ -140,26 +148,40 @@ pValRePresent <- function(store, globStar = TRUE, nestStar = TRUE){
 
 
 
-##' .. content for \description{} (no empty lines) ..
+##' CFA Model table
 ##'
-##' .. content for \details{} ..
-##' @title
-##' @param nestModPairs, a vector contains lavaan objects that will be nestedly compared
-##' @param nestRowName, a vector of the names of the row that represent the results of nested model comparison in the final out table
-##' @param nonNestMod, a vector contains lavaan CFA objects that will be nonNestly comapred
-##' @param nonNestRowName
-##' @param est, the estimators be used to obtained the lavaan objects in nesModPairs and nestRowName, so far only allow MLR, WLSMV, or ML
-##' @param fitDrop the fit indices you want drop, the default only drop pvalue and nestPvalue,
-##' @param footNote
-##' @param tabTitle
-##' @param texFilename
-##' @return write a .tex file that can be open with lyx and gnerating the table
-##' @author Po-Yi Chen
-CFAModComptab <- function(nestModPairs = NULL, nestRowName = NULL, nonNestMod = NULL, nonNestRowName = NULL, est = "ML", fitDrop = c("pvalue", "nestPvalue"),
-                          footNote = "", tabTitle, texFilename){
-
+##' One paragraph
+##' 
+##' @param nestModPairs a vector contains lavaan objects that will be
+##'     nestedly compared
+##' @param nestRowName a vector of the names of the row that
+##'     represent the results of nested model comparison in the final
+##'     out table
+##' @param nonNestMod a vector contains lavaan CFA objects that will
+##'     be nonNestly comapred
+##' @param nonNestRowName ww
+##' @param est the estimators be used to obtained the lavaan objects
+##'     in nesModPairs and nestRowName, so far only allow MLR, WLSMV,
+##'     or ML
+##' @param fitDrop the fit indices you want drop, the default only
+##'     drop pvalue and nestPvalue,
+##' @param footNote wwww www 
+##' @param tabTitle wwww  www
+##' @param texFilename ww www
+##' @import lavaan
+##' @export
+##' @return write a .tex file that can be open with lyx and gnerating
+##'     the table
+##' @author Po-Yi Chen <poyichen@@ku.edu>
+CFAModComptab <-
+    function(nestModPairs = NULL, nestRowName = NULL,
+             nonNestMod = NULL, nonNestRowName = NULL, est = "ML",
+             fitDrop = c("pvalue", "nestPvalue"), footNote = "",
+             tabTitle, texFilename)
+{
+    
     suppressWarnings(modelcheck(nestModPairs, nonNestMod))
-
+    
     if(est == "ML"){
 
         fitMeasureGrep <-  c("chisq","df",  "pvalue", "rmsea", "cfi", "tli", "srmr", "aic", "bic")
@@ -167,24 +189,32 @@ CFAModComptab <- function(nestModPairs = NULL, nestRowName = NULL, nonNestMod = 
 
     } else if(est == "MLR"){
 
-        fitMeasureGrep <-  c("chisq.scaled", "df.scaled", "pvalue","cfi.scaled", "rmsea.scaled", "tli.scaled", "srmr", "aic", "bic")
-        fitMeasureStore <- c("chisq.scaled", "df.scaled", "pvalue","cfi.scaled", "rmsea.scaled", "tli.scaled", "srmr", "aic", "bic")
+        fitMeasureGrep <-  c("chisq.scaled", "df.scaled", "pvalue","cfi.scaled",
+                             "rmsea.scaled", "tli.scaled", "srmr", "aic", "bic")
+        fitMeasureStore <- c("chisq.scaled", "df.scaled", "pvalue","cfi.scaled",
+                             "rmsea.scaled", "tli.scaled", "srmr", "aic", "bic")
 
     } else if(est == "WLSMV"){
 
-        fitMeasureGrep <-  c("chisq.scaled", "df.scaled", "pvalue", "cfi.scaled", "rmsea.scaled", "tli.scaled", "srmr_mplus")
-        fitMeasureStore <- c("chisq.scaled", "df.scaled", "pvalue", "cfi.scaled", "rmsea.scaled", "tli.scaled", "srmr_mplus")
+        fitMeasureGrep <-  c("chisq.scaled", "df.scaled", "pvalue", "cfi.scaled",
+                             "rmsea.scaled", "tli.scaled", "srmr_mplus")
+        fitMeasureStore <- c("chisq.scaled", "df.scaled", "pvalue", "cfi.scaled",
+                             "rmsea.scaled", "tli.scaled", "srmr_mplus")
 
     } else {stop("please set est = ML, MLR, or WLSMV)")}
 
-    if(is.null(nestModPairs) && is.null(nonNestMod)){stop("please put at least one lavaan object in arguments")}
+    if(is.null(nestModPairs) && is.null(nonNestMod)){
+        stop(paste("please put at least one",
+                   "lavaan object in arguments"))
+    }
     if(length(nestModPairs) %% 2 != 0){stop("the length of nestModPairs has to be a even number")}
     if(length(nestModPairs) != 2*length(nestRowName)) {stop("each pair of nested model needs to have its own name")}
     if(length(nonNestMod) != length(nonNestRowName))  {stop("each non- nested model needs to have its own name")}
 
 
     ## fitDrop <- c("cfi", "tli")
-    if(sum(fitDrop %in% c("chisq", "df", "deltaChisq", "pvalue", "deltaDf", "nestPvalue", "rmsea", "cfi", "tli", "srmr", "aic", "bic") == FALSE) != 0){
+    if(sum(fitDrop %in% c("chisq", "df", "deltaChisq", "pvalue", "deltaDf",
+                          "nestPvalue", "rmsea", "cfi", "tli", "srmr", "aic", "bic") == FALSE) != 0){
         stop("the fit indices you want to drop must be chisq,df,deltaChisq, pvalue, deltaDf, nestPvalue, rmsea, cfi, tli, srmr, aic,or bic")
     }
 
