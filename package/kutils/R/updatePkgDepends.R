@@ -9,8 +9,8 @@
 ##' @author Kenna Whitley <kennamarie@@ku.edu>
 ##' @importFrom tools package_dependencies
 ##' @export
-##' @importFrom("utils", "available.packages", "install.packages",
-##'           "installed.packages", "packageDescription", "update.packages")
+##' @importFrom utils available.packages install.packages
+##'           installed.packages packageDescription update.packages
 ##' @examples
 ##' options(repos = c("http://rweb.crmda.ku.edu/kran", "http://rweb.crmda.ku.edu/cran"))
 ##' ## not run

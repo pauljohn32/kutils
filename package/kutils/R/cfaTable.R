@@ -41,9 +41,8 @@
 ##' standardized = TRUE will yield two identical sets of two columns.
 ##'
 ##' @param object A cfa object from lavaan
-##' @param captionLaTeX caption (table name) in table float
-##' @param outfileName of the resulting .tex file. May include the
-##' path
+##' @param caption The LaTeX caption to be used in the table header
+##' @param outfile Name of .tex file. May include the path 
 ##' @param params Measurement parameters to be included. Valid values
 ##' are "loadings", "intercepts", "residuals", "latentvariances",
 ##' and "thresholds". See Details.
@@ -65,7 +64,8 @@
 ##' @param preamble Default = TRUE. Should the .tex file contain a
 ##'     complete LaTeX document, or just the table markup? premable
 ##'     and the begin and end document lines. 
-##' @importFrom("stats", "pnorm")
+##' @param 
+##' @importFrom stats pnorm
 ##' @return File saved as outfile.
 ##' @export
 ##' @author Ben Kite <bakite@@ku.edu>
