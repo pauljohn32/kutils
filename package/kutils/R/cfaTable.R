@@ -1,27 +1,74 @@
-
-##' Builds APA style results tables in .tex code for confirmatory factor analysis output from the "cfa" function in the "lavaan" package.
+##' Creates Confirmatory Factor Analysis Tables
+##' 
+##' Creates LaTeX markup for confirmatory
+##' factor analysis output tables in the style of the American
+##' Psychological Association(APA). Input objects should
+##' be created by the "lavaan" package.
 ##'
-##' @title cfaTable
-##' @param output Output returned by the "cfa" function in lavaan.
+##' The argument params determines the inclusion of estimate sections.
+##' "loadings" are the factor loadings in the model.  "intercepts" are
+##' the indicator variable intercepts.  "residuals" are the indicator
+##' variable residual variances.  "latentvariances" are the latent
+##' variable variances and covariances.  "thresholds" arise in latent
+##' response variates (non-numeric indicator data).
+##'
+##' The stantardized parameter regulates the number of columns to be
+##' included.  standardized=FALE implies there will be four columns:
+##' 1) the estimate, 2) the standard error, 3) the z-value, and 4) the
+##' p-value.  When standardized = TRUE, the columns are: 1) the
+##' parameter estimates, 2) the standard errors, 3) standardized
+##' parameter estimates, and 4) standardized standard errors.
+##'
+##' The standardized parameters are obtained by updating the output
+##' with the options std.lv = TRUE and std.ov = TRUE.  If these
+##' options were used when originally creating output, setting
+##' standardized = TRUE will yield two identical sets of two columns.
+##'
+##' @param object A cfa object from lavaan.
 ##' @param tablename Name of table as it should appear in manuscript.
-##' @param outfile Location and name of the resulting .tex file.
-##' @param params Measurement parameters to be included in table.  Options are "loadings", "intercepts", "residuals", "latentvariances", and "thresholds".  "loadings" are the factor loadings in the model.  "intercepts" are the indicator variable intercepts". "residuals" are the indicator variable residual variances.  "latentvariances" are the latent variable variances and covariances.  "thresholds" are the thresholds on latent response variates in models with ordered-categorical or dichotomous data.
-##' @param fit A vector listing model fit measures that should be included in the note of the table. Listing "chi-square" will do special formatting to the chi-square value in the note. Any other measures listed must correspond to measures found in fitMeasures(output).
-##' @param names_fit Names for the fit measures requested by fit. Set equal to fit by default. For an example of use, if fit = c("cfi.scaled", "tli.scaled") is specified, names_fit = c("CFI", "TLI") can be used to produce cleaner names.
-##' @param standardized Should standarized results be presented along with unstandardized.  Default is set to FALSE, this provides four columns in the table: 1) the estimate of the parameter, 2) the standard error of the parameter, 3) the z-value for the parameter estimate, and 4) the corresponding z-value.  When equal to TRUE, four columns are provided: 1) the parameter estimates provided in output, 2) the standard errors provided in output, 3) standardized parameter estimates, and 4) standardized standard errors.  The standardized parameters are obtained by updating the output with the options std.lv = TRUE and std.ov = TRUE.  If these options were used when originally creating output, setting standardized = TRUE will yield two identical sets of two columns.
-##' @param names_upper Should the names of the model fit parameters be forced to be uppercase.  The default is set to TRUE.  This will also affect whatever is specified in names_fit.
-##' @param single_spaced Should the table be presented as single spaced.  The default is set to TRUE. When set to false the table is double-spaced, which may make some tables too large for a single page.
-##' @param preamble Should the .tex file contain the latex premable and the begin and end document lines.  Default is set to TRUE. When set to FALSE, only the tex code including and between the \begin{table} and \end{table} lines is included.
+##' @param outfile Name of the resulting .tex file. May include the
+##'     path.
+##' @param params Measurement parameters to be included. Valid values
+##'     are "loadings", "intercepts", "residuals", "latentvariances",
+##'     and "thresholds". See Details.
+##' @param fit A vector of fit measures that to be included. Listing
+##'     "chi-square" will do special formatting to the chi-square
+##'     value in the note. Any other measures listed must correspond
+##'     to measures found in fitMeasures(object).
+##' @param names_fit Names for the fit measures requested by the fit
+##'     parameter.  Must have same number of elements as fit.  For
+##'     example, fit = c("cfi.scaled", "tli.scaled"), names_fit =
+##'     c("CFI", "TLI").
+##' @param standardized Should standarized results be presented along
+##'     with unstandardized?  Default is FALSE. See Details.
+##' @param names_upper Should the names of the model fit parameters be
+##'     forced to be uppercase.  The default is TRUE.  This
+##'     will also affect whatever is specified in names_fit.
+##' @param single_spaced Default = TRUE. If a double-spaced table is
+##'     needed, set single_spaced = FALSE.
+##' @param preamble Should the .tex file contain a complete LaTeX
+##'     document, or just the table markup? premable
+##'     and the begin and end document lines.  Default is set to
+##'     TRUE. When set to FALSE, only the tex code including and
+##'     between the \begin{table} and \end{table} lines is included.
+##' 
 ##' @return File saved as outfile.
 ##' @export
 ##' @author Ben Kite bakite@@ku.edu
-cfaTable <- function(output, tablename, outfile, params = c("loadings", "intercepts"), fit = c("chi-square", "cfi", "tli", "rmsea"), names_fit = fit, standardized= FALSE, names_upper = TRUE, single_spaced = TRUE, preamble = TRUE){
-
-    if(class(output)[1] != "lavaan"){
-        stop("The output that you provided does not appear to be lavaan output.  Only lavaan cfa output can be used with the CFATable function.")
+cfaTable <-
+    function(object, tablename, outfile, params = c("loadings", "intercepts"),
+             fit = c("chi-square", "cfi", "tli", "rmsea"),
+             names_fit = fit, standardized= FALSE,
+             names_upper = TRUE, single_spaced = TRUE, preamble = TRUE)
+{
+    if(class(object)[1] != "lavaan"){
+        stop(paste("The object that does not appear to be",
+                   "a lavaan object.  Only lavaan cfa object can be",
+                   "used with the CFATable function."))
     }
-    if(output@Options$model.type != "cfa"){
-        stop("The output object you have provided appears to be from lavaan, but it is not cfa output.  Fit your model with the cfa function and try again.")
+    if(object@Options$model.type != "cfa"){
+        stop(paste("The output object is not cfa object.",
+                   "Fit your model with the cfa function and try again."))
     }
     if(names_upper == TRUE){
         names(fit) <- toupper(names_fit)
@@ -30,13 +77,13 @@ cfaTable <- function(output, tablename, outfile, params = c("loadings", "interce
     }
     fitmeas <- fitMeasures(output)[]
     fitmeas <- sapply(fitmeas, function(x) formatC(round(x, 3), format = 'f', digits = 2))
-    chimeas <- output@Fit@test[[1]]
+    chimeas <- object@Fit@test[[1]]
     chimeas$stat <- formatC(round(chimeas$stat, 3), format = 'f', digits = 2)
     chimeas$pvalue <- formatC(round(chimeas$pvalue, 3), format = 'f', digits = 3)
     chimeas$pvalue <- gsub("0\\.", "\\.", chimeas$pvalue)
-    parameters <- data.frame(output@ParTable)[,c("lhs", "op", "rhs", "free")]
-    parameters$est <- output@Fit@est
-    parameters$se <- output@Fit@se
+    parameters <- data.frame(object@ParTable)[,c("lhs", "op", "rhs", "free")]
+    parameters$est <- object@Fit@est
+    parameters$se <- object@Fit@se
     ##parameters <- parameters[which(parameters$free > 0),]
     parameters$z <- parameters$est/parameters$se
     parameters$p <- 2*pnorm(abs(parameters$z), lower.tail = FALSE)
@@ -46,8 +93,8 @@ cfaTable <- function(output, tablename, outfile, params = c("loadings", "interce
     parameters[,"p"] <- round(parameters[,"p"], 3)
     parameters[,"rhs"] <- as.character(parameters[,"rhs"])
     parameters[,"lhs"] <- as.character(parameters[,"lhs"])
-    variables <- unlist(output@Data@ov.names)
-    latents <- unlist(output@pta$vnames$lv)
+    variables <- unlist(object@Data@ov.names)
+    latents <- unlist(object@pta$vnames$lv)
 
     if(preamble == TRUE){
     template <- "
@@ -122,7 +169,7 @@ FITINFORMATION.
 
     if(standardized == TRUE){
         report <- c("est", "se", "stdest", "stdse")
-        std <- update(output, std.lv = TRUE, std.ov = TRUE)
+        std <- update(object, std.lv = TRUE, std.ov = TRUE)
         parameters$stdest <- std@Fit@est
         parameters$stdse <- std@Fit@se
         holder <-  "& \\\\multicolumn{2}{c}{\\\\uline{Unstandarized}} & \\\\multicolumn{2}{c}{\\\\uline{Standardized}}\\\\tabularnewline"
