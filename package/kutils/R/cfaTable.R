@@ -68,7 +68,7 @@
 ##' @importFrom("stats", "pnorm")
 ##' @return File saved as outfile.
 ##' @export
-##' @author Ben Kite bakite@@ku.edu
+##' @author Ben Kite <bakite@@ku.edu>
 cfaTable <-
     function(object, caption, outfile, params = c("loadings", "intercepts"),
              fit = c("chi-square", "cfi", "tli", "rmsea"),
