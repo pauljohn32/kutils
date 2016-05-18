@@ -25,7 +25,7 @@
 ##' standardized = TRUE will yield two identical sets of two columns.
 ##'
 ##' @param object A cfa object from lavaan.
-##' @param tablename Name of table as it should appear in manuscript.
+##' @param caption LaTeX caption (table name) in table float.
 ##' @param outfile Name of the resulting .tex file. May include the
 ##'     path.
 ##' @param params Measurement parameters to be included. Valid values
@@ -51,12 +51,12 @@
 ##'     and the begin and end document lines.  Default is set to
 ##'     TRUE. When set to FALSE, only the tex code including and
 ##'     between the \begin{table} and \end{table} lines is included.
-##' 
+##' importFrom("stats", "pnorm")
 ##' @return File saved as outfile.
 ##' @export
 ##' @author Ben Kite bakite@@ku.edu
 cfaTable <-
-    function(object, tablename, outfile, params = c("loadings", "intercepts"),
+    function(object, caption, outfile, params = c("loadings", "intercepts"),
              fit = c("chi-square", "cfi", "tli", "rmsea"),
              names_fit = fit, standardized= FALSE,
              names_upper = TRUE, single_spaced = TRUE, preamble = TRUE)
@@ -75,7 +75,7 @@ cfaTable <-
     }else{
         names(fit) <- names_fit
     }
-    fitmeas <- fitMeasures(output)[]
+    fitmeas <- fitMeasures(object)[]
     fitmeas <- sapply(fitmeas, function(x) formatC(round(x, 3), format = 'f', digits = 2))
     chimeas <- object@Fit@test[[1]]
     chimeas$stat <- formatC(round(chimeas$stat, 3), format = 'f', digits = 2)
@@ -375,7 +375,7 @@ ROWINFORMATION
     }else{
         template <- gsub("LATENTVARS", "", template)
     }
-    template <- gsub("TITLE", tablename, template)
+    template <- gsub("TITLE", caption, template)
     fitinfotmpchi <- "$\\\\chi^{2}$(DF)= CHI, \\\\textit{p} = PVAL"
 
     if("chi-square" %in% fit){
