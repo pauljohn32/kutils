@@ -1,12 +1,16 @@
 ##' Install and update packages and their dependencies
 ##'
-##' Checks installed packages for package dependencies, updates packages, and installs/updates packages dependencies
+##' Checks installed packages for package dependencies, updates
+##' packages, and installs/updates packages dependencies
 ##' @param ask If TRUE, asks user to select packages to update
-##' @param checkBuilt If TRUE, packages built under earlier versions of R are to be considered 'old'
+##' @param checkBuilt If TRUE, packages built under earlier versions
+##'     of R are to be considered 'old'
 ##' @return A vector of packages being inserted to complete update
 ##' @author Kenna Whitley <kennamarie@@ku.edu>
 ##' @importFrom tools package_dependencies
 ##' @export
+##' @importFrom("utils", "available.packages", "install.packages",
+##'           "installed.packages", "packageDescription", "update.packages")
 ##' @examples
 ##' options(repos = c("http://rweb.crmda.ku.edu/kran", "http://rweb.crmda.ku.edu/cran"))
 ##' ## not run
