@@ -313,117 +313,117 @@ CFAModComptab <- function(nestModPairs = NULL, nestRowName = NULL, nonNestMod = 
 ###################
 ### testing area ##
 ###################
-library(lavaan)
-library(xtable)
+## library(lavaan)
+## library(xtable)
 
 
-dat <- read.table("../data/data.txt")
-dat <- dat[,-c(8)]
-colnames(dat) <- c("group", "v1", "v2", "v3", "v4", "v5", "v6")
-dat[dat == 999] <- 2
+## dat <- read.table("../data/data.txt")
+## dat <- dat[,-c(8)]
+## colnames(dat) <- c("group", "v1", "v2", "v3", "v4", "v5", "v6")
+## dat[dat == 999] <- 2
 
 
-congModel <- '
-              f1 =~ 1*v1 + v2 + v3 + v4 + v5 + v6
-			  f1 ~~ f1
-			  f1 ~0*1
-			 '
+## congModel <- '
+##               f1 =~ 1*v1 + v2 + v3 + v4 + v5 + v6
+## 			  f1 ~~ f1
+## 			  f1 ~0*1
+## 			 '
 
-weakModel <- '
-              f1 =~ 1*v1 + c(L2,L2)*v2 + c(L3,L3)*v3 + c(L4,L4)*v4 + c(L5,L5)*v5 + c(L6,L6)*v6
-			  f1 ~~ f1
-			  f1 ~0*1
-			'
+## weakModel <- '
+##               f1 =~ 1*v1 + c(L2,L2)*v2 + c(L3,L3)*v3 + c(L4,L4)*v4 + c(L5,L5)*v5 + c(L6,L6)*v6
+## 			  f1 ~~ f1
+## 			  f1 ~0*1
+## 			'
 
-partialweakModel <- '
-              f1 =~ 1*v1 + c(L2,L2)*v2 + c(L3,L3)*v3 + c(L4,L4)*v4 + c(L5,L5)*v5 + v6
-			  f1 ~~ f1
-			  f1 ~0*1
-			'
-partialweakModel2 <- '
-              f1 =~ 1*v1 + c(L2,L2)*v2 + c(L3,L3)*v3 + c(L4,L4)*v4 + v5 + v6
-			  f1 ~~ f1
-			  f1 ~0*1
-			'
-strongModel <- '
-              f1 =~ 1*v1 + c(L2,L2)*v2 + c(L3,L3)*v3 + c(L4,L4)*v4 + c(L5,L5)*v5 + c(L6,L6)*v6
-			  f1 ~~ f1
-			  f1 ~ c(0,NA)*1
-			  v1 ~ c(I1,I1)*1
-			  v2 ~ c(I2,I2)*1
-			  v3 ~ c(I3,I3)*1
-			  v4 ~ c(I4,I4)*1
-			  v5 ~ c(I5,I5)*1
-			  v6 ~ c(I6,I6)*1
-			'
+## partialweakModel <- '
+##               f1 =~ 1*v1 + c(L2,L2)*v2 + c(L3,L3)*v3 + c(L4,L4)*v4 + c(L5,L5)*v5 + v6
+## 			  f1 ~~ f1
+## 			  f1 ~0*1
+## 			'
+## partialweakModel2 <- '
+##               f1 =~ 1*v1 + c(L2,L2)*v2 + c(L3,L3)*v3 + c(L4,L4)*v4 + v5 + v6
+## 			  f1 ~~ f1
+## 			  f1 ~0*1
+## 			'
+## strongModel <- '
+##               f1 =~ 1*v1 + c(L2,L2)*v2 + c(L3,L3)*v3 + c(L4,L4)*v4 + c(L5,L5)*v5 + c(L6,L6)*v6
+## 			  f1 ~~ f1
+## 			  f1 ~ c(0,NA)*1
+## 			  v1 ~ c(I1,I1)*1
+## 			  v2 ~ c(I2,I2)*1
+## 			  v3 ~ c(I3,I3)*1
+## 			  v4 ~ c(I4,I4)*1
+## 			  v5 ~ c(I5,I5)*1
+## 			  v6 ~ c(I6,I6)*1
+## 			'
 
-partialstrongModel1 <- '
-              f1 =~ 1*v1 + c(L2,L2)*v2 + c(L3,L3)*v3 + c(L4,L4)*v4 + c(L5,L5)*v5 + v6
-			  f1 ~~ f1
-			  f1 ~ c(0,NA)*1
-			  v1 ~ c(I1,I1)*1
-			  v2 ~ c(I2,I2)*1
-			  v3 ~ c(I3,I3)*1
-			  v4 ~ c(I4,I4)*1
-			  v5 ~ c(I5,I5)*1
-			  v6 ~ c(I6,I6)*1
-			'
+## partialstrongModel1 <- '
+##               f1 =~ 1*v1 + c(L2,L2)*v2 + c(L3,L3)*v3 + c(L4,L4)*v4 + c(L5,L5)*v5 + v6
+## 			  f1 ~~ f1
+## 			  f1 ~ c(0,NA)*1
+## 			  v1 ~ c(I1,I1)*1
+## 			  v2 ~ c(I2,I2)*1
+## 			  v3 ~ c(I3,I3)*1
+## 			  v4 ~ c(I4,I4)*1
+## 			  v5 ~ c(I5,I5)*1
+## 			  v6 ~ c(I6,I6)*1
+## 			'
 
-partialstrictModel2 <- '
-              f1 =~ 1*v1 + c(L2,L2)*v2 + c(L3,L3)*v3 + c(L4,L4)*v4 + v5 + v6
-			  f1 ~~ c(1,NA)*f1
-			  f1 ~ c(0,NA)*1
+## partialstrictModel2 <- '
+##               f1 =~ 1*v1 + c(L2,L2)*v2 + c(L3,L3)*v3 + c(L4,L4)*v4 + v5 + v6
+## 			  f1 ~~ c(1,NA)*f1
+## 			  f1 ~ c(0,NA)*1
 
-			  v1 ~ c(I1,I1)*1
-			  v2 ~ c(I2,I2)*1
-			  v3 ~ c(I3,I3)*1
-			  v4 ~ c(I4,I4)*1
-			  v5 ~ c(I5,I5)*1
-			  v6 ~ c(I6,I6)*1
+## 			  v1 ~ c(I1,I1)*1
+## 			  v2 ~ c(I2,I2)*1
+## 			  v3 ~ c(I3,I3)*1
+## 			  v4 ~ c(I4,I4)*1
+## 			  v5 ~ c(I5,I5)*1
+## 			  v6 ~ c(I6,I6)*1
 
-			  v1 ~~ c(R1,R1)*v1
-			  v2 ~~ c(R2,R2)*v2
-			  v3 ~~ c(R3,R3)*v3
-			  v4 ~~ c(R4,R4)*v4
-			  v5 ~~ c(R5,R5)*v5
-			  v6 ~~ c(R6,R6)*v6
-'
+## 			  v1 ~~ c(R1,R1)*v1
+## 			  v2 ~~ c(R2,R2)*v2
+## 			  v3 ~~ c(R3,R3)*v3
+## 			  v4 ~~ c(R4,R4)*v4
+## 			  v5 ~~ c(R5,R5)*v5
+## 			  v6 ~~ c(R6,R6)*v6
+## '
 
-cc1 <- cfa(congModel, data=dat, group="group", meanstructure=TRUE, estimator = "MLR")
-cc2 <- cfa(weakModel, data=dat, group="group", meanstructure=TRUE, estimator = "MLR")
-cc21 <- cfa(partialweakModel, data=dat, group="group", meanstructure=TRUE, estimator = "MLR")
-## cc22 <- cfa(partialweakModel2, data=dat, group="group", meanstructure=TRUE, estimator = "ML")
-cc3 <- cfa(partialstrongModel1, data=dat, group="group", meanstructure=TRUE, estimator = "MLR")
+## cc1 <- cfa(congModel, data=dat, group="group", meanstructure=TRUE, estimator = "MLR")
+## cc2 <- cfa(weakModel, data=dat, group="group", meanstructure=TRUE, estimator = "MLR")
+## cc21 <- cfa(partialweakModel, data=dat, group="group", meanstructure=TRUE, estimator = "MLR")
+## ## cc22 <- cfa(partialweakModel2, data=dat, group="group", meanstructure=TRUE, estimator = "ML")
+## cc3 <- cfa(partialstrongModel1, data=dat, group="group", meanstructure=TRUE, estimator = "MLR")
 
-## cc32 <- cfa(partialstrongModel2, data=dat, group="group", meanstructure=TRUE, estimator = "MLR")
-## cc42 <- cfa(partialstrictModel2, data=dat, group="group", meanstructure=TRUE, estimator = "MLR")
+## ## cc32 <- cfa(partialstrongModel2, data=dat, group="group", meanstructure=TRUE, estimator = "MLR")
+## ## cc42 <- cfa(partialstrictModel2, data=dat, group="group", meanstructure=TRUE, estimator = "MLR")
 
-datFemale <- dat[dat$group == 0,]
-datFemale <- datFemale[colnames(datFemale) != "group"]
+## datFemale <- dat[dat$group == 0,]
+## datFemale <- datFemale[colnames(datFemale) != "group"]
 
-ccFemale <- cfa(congModel, data = datFemale , meanstructure=TRUE, estimator = "MLR")
+## ccFemale <- cfa(congModel, data = datFemale , meanstructure=TRUE, estimator = "MLR")
 
-datMale <- dat[dat$group == 1,]
-datMale <- datMale[colnames(datMale) != "group"]
+## datMale <- dat[dat$group == 1,]
+## datMale <- datMale[colnames(datMale) != "group"]
 
-ccMale <- cfa(congModel, data = datMale , meanstructure=TRUE, estimator = "MLR")
+## ccMale <- cfa(congModel, data = datMale , meanstructure=TRUE, estimator = "MLR")
 
-## cc4 <- cfa(strictModel, data=dat, group="group", meanstructure=TRUE, estimator = "WLSMV")
+## ## cc4 <- cfa(strictModel, data=dat, group="group", meanstructure=TRUE, estimator = "WLSMV")
 
 
-## inspect(cc1,'fit')[fit.measures]
+## ## inspect(cc1,'fit')[fit.measures]
 
-### end of testing area
-## CFAModComptex(modList1 = c(ccFemale, ccMale, cc1, cc2, cc21, cc3), modList2 = c(NA, NA, NA, cc1, cc1, cc21), est = "WLSMV",
-##               namesOfRow = c("male", "female", "configural", "metric", "patial metric1", "partial metric2"),
-##               texFilename = "WLSMV", mgNum = 2)
+## ### end of testing area
+## ## CFAModComptex(modList1 = c(ccFemale, ccMale, cc1, cc2, cc21, cc3), modList2 = c(NA, NA, NA, cc1, cc1, cc21), est = "WLSMV",
+## ##               namesOfRow = c("male", "female", "configural", "metric", "patial metric1", "partial metric2"),
+## ##               texFilename = "WLSMV", mgNum = 2)
 
-CFAModComptab(nestModPairs = c(cc1, NA, cc2, cc1, cc21, cc1, cc3, cc21), nestRowName = c("configural", "weak", "partial weak", "partial strong"), nonNestMod = c(ccFemale, ccMale),
-               nonNestRowName = c("female", "male"), est = "MLR", fitDrop = c("pvalue", "nestPvalue", "bic"), footNote = "Note: hello!", tabTitle = "model comparison", texFilename = "table03")
+## CFAModComptab(nestModPairs = c(cc1, NA, cc2, cc1, cc21, cc1, cc3, cc21), nestRowName = c("configural", "weak", "partial weak", "partial strong"), nonNestMod = c(ccFemale, ccMale),
+##                nonNestRowName = c("female", "male"), est = "MLR", fitDrop = c("pvalue", "nestPvalue", "bic"), footNote = "Note: hello!", tabTitle = "model comparison", texFilename = "table03")
 
-CFAModComptab(nonNestMod = c(ccFemale, ccMale, cc1, cc2, cc3),
-               nonNestRowName = c("female", "male", "congf", "metric", "scaler"),est = "MLR", fitDrop = c("pvalue", "nestPvalue", "bic"),
-              footNote = "", tabTitle = "model comparison", texFilename = "table03")
-undebug(CFAModComptab)
+## CFAModComptab(nonNestMod = c(ccFemale, ccMale, cc1, cc2, cc3),
+##                nonNestRowName = c("female", "male", "congf", "metric", "scaler"),est = "MLR", fitDrop = c("pvalue", "nestPvalue", "bic"),
+##               footNote = "", tabTitle = "model comparison", texFilename = "table03")
+## undebug(CFAModComptab)
 
 
