@@ -3,38 +3,53 @@
 ##' Creates LaTeX markup for confirmatory
 ##' factor analysis output tables in the style of the American
 ##' Psychological Association(APA). Input objects should
-##' be created by the "lavaan" package.
+##' be created by the "\code{lavaan}" package.
 ##'
 ##' The argument params determines the inclusion of estimate sections.
-##' "loadings" are the factor loadings in the model.  "intercepts" are
-##' the indicator variable intercepts.  "residuals" are the indicator
-##' variable residual variances.  "latentvariances" are the latent
-##' variable variances and covariances.  "thresholds" arise in latent
+##' \itemize{
+##' \item "loadings" are the factor loadings in the model.
+##' \item "intercepts" are
+##' the indicator variable intercepts.
+##' \item "residuals" are the indicator
+##' variable residual variances.
+##' \item "latentvariances" are the latent
+##' variable variances and covariances.
+##' \item "thresholds" arise in latent
 ##' response variates (non-numeric indicator data).
-##'
+##' }
+##' 
 ##' The stantardized parameter regulates the number of columns to be
 ##' included.  standardized=FALE implies there will be four columns:
-##' 1) the estimate, 2) the standard error, 3) the z-value, and 4) the
-##' p-value.  When standardized = TRUE, the columns are: 1) the
-##' parameter estimates, 2) the standard errors, 3) standardized
-##' parameter estimates, and 4) standardized standard errors.
-##'
+##' \enumerate{
+##' \item the estimate
+##' \item the standard error
+##' \item the z-value, and
+##' \item the p-value.
+##' }
+##' 
+##' When standardized = TRUE, the columns are:
+##' \enumerate{
+##' \item the parameter estimates,
+##' \item the standard errors,
+##' \item standardized parameter estimates, and
+##' \item standardized standard errors.
+##' }
+##' 
 ##' The standardized parameters are obtained by updating the output
 ##' with the options std.lv = TRUE and std.ov = TRUE.  If these
 ##' options were used when originally creating output, setting
 ##' standardized = TRUE will yield two identical sets of two columns.
 ##'
-##' @param object A cfa object from lavaan.
-##' @param tablename Name of table as it should appear in manuscript.
-##' @param outfile Name of the resulting .tex file. May include the
-##'     path.
+##' @param object A cfa object from lavaan
+##' @param caption The LaTeX caption to be used in the table header
+##' @param outfile Name of .tex file. May include the path 
 ##' @param params Measurement parameters to be included. Valid values
-##'     are "loadings", "intercepts", "residuals", "latentvariances",
-##'     and "thresholds". See Details.
+##' are "loadings", "intercepts", "residuals", "latentvariances",
+##' and "thresholds". See Details.
 ##' @param fit A vector of fit measures that to be included. Listing
-##'     "chi-square" will do special formatting to the chi-square
-##'     value in the note. Any other measures listed must correspond
-##'     to measures found in fitMeasures(object).
+##' "chi-square" will do special formatting to the chi-square
+##' value in the note. Any other measures listed must correspond
+##' to measures found in fitMeasures(object).
 ##' @param names_fit Names for the fit measures requested by the fit
 ##'     parameter.  Must have same number of elements as fit.  For
 ##'     example, fit = c("cfi.scaled", "tli.scaled"), names_fit =
@@ -46,17 +61,16 @@
 ##'     will also affect whatever is specified in names_fit.
 ##' @param single_spaced Default = TRUE. If a double-spaced table is
 ##'     needed, set single_spaced = FALSE.
-##' @param preamble Should the .tex file contain a complete LaTeX
-##'     document, or just the table markup? premable
-##'     and the begin and end document lines.  Default is set to
-##'     TRUE. When set to FALSE, only the tex code including and
-##'     between the \begin{table} and \end{table} lines is included.
-##' 
+##' @param preamble Default = TRUE. Should the .tex file contain a
+##'     complete LaTeX document, or just the table markup? premable
+##'     and the begin and end document lines. 
+##' @param 
+##' @importFrom stats pnorm
 ##' @return File saved as outfile.
 ##' @export
-##' @author Ben Kite bakite@@ku.edu
+##' @author Ben Kite <bakite@@ku.edu>
 cfaTable <-
-    function(object, tablename, outfile, params = c("loadings", "intercepts"),
+    function(object, caption, outfile, params = c("loadings", "intercepts"),
              fit = c("chi-square", "cfi", "tli", "rmsea"),
              names_fit = fit, standardized= FALSE,
              names_upper = TRUE, single_spaced = TRUE, preamble = TRUE)
@@ -75,7 +89,7 @@ cfaTable <-
     }else{
         names(fit) <- names_fit
     }
-    fitmeas <- fitMeasures(output)[]
+    fitmeas <- fitMeasures(object)[]
     fitmeas <- sapply(fitmeas, function(x) formatC(round(x, 3), format = 'f', digits = 2))
     chimeas <- object@Fit@test[[1]]
     chimeas$stat <- formatC(round(chimeas$stat, 3), format = 'f', digits = 2)
@@ -375,7 +389,7 @@ ROWINFORMATION
     }else{
         template <- gsub("LATENTVARS", "", template)
     }
-    template <- gsub("TITLE", tablename, template)
+    template <- gsub("TITLE", caption, template)
     fitinfotmpchi <- "$\\\\chi^{2}$(DF)= CHI, \\\\textit{p} = PVAL"
 
     if("chi-square" %in% fit){
