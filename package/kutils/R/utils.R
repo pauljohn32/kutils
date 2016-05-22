@@ -5,8 +5,16 @@
 ##' @return Same path with trailing "/" removed.
 ##' @export 
 ##' @author Paul Johnson <pauljohn@@ku.edu>
-dts <- function(name) gsub("/$", "", name)
+dts <- function(name) gsub("/$", "", dms(name))
 
+##' Delete multiple slashes, replace with one
+##'
+##' Sometimes paths end up with "/too//many//slashes".
+##' While harmless, this is untidy. Clean it up.
+##' @param name A character string to clean
+##' @ export
+##' @author Paul Johnson <pauljohn@@ku.edu>
+dms <- function(name) gsub("(/)\\1+", "/", name)
 
 
 ##' return a floored version of a variable

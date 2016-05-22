@@ -64,7 +64,6 @@
 ##' @param preamble Default = TRUE. Should the .tex file contain a
 ##'     complete LaTeX document, or just the table markup? premable
 ##'     and the begin and end document lines. 
-##' @param 
 ##' @importFrom stats pnorm
 ##' @return File saved as outfile.
 ##' @export
