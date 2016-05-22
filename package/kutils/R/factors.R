@@ -6,6 +6,7 @@
 ##' end of the list.
 ##' @param x a factor variable
 ##' @param eol values to be kept at the end of the list
+##' @export
 ##' @return a new factor variable with reversed values
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 reverse <- function(x, eol = c("Skip", "DNP")){
