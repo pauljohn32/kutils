@@ -1,4 +1,4 @@
-##' Generate "storage" data.frame
+##' Generate a "storage" data.frame
 ##'
 ##' Generating "storage" (data.frame) to store global fit indices of models,
 ##' while user don't have specify the arguments here, they are all set up
@@ -50,8 +50,7 @@ storageGen <- function(est, namesOfRow){
 ##' Checking whether the models put in nesModPairs & nonNestMod are
 ##' legal or not Specifically, models must be lavaan, cfa objects; the
 ##' df.nested should > df.baseline; when conducting nested model
-##' comparison, estimator of two models must be identical model
-##' comparison
+##' comparison, estimator of two models must be identical
 ##' @param nestModPairs list of objects representing nested models
 ##' @param nonNestMod list of objects to be compared as non-nested models
 ##' @return No return
@@ -97,11 +96,11 @@ modelcheck <- function(nestModPairs, nonNestMod){
 ##' @param store the storage of fit indices of all models fit indices
 ##'     inside
 ##' @param globStar if globStar = TRUE, three stars will be added
-##'     aside to the global chisq if p <.001, two stars for p <.01,
-##'     one star for p< .05
+##'     aside to the global chisq if p < 0.001, two stars for p < 0.01,
+##'     one star for p < 0.05
 ##' @param nestStar if nestStar = TRUE, three stars will be added
-##'     aside to the delta chisq if p <.001, two stars for p <.01, one
-##'     star for p< .05
+##'     aside to the delta chisq if p < 0.001, two stars for p < 0.01, one
+##'     star for p < 0.05
 ##' @return storage data frame
 ##' @author Po-Yi Chen
 pValRePresent <- function(store, globStar = TRUE, nestStar = TRUE){
@@ -150,28 +149,27 @@ pValRePresent <- function(store, globStar = TRUE, nestStar = TRUE){
 
 ##' CFA Model table
 ##'
-##' One paragraph
-##' 
-##' @param nestModPairs a vector contains lavaan objects that will be
-##'     nestedly compared
-##' @param nestRowName a vector of the names of the row that
-##'     represent the results of nested model comparison in the final
-##'     out table
+##' comparing the nested and non-nested model. the lavaan object be
+##' listed in the arugment :nestModPairs" will be compared as a pair.
+##' e.g., if nestModPairs = c(mod1, mod2, mod3, mod4, mod5, NA),  mod1 will
+##' be nestly compared to mod2 (df mod1 < df mod2); mod3 will be nestly compared to mod3; mod5
+##' will not be nestly compared to any models. On the other hand, as for the lavaan objects
+##' be listed in the argument "nonNestMod", their fit indices will directly be
+##' presented in rows above the results of nested model comparison
+##'
+##' @param nestModPairs a list contains lavaan objects that will benestedly compared.
+##' @param nestRowName a vector of the names of the row
 ##' @param nonNestMod a vector contains lavaan CFA objects that will
 ##'     be nonNestly comapred
-##' @param nonNestRowName ww
-##' @param est the estimators be used to obtained the lavaan objects
-##'     in nesModPairs and nestRowName, so far only allow MLR, WLSMV,
-##'     or ML
-##' @param fitDrop the fit indices you want drop, the default only
-##'     drop pvalue and nestPvalue,
-##' @param footNote wwww www 
-##' @param tabTitle wwww  www
-##' @param texFilename ww www
+##' @param nonNestRowName row name of the non-nested model in the final output table
+##' @param est so far only allow MLR, WLSMVor ML
+##' @param fitDrop the fit indices you want to drop, the default only
+##' @param footNote contents that you want to put as the footnote of the table
+##' @param tabTitle tile of the name
+##' @param texFilename the name of the out .tex file
 ##' @import lavaan
 ##' @export
-##' @return write a .tex file that can be open with lyx and gnerating
-##'     the table
+##' @return a .tex file that can be open with lyx and gnerate the table
 ##' @author Po-Yi Chen <poyichen@@ku.edu>
 CFAModComptab <-
     function(nestModPairs = NULL, nestRowName = NULL,
@@ -179,9 +177,9 @@ CFAModComptab <-
              fitDrop = c("pvalue", "nestPvalue"), footNote = "",
              tabTitle, texFilename)
 {
-    
+
     suppressWarnings(modelcheck(nestModPairs, nonNestMod))
-    
+
     if(est == "ML"){
 
         fitMeasureGrep <-  c("chisq","df",  "pvalue", "rmsea", "cfi", "tli", "srmr", "aic", "bic")
@@ -211,11 +209,10 @@ CFAModComptab <-
     if(length(nestModPairs) != 2*length(nestRowName)) {stop("each pair of nested model needs to have its own name")}
     if(length(nonNestMod) != length(nonNestRowName))  {stop("each non- nested model needs to have its own name")}
 
-
-    ## fitDrop <- c("cfi", "tli")
     if(sum(fitDrop %in% c("chisq", "df", "deltaChisq", "pvalue", "deltaDf",
                           "nestPvalue", "rmsea", "cfi", "tli", "srmr", "aic", "bic") == FALSE) != 0){
-        stop("the fit indices you want to drop must be chisq,df,deltaChisq, pvalue, deltaDf, nestPvalue, rmsea, cfi, tli, srmr, aic,or bic")
+        stop(paste0("fit indices you can drop are chisq,df,deltaChisq, pvalue, deltaDf, nestPvalue,",
+                    "rmsea, cfi, tli, srmr, aic,or bic"))
     }
 
     if(!is.null(nestModPairs)){
@@ -263,10 +260,8 @@ CFAModComptab <-
             nonNestResStor[i,fitMeasureStore] <- round(inspect(nonNestMod[[i]],'fit')[fitMeasureGrep],2)
             nonNestResStor[,"deltaDf"][i] <- "-"
             nonNestResStor[,"deltaChisq"][i] <- "-"
-            ## nonNestResStor[,"pvalue"][i] <- "-"
             nonNestResStor[,"nestPvalue"][i] <- "-"
         }
-       ## nonNestResStor <- round(nonNestResStor, 2)
     }
 
     if(is.null(nonNestResStor) != TRUE && is.null(NestResStor) != TRUE){
@@ -286,56 +281,38 @@ CFAModComptab <-
     if (est == "MLR" || est == "WLSMV"){colnames(resultStorage) <- gsub(".scaled", "", colnames(resultStorage))}
     resultStorage[,"chisq"] <- round(resultStorage[,"chisq"], 2)
     resultStorage <- pValRePresent(resultStorage)
-    ## use the xtable function in xtable package to generate a rough tex code
-    ## if (est == "MLR" || est == "WLSMV"){colnames(resultStorage) <- gsub(".scaled", "", colnames(resultStorage))}
+
     colnames(resultStorage)[colnames(resultStorage) == "srmr_mplus"] <- "wrmr"
 
-    ## I discard BIC here at the final step, because represent it will make the output table too huge
     if (is.null(fitDrop) != TRUE){
         for (i in fitDrop){resultStorage <-  resultStorage[colnames(resultStorage) != i]}
     }
-    ## resultStorage <-  resultStorage[colnames(resultStorage) != "bic"]
+
     if(est == "WLSMV"){resultStorage <-  resultStorage[colnames(resultStorage) != "aic"]}
     if(est == "WLSMV"){resultStorage <-  resultStorage[colnames(resultStorage) != "bic"]}
 
     comment <- list()
     comment$pos <- list()
     comment$pos[[1]] <- c(nrow(resultStorage))
-    ##footNote <- paste0(footNote, "  \n")
-    comment$command  <- c(paste("\\hline \n",  # we`ll replace all default hlines with this and the ones below
-                                footNote, sep = ""))
+    comment$command  <- c(paste("\\hline \n", footNote, sep = ""))
 
-    ## comment$command  <- c(paste("\\hline \n",  # we`ll replace all default hlines with this and the ones below
-    ##                         footNote,
-    ##                         sep = ""))
 
-    mystring <- print(xtable(resultStorage, caption = tabTitle), add.to.row = comment, hline.after = c(-1, 0), caption.placement = 'top')
-                                        # indicates rows that will contain hlines (the last one was defined up there
-
-    ## mystring <- print(xtable(resultStorage,  caption = tabTitle), caption.placement = 'top')
-    ## mystring <- print(xtable(resultStorage))
-
-    ## use gsub to refine the names of chisq, detlaDF etc.......
+    mystring <- print(xtable(resultStorage, caption = tabTitle), add.to.row = comment, hline.after = c(-1, 0),
+                      caption.placement = 'top')
     mystring <- gsub("chisq", "$\\\\chi^{2}$", mystring)
     mystring <- gsub("deltaChisq","$\\\\chi_{diff}^{2}$", mystring)
     mystring <- gsub("deltaDf", "$\\\\Delta df$", mystring)
     mystring <- gsub("ptarget", "\\\\textit{p}", mystring)
     mystring <- gsub("pvalue", "\\\\textit{p}-value", mystring)
-    ## mystring <- gsub("srmr_mplus", "wrmr", mystring)
-    ## mystring <- gsub("cfi", "CFI", mystring)
-    ## mystring <- gsub("tli", "TLI", mystring)
-    ## mystring <- gsub("rmsea", "RMSEA", mystring)
-    ## mystring <- gsub("srmr", "SRMR", mystring)
-    ## mystring <- gsub("aic", "AIC", mystring)
-    ## mystring <- gsub(".scaled", "", mystring)
 
     mystring2 <- paste0(texFilename, ".tex")
-    ## write out the tex file
     write(file = mystring2, print(mystring))
 
     if(est == "WLSMV"){
         print("WARNING!!!!!")
-        print("The pvalues of nested model comparisons are obtained from anova(lavaanObje1, lavaanObje2), rather than the widely-used DIFFTEST function in Mplus")
+
+        print(paste0("The pvalues of nested model comparisons are obtained from anova(lavaanObje1, lavaanObje2),",
+                     "rather than the widely-used DIFFTEST function in Mplus"))
     }
 }
 
@@ -347,7 +324,7 @@ CFAModComptab <-
 ## library(xtable)
 
 
-## dat <- read.table("../data/data.txt")
+## dat <- read.table("data.txt")
 ## dat <- dat[,-c(8)]
 ## colnames(dat) <- c("group", "v1", "v2", "v3", "v4", "v5", "v6")
 ## dat[dat == 999] <- 2
