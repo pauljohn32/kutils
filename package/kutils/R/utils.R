@@ -41,6 +41,8 @@ floorvar <- function(dat, varname){
 ##' Regression table makers need to know how many stars
 ##' to attach to parameter estimates. This takes
 ##' p values and returns a required number of asterixes.
+##' Was named "stars" in previous version, but renamed due to
+##' conflict with R base function stars
 ##' @param pval P value
 ##' @param alpha alpha vector
 ##' @return a character vector of asterixes, same length as pval 
