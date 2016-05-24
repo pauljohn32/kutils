@@ -1,3 +1,8 @@
+2016-05-23  Paul Johnson  <pauljohn@dellap14>
+
+	* ../R/utils.R (stars): The stars function conflicted with
+	base package stars, so rename "starsig"
+
 2016-03-08  Paul Johnson  <pauljohn@dellap14>
 
 	* TODO: Created a TODO file, and ChangeLog for first time

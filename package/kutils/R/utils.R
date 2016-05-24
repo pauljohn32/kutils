@@ -12,7 +12,7 @@ dts <- function(name) gsub("/$", "", dms(name))
 ##' Sometimes paths end up with "/too//many//slashes".
 ##' While harmless, this is untidy. Clean it up.
 ##' @param name A character string to clean
-##' @ export
+##' @export
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 dms <- function(name) gsub("(/)\\1+", "/", name)
 
@@ -47,10 +47,10 @@ floorvar <- function(dat, varname){
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @export
 ##' @examples
-##' stars(0.06)
-##' stars(0.021)
-##' stars(0.001)
-stars <- function(pval, alpha = c(0.05, 0.01, 0.001)) {
+##' starsig(0.06)
+##' starsig(0.021)
+##' starsig(0.001)
+starsig <- function(pval, alpha = c(0.05, 0.01, 0.001)) {
     ##xxx <- sum(abs(pval) < alpha)
     ## handle a vector of pvals
     nstars <- sapply(pval, function(x) sum(abs(x) < alpha))

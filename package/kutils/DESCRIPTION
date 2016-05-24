@@ -1,11 +1,14 @@
 Package: kutils
 Type: Package
 Title: Project Management Tools 
-Version: 0.07
-Date: 2016-05-22
-Author: Paul Johnson <pauljohn@ku.edu> Kenna Whitley <pauljohn@ku.edu? 
-Maintainer: Kenna Whitley <yourfault@somewhere.net>
-Description: Some stuff we use all the time in CRMDA.  This will be
+Version: 0.08
+Date: 2016-05-23
+Author: Paul Johnson <pauljohn@ku.edu> Kenna Whitley <kennamarie@ku.edu> 
+Maintainer: Paul Johnson <pauljohn@ku.edu>
+Description: Some stuff we use all the time in CRMDA.  There
+    are functions for recoding and displaying factors, fixing
+    string variables, and implementing structured recoding (the "variable
+    key").  This will be
     a testing package for new functions that may eventually be 
     moved elsewhere.
 License: GPL-2
