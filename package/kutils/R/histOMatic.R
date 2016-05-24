@@ -6,7 +6,7 @@
 ##' This has an argument that can specify an output file name instead of
 ##' looking at the histograms on the screen.
 ##' @param dat An R data frame
-##' @param sort. Do you want alphabetized columns?
+##' @param sort Do you want alphabetized columns?
 ##' @param file  Should output go in file rather than to the screen.
 ##' Default is NULL, meaning show on screen. If you supply a file 
 ##' name, we will write PDF output into it.
@@ -14,7 +14,8 @@
 ##' arguments one would ordinarily intend for a histogram, such as prob, breaks,
 ##' xlab, colors, main, etc.
 ##' @export
-##' @importFrom stats hist
+##' @importFrom utils modifyList
+##' @importFrom grDevices dev.off devAskNewPage pdf
 ##' @return A vector of column names that were plotted
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @examples
