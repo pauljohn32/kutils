@@ -86,7 +86,9 @@
 ##' dat <- simulateData(model, sample.nobs = 300)
 ##' testmodel <- "Factor =~ y1 + y2 + y3 + y4"
 ##' output <- cfa(testmodel, data = dat, ordered = colnames(dat), std.lv = TRUE)
-##' cfaTable(output, caption = "Example with Categorical Data", outfile = "catTable.tex", params = c("loadings", "thresholds", "residuals"), fit = c("tli", "chi-square"), names_fit = c("TLI", "chi-square"))
+##' cfaTable(output, caption = "Example with Categorical Data", outfile = "catTable.tex",
+##' params = c("loadings", "thresholds", "residuals"), fit = c("tli", "chi-square"),
+##' names_fit = c("TLI", "chi-square"))
 
 cfaTable <-
     function(object, caption, outfile, params = c("loadings", "intercepts"),
