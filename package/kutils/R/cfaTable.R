@@ -68,6 +68,26 @@
 ##' @return File saved as outfile.
 ##' @export
 ##' @author Ben Kite <bakite@@ku.edu>
+##' @examples
+##' library(lavaan)
+##' HS.model <- ' visual  =~ x1 + x2 + x3
+##' textual =~ x4 + x5 + x6
+##' speed   =~ x7 + x8 + x9 '
+##' fit <- cfa(HS.model, data = HolzingerSwineford1939)
+##' cfaTable(fit, "Example of cfaTable", "exampleTable.tex", params = "loadings")
+##'
+##' 
+##' model <- "factor =~ .7*y1 + .7*y2 + .7*y3 + .7*y4
+##' y1 | -1*t1 + 1*t2
+##' y2 | -.5*t1 + 1*t2
+##' y3 | -.2*t1 + 1*t2
+##' y4 | -1*t1 + 1*t2
+##' "
+##' dat <- simulateData(model, sample.nobs = 300)
+##' testmodel <- "Factor =~ y1 + y2 + y3 + y4"
+##' output <- cfa(testmodel, data = dat, ordered = colnames(dat), std.lv = TRUE)
+##' cfaTable(output, caption = "Example with Categorical Data", outfile = "catTable.tex", params = c("loadings", "thresholds", "residuals"), fit = c("tli", "chi-square"), names_fit = c("TLI", "chi-square"))
+
 cfaTable <-
     function(object, caption, outfile, params = c("loadings", "intercepts"),
              fit = c("chi-square", "cfi", "tli", "rmsea"),
