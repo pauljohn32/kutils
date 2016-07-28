@@ -1,3 +1,18 @@
+2016-07-28  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/histOMatic.R (varType): dots arguments for pdf are now
+	extracted. Corrected ask logic when file is true. New, richer
+	examples showing combinations.
+
+2016-07-27  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/histOMatic.R: change histOMatic to "look", handles
+	numeric, string, or factor variables, can output on screen, in
+	file, also option to put text in session.
+
+	* ../R/updatePkgDepends.R: Accelerate by vectorization, insert
+	BIOC as repo, clean up docs
+
 2016-05-23  Paul Johnson  <pauljohn@dellap14>
 
 	* ../R/utils.R (stars): The stars function conflicted with
