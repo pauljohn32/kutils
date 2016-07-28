@@ -40,6 +40,7 @@
 ##' @export
 ##' @importFrom utils modifyList
 ##' @importFrom grDevices dev.off devAskNewPage pdf
+##' @importFrom graphics strwidth
 ##' @import datasets
 ##' @return A vector of column names that were plotted
 ##' @author Paul Johnson <pauljohn@@ku.edu>
@@ -59,7 +60,7 @@
 ##' look(mydf, sort = FALSE)
 ##' ## Demonstrate the dot-dot-dot usage to pass in hist params
 ##' look(mydf, breaks = 30, ylab = "These are Counts, not Densities", prob = FALSE)
-##' Not Run: file output
+##' ## Not Run: file output
 ##' ## look(mydf, sort = FALSE, file = "three_histograms.pdf")
 ##' ## Use some objects from the datasets package
 ##' library(datasets)
@@ -68,8 +69,10 @@
 ##'
 ##' look(EuStockMarkets, breaks = 50, prob = FALSE)
 ##' ## Not run
-##' ## look(EuStockMarkets, breaks = 50, file = "myeuro.pdf", height = 4, width=3, family = "Times")
-##' ## look(EuStockMarkets, breaks = 50, file = "myeuro-%d3.pdf", onefile = FALSE, family = "Times", textout = TRUE)
+##' ## look(EuStockMarkets, breaks = 50, file = "myeuro.pdf",
+##' ##      height = 4, width=3, family = "Times")
+##' ## look(EuStockMarkets, breaks = 50, file = "myeuro-%d3.pdf",
+##' ##      onefile = FALSE, family = "Times", textout = TRUE)
 look <-
     function(dat, sort = TRUE, file = NULL, textout = FALSE, ask, ...,
              xlabstub = "kutils look: ")
