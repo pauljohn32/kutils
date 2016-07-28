@@ -60,3 +60,38 @@ starsig <- function(pval, alpha = c(0.05, 0.01, 0.001)) {
     sapply(nstars, function(y) paste0("", rep("*", y), collapse = ""))
 }
  
+
+
+##' remove elements if they are in a target set
+##'
+##' If a vector has c("A", "b", "c") and we want
+##' to remove "b" and "c", this function can do the work.
+##'
+##' If elements in y are not members of x, they are silently
+##' ignored.
+##' 
+##' The code for this is not complicated, but it is
+##' difficult to remember.  If you don't want to
+##' use the function, here's the recipe to remove
+##' elements y from x: \code{x <- x[!x \%in\% y[y \%in\% x]]}
+##' 
+##' @param x vector from which elements are to be removed
+##' @param y shorter vector of elements to be removed
+##' @param padNA: Default FALSE, Should removed items be replaced with NA values?
+##' @return a vector with elements in y removed
+##' @author Ben Kite <bakite@@ku.edu> and Paul Johnson <pauljohn@@ku.edu>
+##' @export
+##' @examples
+##' x <- c("a", "b", "c", "d", "e", "f")
+##' y <- c("e", "a")
+##' removeMatches(x, y)
+##' y <- c("q", "r", "s")
+##' removeMatches(x, y)
+removeMatches <- function(x, y, padNA = FALSE){
+    if (padNA) {
+        x[x %in% y] <- NA
+    } else {
+        x <- x[!x %in% y[y %in% x]]
+    }
+    x
+}
