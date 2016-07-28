@@ -1,5 +1,13 @@
 2016-07-28  Paul Johnson  <pauljohn@delllap-16>
 
+	* ../R/histOMatic.R (quickbar): histargs, barargs inserted,
+	using to reduce warnings due to arguments that do not fit.
+
+	* ../R/utils.R (removeMatches): new function, adapted from Ben
+	Kite code
+	(mgsub): multi-gsub function, adapted from loose recollection of
+	something Jared harpole wrote.
+
 	* ../R/histOMatic.R (varType): dots arguments for pdf are now
 	extracted. Corrected ask logic when file is true. New, richer
 	examples showing combinations.

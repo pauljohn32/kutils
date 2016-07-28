@@ -11,6 +11,17 @@
 ##' The barplots are horizontal, on the grounds that some value labels
 ##' for factors are too long to fit comfortably under the bars (and
 ##' I hate writing vertically, but know how to if I want to, but did not).
+##'
+##' This has a fairly elaborate setup for dealing the the additional
+##' arguments.  The "..." will notice any extra arguments, but we need
+##' a good way to separate the arguments among the uses of the
+##' functions \code{table} \code{pdf} \code{hist} and
+##' \code{barplot}. An argument that falls into "..." will be sent to
+##' both the histogram and barplots, so this is suitable for graphics
+##' parameters. However, if one wants to target some arguments to
+##' histograms, then the barargs list argument should be
+##' used. Similarly, barargs should be used to send argument to the
+##' barplot function. 
 ##' 
 ##' @param dat An R data frame
 ##' @param sort Do you want alphabetized columns?
@@ -56,31 +67,47 @@
 ##' ## Insert 16 missings
 ##' mydf$x1[sample(1:150, 16,)] <- NA
 ##' mydf$adate <- as.Date(c("1jan1960", "2jan1960", "31mar1960", "30jul1960"), format = "%d%b%y")
-##' look(mydf)
-##' look(mydf, sort = FALSE)
+##' peek(mydf)
+##' peek(mydf, sort = FALSE)
 ##' ## Demonstrate the dot-dot-dot usage to pass in hist params
-##' look(mydf, breaks = 30, ylab = "These are Counts, not Densities", prob = FALSE)
+##' peek(mydf, breaks = 30, ylab = "These are Counts, not Densities", prob = FALSE)
 ##' ## Not Run: file output
-##' ## look(mydf, sort = FALSE, file = "three_histograms.pdf")
+##' ## peek(mydf, sort = FALSE, file = "three_histograms.pdf")
 ##' ## Use some objects from the datasets package
 ##' library(datasets)
-##' look(cars)
-##' look(EuStockMarkets)
+##' peek(cars)
+##' peek(EuStockMarkets)
 ##'
-##' look(EuStockMarkets, breaks = 50, prob = FALSE)
+##' peek(EuStockMarkets, breaks = 50, prob = FALSE)
 ##' ## Not run
-##' ## look(EuStockMarkets, breaks = 50, file = "myeuro.pdf",
+##' ## peek(EuStockMarkets, breaks = 50, file = "myeuro.pdf",
 ##' ##      height = 4, width=3, family = "Times")
-##' ## look(EuStockMarkets, breaks = 50, file = "myeuro-%d3.pdf",
+##' ## peek(EuStockMarkets, breaks = 50, file = "myeuro-%d3.pdf",
 ##' ##      onefile = FALSE, family = "Times", textout = TRUE)
-look <-
+##' ## xlab goes into "..." and affects both histograms and barplots
+##' peek(mydf, breaks = 30, ylab = "These are Counts, not Densities",
+##'     freq = TRUE, xlab = "Whatever I say")
+##' ## xlab is added in the barargs list.
+##' peek(mydf, breaks = 30, ylab = "These are Counts, not Densities",
+##'     freq = TRUE, barargs = list(horiz = TRUE, las = 1, xlab = "I'm in barargs"))
+## peek(mydf, breaks = 30, ylab = "These are Counts, not Densities", freq = TRUE,
+##      barargs = list(horiz = TRUE, las = 1, xlim = c(0,100), xlab = "I'm in barargs"))
+## levels(mydf$x1) <- c(levels(mydf$x1), "arthur philpot smythe")
+## mydf$x1[4] <- "arthur philpot smythe"
+## mydf$x2[1] <- "I forgot what letter"
+## peek(mydf, breaks = 30,
+##      barargs = list(horiz = TRUE, las = 1))
+peek <-
     function(dat, sort = TRUE, file = NULL, textout = FALSE, ask, ...,
-             xlabstub = "kutils look: ")
+             xlabstub = "kutils peek: ", freq = FALSE,
+             histargs = list(probability = !freq),
+             barargs = list(horiz = TRUE, las = 1))
 {
     quickhist <- function(i){
-        histargs <- list(prob = TRUE, xlab = paste0(xlabstub, i),
-                         main = i)
-        histargz <- modifyList(histargs, dots)
+        args <- list(xlab = paste0(xlabstub, i),
+                     main = i)
+        histargz <- modifyList(args, dots)
+        histargz <- modifyList(histargz, histargs)
         qqq <- modifyList(list(x = dat[ , i]), histargz)
         h1 <- do.call("hist", qqq)
         if (textout){
@@ -91,24 +118,28 @@ look <-
     }
     
     quickbar <- function(i){
-        targs <- list(dat[ , i], exclude = NULL, dnn = "Proportion")
+        targs <- list(dat[ , i], exclude = NULL,
+                      dnn =  if (!freq) "Proportion" else "Frequency")
         targz <- modifyList(targs, dotsForTable)
-
+        ## don't allow hist or barplot arguments to to to table, silences warning
+        ## targz[c(names.par, names.barplot.unique, names.hist.unique)] <- NULL
         t1 <- do.call("table", targz)
-        t1 <- t1/margin.table(t1)
+        if (!freq) t1 <- t1/margin.table(t1)
         names(t1) <- ifelse(is.na(names(t1)), "NA", names(t1))
 
-        barargs <- list(t1, horiz = TRUE, las = 1, main = i,
-                        xlab = paste(xlabstub,  i, "(Proportion)"))
-        barargz <- modifyList(barargs, dots)
-        
+        args <- list(t1, main = i,
+                     xlab = paste(xlabstub,  i, if (freq)"Frequencies" else "(Proportion)"))
+        barargz <- modifyList(args, dots)
+        barargz <- modifyList(barargz, barargs)
+        ## Remove args that would have gone to hist
+        barargz[names.hist.unique] <- NULL
         par.old <- par(no.readonly = TRUE)
         ## if longest name exceeds guess of space in margin,
         ## then pad the margin left side.
         marinch <- par("mai")
         marrequired <- max(strwidth(names(t1), units = "inches"))
-        if (marrequired > marinch[2] + 0.25) {
-            marinch[2] <- marrequired + 0.25
+        if (marrequired + 0.35 > marinch[2]) {
+            marinch[2] <- marrequired + 0.5
             par(xpd = TRUE)
             par("mai" = marinch)
         }
@@ -121,11 +152,21 @@ look <-
         }
     }
 
+    ## We get lots of warnings about inappropriate arguments to functions.
+    ## Focus on most likely objections by getting names unique to
+    ## hist and removing them from the bar portion, and
+    ## names unique to bar and removing from the hist portion
+    names.par <- names(par())
+    names.hist <- removeMatches(names(formals(hist.default)), "...")
+    names.barplot <- removeMatches(names(formals(barplot.default)), "...")
+    names.barplot.unique <- names.barplot[!names.barplot %in% names.hist]
+    names.hist.unique <- names.hist[!names.hist %in% names.barplot]
+    
     varType <- function(x){
         ifelse(is.numeric(x), "numeric",
-        ifelse(is.character(x) | is.factor(x), "factor", "noneoftheabove")
-        )}
-
+        ifelse(is.character(x) | is.factor(x), "factor", "noneoftheabove"))
+    }
+    
     if (!is.data.frame(dat)) dat <- as.data.frame(dat)
     namez <- colnames(dat)
     namez <- if(sort) sort(namez) else namez
@@ -154,6 +195,7 @@ look <-
     dotsForPDF <- dots[pdfFormals[pdfFormals %in% names(dots)]]
     dots[names(dotsForPDF)] <- NULL
 
+    
     ## Unless user sets ask, we assume TRUE if there is no file argument
     if (missing(ask)) {
         if (is.null(file)) ask <- TRUE else ask <- FALSE
