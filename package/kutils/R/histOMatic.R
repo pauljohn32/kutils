@@ -20,18 +20,23 @@
 ##' @param textout If TRUE, counts from histogram bins and tables will
 ##'     appear in the console.
 ##' @param ... Additional arguments for the histogram, table, or
-##'     barplot functions. This function parses the arguments so that
-##'     additional arguments are extracted and used for creating the
-##'     table. The other dot arguments can be any of the arguments one
-##'     would ordinarily intend for a histogram, such as prob, breaks,
-##'     xlab, colors, main, etc, or with a barplot. I did not work as
-##'     hard to sort out the plot and barplot arguments, but that is
-##'     in the TODO list.
+##'     barplot functions. These arguments are extracted and used in
+##'     the table function: c("exclude", "dnn", "useNA",
+##'     "deparse.level"). These arguments are extracted and sent to
+##'     the pdf function for usage in file output: c("width",
+##'     "height", "onefile", "family", "title", "fonts", "version",
+##'     "paper", "encoding", "bg", "fg", "pointsize", "pagecentre",
+##'     "colormodel", "useDingbats", "useKerning", "fillOddEven",
+##'     "compress") The other arguments should apply to histograms or
+##'     barplots.  Histogram arguments like prob or breaks work well.
+##'     Arguments like xlab, colors, main, etc, will be used by both
+##'     histogram and barplot. That is probably unfortunate; for the
+##'     next version I'm collecting suggestions on what to do.
 ##' @param xlabstub A text stub that will appear in the x axis label
 ##' @param ask Default TRUE, should keyboard interaction advance the
-##'     plot.  Setting this to FALSE seems mostly useless, except if
-##'     somebody just wants the text output in the console and does not
-##'     mind that the graphs whir bye.
+##'     plot.  Will default to false if the file argument is non-null.
+##'     If file is null, setting ask = FALSE will cause graphs to whir
+##'     bye without pausing.
 ##' @export
 ##' @importFrom utils modifyList
 ##' @importFrom grDevices dev.off devAskNewPage pdf
@@ -59,19 +64,24 @@
 ##' library(datasets)
 ##' look(cars)
 ##' look(EuStockMarkets)
+##'
+##' look(EuStockMarkets, breaks = 50, prob = FALSE)
+##' ## Not run
+##' ## look(EuStockMarkets, breaks = 50, file = "myeuro.pdf", height = 4, width=3, family = "Times")
+##' ## look(EuStockMarkets, breaks = 50, file = "myeuro-%d3.pdf", onefile = FALSE, family = "Times", textout = TRUE)
 look <-
-    function(dat, sort = TRUE, file = NULL, textout = FALSE, ...,
-             xlabstub = "kutils look: ", ask = TRUE)
+    function(dat, sort = TRUE, file = NULL, textout = FALSE, ask, ...,
+             xlabstub = "kutils look: ")
 {
     quickhist <- function(i){
         histargs <- list(prob = TRUE, xlab = paste0(xlabstub, i),
-                         main = "")
+                         main = i)
         histargz <- modifyList(histargs, dots)
         qqq <- modifyList(list(x = dat[ , i]), histargz)
         h1 <- do.call("hist", qqq)
         if (textout){
             df1 <- data.frame("midpoints" = h1$mids, "density" = h1$density)
-            cat("\n", i, "\n")
+            cat(i, "\n")
             print(df1)
         }
     }
@@ -84,6 +94,10 @@ look <-
         t1 <- t1/margin.table(t1)
         names(t1) <- ifelse(is.na(names(t1)), "NA", names(t1))
 
+        barargs <- list(t1, horiz = TRUE, las = 1, main = i,
+                        xlab = paste(xlabstub,  i, "(Proportion)"))
+        barargz <- modifyList(barargs, dots)
+        
         par.old <- par(no.readonly = TRUE)
         ## if longest name exceeds guess of space in margin,
         ## then pad the margin left side.
@@ -94,10 +108,11 @@ look <-
             par(xpd = TRUE)
             par("mai" = marinch)
         }
-        barplot(t1, horiz = TRUE, las = 1, xlab = paste(xlabstub,  i, "(Proportion)"))
+        do.call("barplot", barargz)
+                
         par(par.old)
         if (textout) {
-            cat("\n", i, "\n")
+            cat(i, "\n")
             print(t1)
         }
     }
@@ -114,22 +129,37 @@ look <-
     colTypes <- sapply(dat, varType)
     colTypes <- colTypes[namez]
 
-    print(paste("These variables are being omitted because they are",
-                "neither numbers nor can they be interpreted as factors"))
-    print(colTypes[colTypes == "noneoftheabove"])
+    cat(paste("These variables are being omitted because they are",
+                "neither numbers nor can they be interpreted as factors: \n"))
+    cat(paste(names(colTypes[colTypes == "noneoftheabove"]), "\n"))
     ## remove unrecognized types
     colTypes <- colTypes[colTypes != "noneoftheabove"]
     
     dots <- list(...)
       
-    ## get just these arguments out of dots
+    ## copy args for table, remove from dots
     tableFormals <- c("exclude", "dnn", "useNA", "deparse.level")
     dotsForTable <- dots[tableFormals[tableFormals %in% names(dots)]]
     dots[names(dotsForTable)] <- NULL
-       
+
+    ## copy args for pdf, remove from dots
+    pdfFormals <- c("width", "height", "onefile", "family", "title", "fonts",
+                    "version", "paper", "encoding", "bg", "fg", "pointsize",
+                    "pagecentre", "colormodel", "useDingbats", "useKerning",
+                    "fillOddEven", "compress")
+    dotsForPDF <- dots[pdfFormals[pdfFormals %in% names(dots)]]
+    dots[names(dotsForPDF)] <- NULL
+
+    ## Unless user sets ask, we assume TRUE if there is no file argument
+    if (missing(ask)) {
+        if (is.null(file)) ask <- TRUE else ask <- FALSE
+    }
+    
     if (!is.null(file)){
         if (!is.character(file)) stop("Sorry, file has to be a character string")
-        pdf(file, onefile = TRUE)
+        pdfargs <- list(file = file, onefile = TRUE)
+        pdfargz <- modifyList(pdfargs, dotsForPDF)
+        do.call("pdf", pdfargz)
     }
     if (is.null(file) || isTRUE(ask)) devAskNewPage(TRUE)
     
