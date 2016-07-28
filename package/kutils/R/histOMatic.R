@@ -43,6 +43,7 @@
 ##' @import datasets
 ##' @return A vector of column names that were plotted
 ##' @author Paul Johnson <pauljohn@@ku.edu>
+##' @aliases histOMatic
 ##' @examples
 ##' set.seed(234234)
 ##' N <- 200
