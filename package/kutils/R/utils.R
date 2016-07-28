@@ -95,3 +95,46 @@ removeMatches <- function(x, y, padNA = FALSE){
     }
     x
 }
+
+
+##' apply gsub interatively to process a list of candidate replacements
+##'
+##' This is multi-gsub.  Use it when it is necessary to process
+##' many patterns and replacements in a given order on a vector.
+##' 
+##' @param pattern vector of values to be replaced. A vector filled
+##'     with patterns as documented in the \code{gsub} pattern
+##'     argument
+##' @param replacement vector of replacements, otherwise same as
+##'     \code{gsub}.  Length of replacement must be either 1 or same
+##'     as pattern, otherwise an error results.
+##' @param x the vector in which elements are to be replaced, same as
+##'     \code{gsub}
+##' @param ... Additional arguments to be passed to gsub
+##' @return vector with pattern replaced by replacement
+##' @author Jared Harpole <jared.harpole@@gmail.com> and Paul Johnson
+##'     <pauljohn@@ku.edu>
+##' @export
+##' @examples
+##' x <- c("Tom", "Jerry", "Elmer", "Bugs")
+##' pattern <- c("Tom", "Bugs")
+##' replacement <- c("Thomas", "Bugs Bunny")
+##' (y <- mgsub(pattern, replacement, x))
+##' x[1] <- "tom"
+##' (y <- mgsub(pattern, replacement, x, ignore.case = TRUE))
+##' (y <- mgsub(c("Elmer", "Bugs"), c("Looney Characters"), x, ignore.case = TRUE))
+mgsub <- function(pattern, replacement, x, ... ){
+    if (length(pattern) != length(replacement)) {
+        if (length(replacement) == 1) {
+            replacement <- rep(replacement, length(pattern))
+        } else {
+            messg <- paste("replacement must either be 1 element or the same number of elements as pattern")
+            stop(messg)
+        }
+    }
+    for (i in seq_along(pattern)){
+        x <- gsub(pattern[i], replacement[i], x, ...)
+    }
+    x
+}
+    
