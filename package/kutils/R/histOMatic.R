@@ -1,53 +1,97 @@
-
 ##' Show variables, one column at a time.
 ##'
 ##' This makes it easy to quickly scan through all of the columns in a
-##' data frame to spot bad codes (or just gaze at histograms and
-##' barplots).  This has an argument that can specify an output file
-##' name instead of looking at the histograms on the screen.
+##' data frame to spot unexpected patterns or data entry
+##' errors. Numeric variables are depiced as histograms, while factor
+##' and character variables are summarized by the R table function and
+##' then presented as barplots. Previous edition of this function was
+##' \code{histOMatic}, intended only for numeric variables.  That
+##' previous name is now an alias for this function.
 ##'
-##' This draws histograms for numeric variables, draw barplots for factors
-##' or character variables. The histograms are standard, upright histograms.
-##' The barplots are horizontal, on the grounds that some value labels
-##' for factors are too long to fit comfortably under the bars (and
-##' I hate writing vertically, but know how to if I want to, but did not).
+##' @section Try the Defaults: Every effort has been made to make this
+##'     simple and easy to use. Please run the examples as they are
+##'     before becoming too concerned about customization.  This
+##'     function is intended for getting a quick look at each
+##'     variable, one-by-one, it is not intended to create publication
+##'     quality histograms.  Most users won't need to customize the
+##'     arguments, but for sake of the fastidious few, a lot of
+##'     settings can be adjusted.  This draws histograms for numeric
+##'     variables, and as we all know, the R \code{hist} function
+##'     allows a great many arguments.  It draws barplots for factors
+##'     or character variables, and that brings the \code{table} and
+##'     \code{barplot} functions into the picture.
 ##'
-##' This has a fairly elaborate setup for dealing the the additional
-##' arguments.  The "..." will notice any extra arguments, but we need
-##' a good way to separate the arguments among the uses of the
-##' functions \code{table} \code{pdf} \code{hist} and
-##' \code{barplot}. An argument that falls into "..." will be sent to
-##' both the histogram and barplots, so this is suitable for graphics
-##' parameters. However, if one wants to target some arguments to
-##' histograms, then the barargs list argument should be
-##' used. Similarly, barargs should be used to send argument to the
-##' barplot function. 
+##' @section Style: The histograms are standard, upright histograms.
+##'     The barplots are horizontal. I recognize that is a style
+##'     clash.  I chose to make the bars horizontal because long value
+##'     labels are more easily accomodated on the left axis.  The code
+##'     measures the length (in inches) for strings and the margin is
+##'     increased accordingly.  The examples have a demonstration of
+##'     that effect.
 ##' 
-##' @param dat An R data frame
-##' @param sort Do you want alphabetized columns?
+##' @section Dealing with Dots: This has a fairly elaborate setup for
+##'     dealing the the additional arguments, which end up in
+##'     "...". It is necessary to separate the arguments among
+##'     functions \code{table}, \code{pdf}, \code{hist} and
+##'     \code{barplot}. If we send an argument like \code{plot} to the
+##'     \code{table} function, for example, there will be a warning
+##'     that we want to avoid.  \cr \cr The plan is to separate
+##'     arguments as well as possible so that an argument that is
+##'     known to be used only for one function should be sorted and
+##'     used only for that function. These arguments: c("exclude",
+##'     "dnn", "useNA", "deparse.level") and will go to the
+##'     \code{table} function (which is used to make barplots for
+##'     factor and character variables). These arguments are extracted
+##'     and sent to the pdf function: c("width", "height", "onefile",
+##'     "family", "title", "fonts", "version", "paper", "encoding",
+##'     "bg", "fg", "pointsize", "pagecentre", "colormodel",
+##'     "useDingbats", "useKerning", "fillOddEven", "compress"). Any
+##'     other arguments that are unique to \code{hist} or
+##'     \code{barplot} are sorted out and sent only to those
+##'     functions.  \cr \cr Any other arguments, including graphical
+##'     parameters will be sent to both the histogram and barplot
+##'     functions, so it is a convenient way to obtain uniform
+##'     appearance. Additional arguments that are common to
+##'     \code{barplot} and \code{hist} will work, and so will any
+##'     graphics parameters (named arguments of \code{par}, for
+##'     example). However, if one wants to target some arguments to
+##'     \code{hist}, then the \code{histargs} list argument should be
+##'     used. Similarly, \code{barargs} should be used to send
+##'     argument to the \code{barplot} function. Warning: the defaults
+##'     for \code{histargs} and \code{barargs} include some settings
+##'     that are needed for the existing design.  If new lists for
+##'     \code{histargs} or \code{barargs} are supplied, the previously
+##'     specified defaults are lost.  Hence, users should include the
+##'     existing members of those lists, possibly with revised values.
+##'     \cr \cr All of this argument sorting effort is done in order
+##'     to reduce a prolific number of warnings that were observed in
+##'     previous editions of this function.
+##' 
+##' @param dat An R data frame or something that can be coerced to a
+##'     data frame by \code{as.data.frame}
+##' @param sort Default TRUE. Do you want display of the columns in
+##'     alphabetical order?
 ##' @param file Should output go in file rather than to the screen.
 ##'     Default is NULL, meaning show on screen. If you supply a file
 ##'     name, we will write PDF output into it.
 ##' @param textout If TRUE, counts from histogram bins and tables will
 ##'     appear in the console.
-##' @param ... Additional arguments for the histogram, table, or
-##'     barplot functions. These arguments are extracted and used in
-##'     the table function: c("exclude", "dnn", "useNA",
-##'     "deparse.level"). These arguments are extracted and sent to
-##'     the pdf function for usage in file output: c("width",
-##'     "height", "onefile", "family", "title", "fonts", "version",
-##'     "paper", "encoding", "bg", "fg", "pointsize", "pagecentre",
-##'     "colormodel", "useDingbats", "useKerning", "fillOddEven",
-##'     "compress") The other arguments should apply to histograms or
-##'     barplots.  Histogram arguments like prob or breaks work well.
-##'     Arguments like xlab, colors, main, etc, will be used by both
-##'     histogram and barplot. That is probably unfortunate; for the
-##'     next version I'm collecting suggestions on what to do.
-##' @param xlabstub A text stub that will appear in the x axis label
-##' @param ask Default TRUE, should keyboard interaction advance the
-##'     plot.  Will default to false if the file argument is non-null.
-##'     If file is null, setting ask = FALSE will cause graphs to whir
-##'     bye without pausing.
+##' @param ask As in the old style R \code{par(ask = TRUE)}: should
+##'     keyboard interaction advance to the next plot.  Will default
+##'     to false if the file argument is non-null.  If file is null,
+##'     setting ask = FALSE will cause graphs to whir bye without
+##'     pausing.
+##' @param ... Additional arguments for the pdf, histogram, table, or
+##'     barplot functions. Please see Details below.
+##' @param xlabstub A text stub that will appear in the x axis
+##'     label. Currently it includes advertising for this package.
+##' @param freq As in the histogram frequency argument. Should graphs
+##'     show counts (freq = TRUE) or proportions (AKA densities) (freq
+##'     = FALSE)
+##' @param histargs A list of arguments to be passed to the
+##'     \code{hist} function.
+##' @param barargs A list of arguments to be passed to the
+##'     \code{barplot} function.
 ##' @export
 ##' @importFrom utils modifyList
 ##' @importFrom grDevices dev.off devAskNewPage pdf
@@ -90,13 +134,13 @@
 ##' ## xlab is added in the barargs list.
 ##' peek(mydf, breaks = 30, ylab = "These are Counts, not Densities",
 ##'     freq = TRUE, barargs = list(horiz = TRUE, las = 1, xlab = "I'm in barargs"))
-## peek(mydf, breaks = 30, ylab = "These are Counts, not Densities", freq = TRUE,
-##      barargs = list(horiz = TRUE, las = 1, xlim = c(0,100), xlab = "I'm in barargs"))
-## levels(mydf$x1) <- c(levels(mydf$x1), "arthur philpot smythe")
-## mydf$x1[4] <- "arthur philpot smythe"
-## mydf$x2[1] <- "I forgot what letter"
-## peek(mydf, breaks = 30,
-##      barargs = list(horiz = TRUE, las = 1))
+##' peek(mydf, breaks = 30, ylab = "These are Counts, not Densities", freq = TRUE,
+##'      barargs = list(horiz = TRUE, las = 1, xlim = c(0,100), xlab = "I'm in barargs"))
+##' levels(mydf$x1) <- c(levels(mydf$x1), "arthur philpot smythe")
+##' mydf$x1[4] <- "arthur philpot smythe"
+##' mydf$x2[1] <- "I forgot what letter"
+##' peek(mydf, breaks = 30,
+##'      barargs = list(horiz = TRUE, las = 1))
 peek <-
     function(dat, sort = TRUE, file = NULL, textout = FALSE, ask, ...,
              xlabstub = "kutils peek: ", freq = FALSE,

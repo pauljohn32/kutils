@@ -1,3 +1,8 @@
+2016-07-29  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/histOMatic.R: fix documentation about arguments, reformat
+	as details.
+
 2016-07-28  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/histOMatic.R (quickbar): histargs, barargs inserted,
