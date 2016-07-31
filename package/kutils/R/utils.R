@@ -6,6 +6,7 @@
 ##' @export 
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 dts <- function(name) gsub("/$", "", dms(name))
+NULL
 
 ##' Delete multiple slashes, replace with one
 ##'
@@ -15,7 +16,7 @@ dts <- function(name) gsub("/$", "", dms(name))
 ##' @export
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 dms <- function(name) gsub("(/)\\1+", "/", name)
-
+NULL
 
 ##' return a floored version of a variable
 ##'
@@ -33,7 +34,7 @@ floorvar <- function(dat, varname){
     }
     as.integer(newvar)
 }
-
+NULL
 
 
 ##' How many stars would we need for this p value
@@ -59,10 +60,10 @@ starsig <- function(pval, alpha = c(0.05, 0.01, 0.001)) {
     ## paste0("", rep("*", xxx), collapse = "")
     sapply(nstars, function(y) paste0("", rep("*", y), collapse = ""))
 }
- 
+NULL 
 
 
-##' remove elements if they are in a target set
+##' Remove elements if they are in a target vector
 ##'
 ##' If a vector has c("A", "b", "c") and we want
 ##' to remove "b" and "c", this function can do the work.
@@ -77,7 +78,7 @@ starsig <- function(pval, alpha = c(0.05, 0.01, 0.001)) {
 ##' 
 ##' @param x vector from which elements are to be removed
 ##' @param y shorter vector of elements to be removed
-##' @param padNA: Default FALSE, Should removed items be replaced with NA values?
+##' @param padNA Default FALSE, Should removed items be replaced with NA values?
 ##' @return a vector with elements in y removed
 ##' @author Ben Kite <bakite@@ku.edu> and Paul Johnson <pauljohn@@ku.edu>
 ##' @export

@@ -9,7 +9,13 @@
 ##'     vector.
 ##' @param oldnames Optional. If supplied, must be same length as
 ##'     newnames.
-##' @param lowercases should new names be converted to lower case?
+##' @param ... Additional arguments that will be passed to R's
+##'     \code{gsub} function, which is used term-by-term inside this
+##'     function.
+##' @param lowercase Default FALSE. Should all column names be
+##'     converted to lower case.
+##' @param verbose Default FALSE. Want diagnostic output about column
+##'     name changes?
 ##' @return a data frame
 ##' @export
 ##' @author Paul Johnson <pauljohn@@ku.edu>

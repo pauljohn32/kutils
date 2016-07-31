@@ -1,3 +1,8 @@
+2016-07-31  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/project.R (initProject): new function to create project
+	directories, starts git repo, adds readme and changelog files.
+
 2016-07-29  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/histOMatic.R: fix documentation about arguments, reformat
