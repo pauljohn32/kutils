@@ -4,7 +4,6 @@
 ##' @param name A path
 ##' @return Same path with trailing "/" removed.
 ##' @export
-##' @rdname slashes
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 dts <- function(name) gsub("/$", "", dms(name))
 NULL
@@ -15,7 +14,6 @@ NULL
 ##' While harmless, this is untidy. Clean it up.
 ##' @param name A character string to clean
 ##' @export
-##' @rdname slashes
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 dms <- function(name) gsub("(/)\\1+", "/", name)
 NULL

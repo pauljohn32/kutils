@@ -210,8 +210,19 @@ peek <-
         ifelse(is.numeric(x), "numeric",
         ifelse(is.character(x) | is.factor(x), "factor", "noneoftheabove"))
     }
+
+    if (is.atomic(dat)){
+        xclean <- xname <- deparse(substitute(dat))
+        dat <- as.data.frame(dat)
+        if (length(grep("\\$", xname) > 0)){
+            xsplit <- unlist(strsplit(xname, "\\$"))
+            xclean <- xsplit[length(xsplit)]
+        }
+        colnames(dat) <- xclean
+    } else {
+        if (!is.data.frame(dat)) dat <- as.data.frame(dat)
+    }
     
-    if (!is.data.frame(dat)) dat <- as.data.frame(dat)
     namez <- colnames(dat)
     namez <- if(sort) sort(namez) else namez
     

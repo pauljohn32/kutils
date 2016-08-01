@@ -1,3 +1,13 @@
+2016-08-01  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/utils.R (floorvar): delete. I cannot think of any
+	reasonable use case for this.
+	(starsig): insert new argument symbols to allow users to have
+	whatever symbols they want. 
+
+	* ../R/peek.R (varType): revise to allow single columns in
+	addition to data frames
+
 2016-07-31  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/project.R (initProject): new function to create project
