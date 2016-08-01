@@ -5,7 +5,8 @@
 ##' This creates folders for the separate parts of a project. It tries
 ##' to be clever about which directories are created and where they are
 ##' placed. Please see details for 3 scenarios for which we have
-##' planned.
+##' planned. If a directory already exists, it will not be damaged or
+##' re-created.
 ##'
 ##' If the dir argument is NULL, as default, then the current working
 ##' directory will be the place where new directories and the git
@@ -28,7 +29,8 @@
 ##' @param dir Default NULL, otherwise a legal directory name to serve
 ##'     as the top level directory for this project
 ##' @param ddir Data directory, place where "read only" unadjusted
-##'     data files are kept. Defaults as "data"
+##'     data files are kept. Defaults as "data". If user sets it as NA
+##'     or NULL, the directory will not be created.
 ##' @param wdir Working data directory, where recorded, revised, and
 ##'     cleaned data files are kept. Defaults as "workingdata"
 ##' @param odir Output directory. Defaults as "output".
@@ -44,6 +46,7 @@
 ##'     "client_provided"}, \code{bdir = "codebooks"}, \code{sdir =
 ##'     "Stata")}. These may be grouped in a named vector or list, if
 ##'     user convenience dictates.
+##' @importFrom stats na.omit
 ##' @export
 ##' @return Name of project top level directory
 ##' @author Paul Johnson <pauljohn@@ku.edu>
@@ -63,7 +66,11 @@
 ##' setwd(tempdir)
 ##' initProject(paste(tempdir, "test4", sep = "/"), list(food = "menu", bev = "drink_orders"))
 ##' list.files(all.files = TRUE)
-##' unlink(c("test1", "test2", "test3", "test4"), recursive = TRUE)
+##' setwd(tempdir)
+##' initProject("test5", odir = NA, tdir = NA, writedir = NA)
+##' list.files(all.files = TRUE)
+##' setwd(tempdir)
+##' unlink(c("test1", "test2", "test3", "test4", "test5"), recursive = TRUE)
 initProject <- function(dir = NULL, ddir = "data",
                     wdir = "workingdata", odir = "output",
                     tdir = "tmp", ldir = "lit",
@@ -78,6 +85,8 @@ initProject <- function(dir = NULL, ddir = "data",
     if (length(dots > 0)){
         dirs <- c(dirs, dots)
     }
+
+    dirs <- na.omit(dirs)
     
     ## Only create rdir if dir NULL or not now in "R"
     if (!is.null(dir)){
@@ -122,9 +131,12 @@ initProject <- function(dir = NULL, ddir = "data",
     gitout <- system(makeGit, intern = TRUE)
 
     messg1 <- "git add 00-README.txt ChangeLog"
-    system(messg1)
+    log1 <- system(messg1, intern = TRUE)
     messg2 <- paste("git commit -a -m \"Initialized project in", dir, "\"")
-    system(messg2)
+    log2 <- system(messg2, intern = TRUE)
+   
+    messg3 <- paste("Please consider creating a remote repository to which this repo should be linked")
+    cat(gitout, log1, log2, messg3, fill = TRUE)
     
     dir
 }
