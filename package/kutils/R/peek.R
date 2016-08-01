@@ -114,7 +114,7 @@
 ##' peek(mydf)
 ##' peek(mydf, sort = FALSE)
 ##' ## Demonstrate the dot-dot-dot usage to pass in hist params
-##' peek(mydf, breaks = 30, ylab = "These are Counts, not Densities", prob = FALSE)
+##' peek(mydf, breaks = 30, ylab = "These are Counts, not Densities", freq = TRUE)
 ##' ## Not Run: file output
 ##' ## peek(mydf, sort = FALSE, file = "three_histograms.pdf")
 ##' ## Use some objects from the datasets package
@@ -122,7 +122,7 @@
 ##' peek(cars)
 ##' peek(EuStockMarkets)
 ##'
-##' peek(EuStockMarkets, breaks = 50, prob = FALSE)
+##' peek(EuStockMarkets, breaks = 50, freq = TRUE)
 ##' ## Not run
 ##' ## peek(EuStockMarkets, breaks = 50, file = "myeuro.pdf",
 ##' ##      height = 4, width=3, family = "Times")
