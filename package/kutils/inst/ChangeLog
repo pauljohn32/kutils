@@ -1,10 +1,14 @@
 2016-08-01  Paul Johnson  <pauljohn@delllap-16>
 
+	* ../R/peek.R (varType): if noneoftheabove variables are not
+	present, do not print a warning about having to exclude them.
+	Rocket Science Alert.
+
 	* ../R/utils.R (floorvar): delete. I cannot think of any
 	reasonable use case for this.
 	(starsig): insert new argument symbols to allow users to have
-	whatever symbols they want. 
-
+	whatever symbols they want.
+	
 	* ../R/peek.R (varType): revise to allow single columns in
 	addition to data frames
 

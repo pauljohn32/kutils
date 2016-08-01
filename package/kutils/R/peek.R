@@ -229,11 +229,13 @@ peek <-
     colTypes <- sapply(dat, varType)
     colTypes <- colTypes[namez]
 
-    cat(paste("These variables are being omitted because they are",
-                "neither numbers nor can they be interpreted as factors: \n"))
-    cat(paste(names(colTypes[colTypes == "noneoftheabove"]), "\n"))
-    ## remove unrecognized types
-    colTypes <- colTypes[colTypes != "noneoftheabove"]
+    if (length(colTypes[colTypes == "noneoftheabove"]) > 0) {
+        cat(paste("These variables are being omitted because they are",
+                  "neither numbers nor can they be interpreted as factors: \n"))
+        cat(paste(names(colTypes[colTypes == "noneoftheabove"]), "\n"))
+        ## remove unrecognized types
+        colTypes <- colTypes[colTypes != "noneoftheabove"]
+    }
     
     dots <- list(...)
       

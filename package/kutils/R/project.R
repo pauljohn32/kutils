@@ -123,7 +123,7 @@ initProject <- function(dir = NULL, ddir = "data",
     readme <- paste0("## ", sysinfo[["user"]], "\n", "## ", format(systime,"%Y%m%d\n"))
     cat(readme, file = paste("00-README.txt"))
     
-    changelog <- paste(format(systime, "%Y-%b-%d"), sysinfo[["user"]], "\n\n")
+    changelog <- paste(format(systime, "%Y-%m-%d"), sysinfo[["user"]], "\n\n")
     changelog <- paste0(changelog, "\t* " , dir, "(initProject):\n")
     cat(changelog, file = paste("ChangeLog"))
 
