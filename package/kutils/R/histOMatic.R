@@ -95,7 +95,7 @@
 ##' @export
 ##' @importFrom utils modifyList
 ##' @importFrom grDevices dev.off devAskNewPage pdf
-##' @importFrom graphics strwidth par
+##' @importFrom graphics strwidth par barplot.default hist.default
 ##' @import datasets
 ##' @return A vector of column names that were plotted
 ##' @author Paul Johnson <pauljohn@@ku.edu>
