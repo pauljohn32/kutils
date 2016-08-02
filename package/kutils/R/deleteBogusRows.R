@@ -8,7 +8,7 @@
 ##' this to deal with problem that MS Excel users often include a
 ##' marginal note at the bottom of a spread sheet.
 ##'
-##' @param dframe A data frame
+##' @param dframe A data frame or matrix
 ##' @param pm "proportion missing data" to be tolerated.
 ##' @param drop Default FALSE: if data frame result is reduced to one
 ##'     row, should R's default drop behavior "demote" this to a
@@ -58,6 +58,8 @@ deleteBogusRows <- function (dframe, pm = 0.9, drop = FALSE,
 ##' This is a column version of \code{deleteBogusRows}. Use the pm
 ##' argument to set the proportion of missing required before a column
 ##' is flagged for deletion
+##' 
+##' @param dframe A data frame or matrix
 ##' @param pm "proportion missing data" to be tolerated.
 ##' @param drop Default FALSE: if data frame result is reduced to one
 ##'     column, should R's default drop behavior "demote" this to a
