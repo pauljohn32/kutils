@@ -1,8 +1,8 @@
 Package: kutils
 Type: Package
 Title: Project Management Tools 
-Version: 0.14
-Date: 2016-07-01
+Version: 0.15
+Date: 2016-08-02
 Author: Paul Johnson <pauljohn@ku.edu> Kenna Whitley <kennamarie@ku.edu> 
 Maintainer: Paul Johnson <pauljohn@ku.edu>
 Description: Some stuff we use all the time in CRMDA.  There
