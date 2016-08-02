@@ -127,17 +127,23 @@ initProject <- function(dir = NULL, ddir = "data",
     changelog <- paste0(changelog, "\t* " , dir, "(initProject):\n")
     cat(changelog, file = paste("ChangeLog"))
 
-    makeGit <- "git init --shared=group"
-    gitout <- system(makeGit, intern = TRUE)
-
-    messg1 <- "git add 00-README.txt ChangeLog"
-    log1 <- system(messg1, intern = TRUE)
-    messg2 <- paste("git commit -a -m \"Initialized project in", dir, "\"")
-    log2 <- system(messg2, intern = TRUE)
-   
-    messg3 <- paste("Please consider creating a remote repository to which this repo should be linked")
-    cat(gitout, log1, log2, messg3, fill = TRUE)
-    
+    git <- Sys.which("git")
+    if (git != ""){
+        makeGit <- "git init --shared=group"
+        gitout <- system(makeGit, intern = TRUE)
+        
+        messg1 <- "git add 00-README.txt ChangeLog"
+        log1 <- system(messg1, intern = TRUE)
+        messg2 <- paste("git commit -a -m \"Initialized project in", dir, "\"")
+        log2 <- system(messg2, intern = TRUE)
+        
+        messg3 <- paste("Please consider creating a remote repository to which this repo should be linked")
+        cat(gitout, log1, log2, messg3, fill = TRUE)
+    } else {
+        messg4 <- paste("The git executable was not found.",
+                        "Thus, a git repo was not created in the working directory.",
+                        "Please install it and use it faithfully")
+    }
     dir
 }
 
