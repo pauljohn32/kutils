@@ -92,3 +92,7 @@ deleteBogusColumns <- function (dframe, pm = 0.9, drop = FALSE,
     print(paste("No bogus columns were found in: ", deparse(substitute(dframe))))
     invisible(dframe)
 }
+
+
+## TODO: make deleteBogus a generic, then write a method for data
+## frames and a method for data tables.
