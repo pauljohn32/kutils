@@ -1,5 +1,9 @@
 2016-08-02  Paul Johnson  <pauljohn@delllap-16>
 
+	* ../R/project.R (initProject): Sys.which("git") to check if
+	user's system has git in path. Could we search more aggressively
+	if it exists elsewhere?
+
 	* ../R/deleteBogusRows.R (deleteBogusRows): add arguments drop,
 	verbose, and n, use NCOL. Argument n allows NULL or NA values.
 	(deleteBogusColumns): a column version of deleteBogusRows. Should
