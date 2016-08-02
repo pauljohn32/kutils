@@ -1,5 +1,9 @@
 2016-08-02  Paul Johnson  <pauljohn@delllap-16>
 
+	* ../R/assignMissing.R (assignMissing): overhaul with
+	documentation to deal with different inputs for doubles, integers,
+	factors
+
 	* ../R/project.R (initProject): Sys.which("git") to check if
 	user's system has git in path. Could we search more aggressively
 	if it exists elsewhere?
