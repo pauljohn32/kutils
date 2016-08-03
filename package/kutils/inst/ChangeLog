@@ -1,3 +1,8 @@
+2016-08-03  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/assignMissing.R (keyTemplateLong): remove usage of openxlsx
+	in function, put as example, add Suggests to DESCRIPTION document.
+
 2016-08-02  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/assignMissing.R (assignMissing): overhaul with

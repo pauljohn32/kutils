@@ -1,12 +1,15 @@
-natlongsurv <- read.csv2("../data/natlongsurv.csv")
-save(natlongsurv, file = "../data/natlongsurv.RData")
+## natlongsurv <- read.csv2("../extdata/natlongsurv.csv")
+## save(natlongsurv, file = "../data/natlongsurv.RData", compress = TRUE)
 
 
 ##' Happiness, etcetera
 ##'
-##' A selection of variables from the US National Longitudinal Survey.
-##' All variables are for the 2003 year, except where otherwise noted.
+##' A selection of 29 variables from the US National Longitudinal Survey,
+##' including 5159 rows. All variables are for the 2003 year, except where otherwise noted.
 ##'
+##' @name natlongsurv
+##' @docType data
+##' @usage data(natlongsurv)
 ##' @format A data frame with rows and variables:
 ##'
 ##'\itemize{
@@ -39,5 +42,8 @@ save(natlongsurv, file = "../data/natlongsurv.RData")
 ##'   \item	R7477800	COUNT ELIGIBLE HOUSEHOLD CHILDREN
 ##'   \item	R7610300	REGION OF RESIDENCE
 ##'}
-"natlongsurv"
+##'@examples
+##' data(natlongsurv)
+##' peek(natlongsurv, ask = FALSE, file = paste0(tempdir(), "/","peek.pdf"))
+NULL
 

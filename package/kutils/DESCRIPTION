@@ -1,7 +1,7 @@
 Package: kutils
 Type: Package
 Title: Project Management Tools 
-Version: 0.16
+Version: 0.17
 Date: 2016-08-02
 Author: Paul Johnson <pauljohn@ku.edu> Kenna Whitley <kennamarie@ku.edu> 
 Maintainer: Paul Johnson <pauljohn@ku.edu>
@@ -13,4 +13,7 @@ Description: Some stuff we use all the time in CRMDA.  There
     moved elsewhere.
 License: GPL-2
 Imports: stats, utils, xtable, lavaan 
+Suggests: openxlsx
 RoxygenNote: 5.0.1
+LazyData: TRUE
+

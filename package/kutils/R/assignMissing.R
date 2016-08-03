@@ -20,8 +20,8 @@
 ##' @export
 ##' @author Paul Johnson
 ##' @examples
-##' ## 1.  Integers.
-##' ## must be very sure these are truly integers, or else fails
+## 1.  Integers.
+## must be very sure these are truly integers, or else fails
 ##' x <- seq.int(2L, 22L, by = 2L)
 ##' missings <- c(2)
 ##' assignMissing(x, missings)
@@ -34,46 +34,40 @@
 ##' 
 ##' missings <- " > 11"
 ##' assignMissing(x, missings)
-##' 
-##' 
-##' ## 2. strings
-##' x <- c("low", "low", "med", "high")
-##' missings <- c("low", "high")
-##' assignMissing(x, missings)
-##' missings <- c("med", "doesnot exist")
-##' assignMissing(x, missings)
-##' 
-##' 
-##' ## 3. factors (same as strings inside assignMissing)
-##' x <- factor(c("low", "low", "med", "high"))
-##' missings <- c("low", "high")
-##' assignMissing(x, missings)
-##' missings <- c("med", "doesnot exist")
-##' assignMissing(x, missings)
-##' 
-##' ## 4. Real-valued variable
-##' set.seed(234234)
-##' x <- rnorm(10)
-##' missings <- "< 0"
-##' assignMissing(x, missings)
-##' 
-##' missings <- c("< 0", "> 2")
-##' assignMissing(x, missings)
-##' 
-##' missings <- c("> 0.1", "< 0.7")
-##' assignMissing(x, missings)
-##' 
-##' ## Inclusive 
-##' x <- round(x, 2)
-##' missings <- c(">= 0.1", "<= 0.14")
-##' assignMissing(x, missings)
+## ## 2. strings
+## x <- c("low", "low", "med", "high")
+## missings <- c("low", "high")
+## assignMissing(x, missings)
+## missings <- c("med", "doesnot exist")
+## assignMissing(x, missings)
+## ## 3. factors (same as strings inside assignMissing)
+## x <- factor(c("low", "low", "med", "high"))
+## missings <- c("low", "high")
+## assignMissing(x, missings)
+## missings <- c("med", "doesnot exist")
+## assignMissing(x, missings)
+## ## 4. Real-valued variable
+## set.seed(234234)
+## x <- rnorm(10)
+## missings <- "< 0"
+## assignMissing(x, missings)
+## missings <- c("> 0.1", "< 0.7")
+## assignMissing(x, missings)
+## ## Inclusive 
+## x <- round(x, 2)
+## missings <- c(">= 0.1", "<= 0.14")
+## assignMissing(x, missings)
+## ## If you need to remove the low and the high,
+## ## necessary to set missings as a string with a semi-colon separator.
+## missings <- c("< 0 ; > 2")
+## assignMissing(x2, missings[2])
 assignMissing <- function(avar, missings){
     if (is.factor(avar) | is.character(avar)){
         avar[avar %in% missings] <- NA
         avar <- factor(avar)
         return(avar)
     } else if (is.integer(avar)) {
-        if (is.integer(avar) && is.integer(missings)) mysep = "==" else mysep = ""
+        if (is.integer(avar) && !is.character(missings)) mysep = "==" else mysep = ""
         conditional <- paste(paste(quote(avar), mysep, missings), collapse = " | ")
         avarcheck <- eval(parse(text = conditional))
         avar[avarcheck] <- NA
@@ -118,9 +112,9 @@ cleanDF <- function(dframe, key){
     for (i in key[ , "oldname"]){
         mvals <- key[key[ , "oldname" == i], "missings"]
         print(mvals)
-        exprs <- unlist(strsplit(gg, ";"))
+        exprs <- unlist(strsplit(mvals, ";"))
         for(j in exprs){
-            dframe[ , key[i, "newname"]] <- assignMissing(dframe, i, j)
+            dframe[ , key[i, "newname"]] <- assignMissing(dframe[, i], j)
         }
     }
     dframe
@@ -160,18 +154,25 @@ keyTemplate <- function(dframe, cnames = c(oldname = "oldname",
 ##' @param filebase A text string for the output file's base name. CSV
 ##'     and XLSX files are created.
 ##' @param outdir The output directory for the new variable key files
-##' @param maxvalues Default = 10. 
-##' @return A data frame including the variable key
+##' @param maxvalues Default = 10.
+##' @importFrom utils write.csv
+##' @return A data frame including the variable key. Creates a file named "key.csv".
 ##' @author Paul Johnson <pauljohn@@ku.edu> and Ben Kite
 ##'     <bakite@@ku.edu>
-set.seed(234234)
-N <- 200
-mydf <- data.frame(x5 = rnorm(N), x4 = rnorm(N),
-                   x3 = ordered(sample(c("lo", "med", "hi"), size = N, replace=TRUE), levels = c("lo", "med", "hi")),
-                   x2 = letters[sample(1:24, 200, replace = TRUE)],
-                   x1 = factor(sample(c("cindy", "bobby", "marsha",
-                                        "greg", "chris"), 200, replace = TRUE)),
-                   stringsAsFactors = FALSE)
+##' set.seed(234234)
+##' N <- 200
+##' mydf <- data.frame(x5 = rnorm(N), x4 = rnorm(N),
+##'                    x3 = ordered(sample(c("lo", "med", "hi"), size = N, replace=TRUE), levels = c("lo", "med", "hi")),
+##'                    x2 = letters[sample(1:24, 200, replace = TRUE)],
+##'                    x1 = factor(sample(c("cindy", "bobby", "marsha",
+##'                                         "greg", "chris"), 200, replace = TRUE)),
+##'                    stringsAsFactors = FALSE)
+##' keyTemplateLong(mydf)
+##' \donttest{
+##' if (require(openxlsx)){
+##'    write.xlsx(key, paste0(outdir, filebase, ".xlsx"))
+##' }
+##' }
 keyTemplateLong <- function(dframe, cnames = c(oldname = "oldname",
                                                newname = "newname",
                                                oldclass = "oldclass",
@@ -179,7 +180,7 @@ keyTemplateLong <- function(dframe, cnames = c(oldname = "oldname",
                                                oldvalue = "oldvalue",
                                                newvalue = "newvalue",
                                                missings = "missings"),
-                            filebase = "key", outdir = getwd(),
+                            file = "key.csv", outdir = getwd(),
                             maxvalues = 10, sort = FALSE)
 {
     cn <- colnames(dframe)
@@ -223,35 +224,33 @@ keyTemplateLong <- function(dframe, cnames = c(oldname = "oldname",
     if (sort) key <- key[order(key$oldnames), ]
     
     colnamesReplace(key, newnames = cnames)
-   
-    require(openxlsx)
-    write.xlsx(key, paste0(outdir, filebase, ".xlsx"))
-    write.csv(key, paste0(outdir, filebase, ".csv"), row.names = FALSE)
+     
+    write.csv(key, paste0(outdir, file), row.names = FALSE)
     key
 }
 
 
 
 
-importWithKeyLong <- (dframe, key){
+## importWithKeyLong <- (dframe, key){
 
-    ## First, apply missings
-    ## Then apply numeric recodes with the newvalue parsed
-    ## Then apply factors with the newvalues as they are
+##     ## First, apply missings
+##     ## Then apply numeric recodes with the newvalue parsed
+##     ## Then apply factors with the newvalues as they are
 
 
-    ## clean up key column names, then
-    ## colnamesReplace
+##     ## clean up key column names, then
+##     ## colnamesReplace
     
-}
+## }
 
 
-importWithKeyShort <- function(dframe, key){
+## importWithKeyShort <- function(dframe, key){
 
-    for (i in colnames(dframe)){
-        dframe[ , key[key$oldname == i, "newname"]] <- cleanVar("nlsdat", i, key[key$var2 == i , "missings"])
-}
+##     for (i in colnames(dframe)){
+##         dframe[ , key[key$oldname == i, "newname"]] <- cleanVar("nlsdat", i, key[key$var2 == i , "missings"])
+## }
 
 
 
-}
+## }
