@@ -125,30 +125,74 @@ cleanDF <- function(dframe, key){
 ##' Create a 'wide format' variable key table
 ##'
 ##' This is the original style of the variable key. It is more compact,
-##' probably easier for experts to use, but perhaps more (too) complicated
+##' probably easier for experts to use, but perhaps more complicated
 ##' for non-programmers.
 ##' @param dframe A data frame
 ##' @param cnames The column names to be created in the new variable key
 ##' @param file A text string for the output file's base name. 
 ##'     Defaut is "key.csv"    
 ##' @param outdir The output directory for the new variable key files. 
-##'     Default is current working directory. 
+##'     Default is current working directory.
+##' @param maxvalues Default = 10.
 ##' @return A key in the form of a data frame
 ##' @author Paul Johnson
+##' @examples
+##' set.seed(234234)
+##' N <- 200
+##' mydf <- data.frame(x5 = rnorm(N), x4 = rnorm(N),
+##'                    x3 = ordered(sample(c("lo", "med", "hi"),
+##'                    size = N, replace=TRUE),
+##'                    levels = c("lo", "med", "hi")),
+##'                    x2 = letters[sample(1:24, 200, replace = TRUE)],
+##'                    x1 = factor(sample(c("cindy", "bobby", "marsha",
+##'                                         "greg", "chris"), 200, replace = TRUE)),
+##'                    stringsAsFactors = FALSE)
+##' key <- keyTemplate(mydf, file = "mydfkey.csv")
+##'
+##' data(natlongsurv)
+##' key2 <- keyTemplate(natlongsurv, file = "natlongsurvkey.csv", maxvalues = 15,
+##'     sort = TRUE)
 ##' 
 keyTemplate <- function(dframe, cnames = c(oldname = "oldname",
                                            newname = "newname",
                                            oldclass = "oldclass",
                                            newclass = "newclass",
+                                           oldvalue = "oldvalue",
+                                           newvalue = "newvalue",
                                            recodes = "recodes",
                                            missings = "missings"),
-                        file = "key.csv", outdir = getwd())
+                        file = "key.csv", outdir = getwd(), maxvalues = 10)
 {
     df.class <- sapply(dframe, function(x)class(x)[1])
-    key <- data.frame(oldname = colnames(dframe), newname = "", oldclass = df.class,
-                      newclass = "", recodes = "", missings = "")
+    key <- data.frame(oldname = colnames(dframe), newname = "",
+                      oldclass = df.class, newclass = "",
+                      oldvalue = as.character(""), newvalue = "", 
+                      recodes = "", missings = "", stringsAsFactors = FALSE)
+    rownames(key) <- key$oldname
     
-    write.csv(key, paste0(outdir, "/", file), row.names = FALSE)
+    oldvals <- sapply(names(df.class), function(x) {
+        y <- dframe[ , x]
+        z <- ""
+        if (df.class[x] == "integer" || df.class[x] == "logical"){
+            z <- paste(sort(unique(y)[1:min(maxvalues, length(unique(y)))], collapse = "|"))
+            return(z)
+        }
+        if (df.class[x] == "factor"){
+            z <- paste(levels(y)[1:min(maxvalues, length(unique(y)))], collapse = "|")
+            return(z)
+        }
+        if (df.class[x] =="character" | df.class[x] == "Date"){
+            z <- paste(unique(x)[1:min(maxvalues, length(unique(y)))], collapse = "|")
+            return(z)
+        }
+        z
+    })
+    for(i in names(oldvals)){
+        key[i , "oldvalue"] <- oldvals[i]
+    }        
+    if (!is.null(file) | !is.na(file)){
+        write.csv(key, paste0(outdir, "/", file), row.names = FALSE)
+    }
     key
 }
 
@@ -190,10 +234,15 @@ keyTemplate <- function(dframe, cnames = c(oldname = "oldname",
 ##'                    x1 = factor(sample(c("cindy", "bobby", "marsha",
 ##'                                         "greg", "chris"), 200, replace = TRUE)),
 ##'                    stringsAsFactors = FALSE)
-##' keyTemplateLong(mydf)
+##' key <- keyTemplateLong(mydf, file = "mydfkey.csv")
+##'
+##' data(natlongsurv)
+##' key2 <- keyTemplateLong(natlongsurv, file = "natlongsurvkey.csv", maxvalues = 15,
+##'     sort = TRUE)
+##' 
 ##' \donttest{
 ##' if (require(openxlsx)){
-##'    write.xlsx(key, file = "natlongsurv.key.csv")
+##'    write.xlsx(key2, file = "natlongsurv.key.xlsx")
 ##' }
 ##' }
 ##' 
@@ -205,7 +254,7 @@ keyTemplateLong <- function(dframe, cnames = c(oldname = "oldname",
                                                newvalue = "newvalue",
                                                missings = "missings"),
                             file = "key.csv", outdir = getwd(),
-                            maxvalues = 10, sort = FALSE)
+                            maxvalues = 10, sort = FALSE, stringsAsFactors = FALSE)
 {
     cn <- colnames(dframe)
     df.class <- sapply(dframe, function(x)class(x)[1])
@@ -237,7 +286,8 @@ keyTemplateLong <- function(dframe, cnames = c(oldname = "oldname",
     key$seq <- unlist(tapply(key$oldname, key$oldname, seq_along))
     
     xxx <- lapply(df.unique2, function(x) as.character(x[seq_along(x)]))
-    key$oldvalue <- unlist(xxx) ## This wasn't working properly.  There were 8 too many values, but the addition to the function for the ppp object fixed it.
+    key$oldvalue <- unlist(xxx)
+    ## This wasn't working properly. function for the ppp object fixed it.
     key$seq <- NULL
     key$oldvalue <- ifelse(key$oldclass == "numeric", ".", key$oldvalue)
     key$oldvalue <- ifelse(key$oldclass == "integer", ifelse(nchar(key$oldvalue) >= 4, ".", key$oldvalue), key$oldvalue)
@@ -248,8 +298,9 @@ keyTemplateLong <- function(dframe, cnames = c(oldname = "oldname",
     if (sort) key <- key[order(key$oldnames), ]
     
     colnamesReplace(key, newnames = cnames)
-     
-    write.csv(key, paste0(outdir, "/", file), row.names = FALSE)
+    if (!is.null(file) | !is.na(file)){
+        write.csv(key, paste0(outdir, "/", file), row.names = FALSE)
+    }
     key
 }
 
