@@ -5,13 +5,14 @@
 ##' else this fails
 ##' @param avar A variable
 ##' @param missings A string with a vector of values or R expressions.
-##'     These are done differently for integer, numeric, factor, and character
-##'     variables. For integer variables, use a vector
-##'     of missings, as in c(8,9,10) or part of an R expression such
+##'     These are done differently for integer, numeric, factor, and
+##'     character variables. For integer variables, use a vector of
+##'     missings, as in c(8,9,10) or part of an R expression such
 ##'     "> 8". For numerics, use a range such as "> 99".  If a
-##'     variable is real-valued, exact comparisons with ==  are unreliable, so don't ask for them.
-##'     use a two value vector to indicate a range that should be set
-##'     to missing. For example, c("> 99", "< 101") will set values between 99 and 101 as
+##'     variable is real-valued, exact comparisons with == are
+##'     unreliable, so don't ask for them.  use a two value vector to
+##'     indicate a range that should be set to missing. For example,
+##'     c("> 99", "< 101") will set values between 99 and 101 as
 ##'     NA. For factors and character variables, it should be a set of
 ##'     levels to be marked as NA, as in c("low", "high") or a vector
 ##'     of numbers referring to existing levels as returned by
@@ -121,17 +122,34 @@ cleanDF <- function(dframe, key){
 }
 
 
-
+##' Create a 'wide format' variable key table
+##'
+##' This is the original style of the variable key. It is more compact,
+##' probably easier for experts to use, but perhaps more (too) complicated
+##' for non-programmers.
+##' @param dframe A data frame
+##' @param cnames The column names to be created in the new variable key
+##' @param file A text string for the output file's base name. 
+##'     Defaut is "key.csv"    
+##' @param outdir The output directory for the new variable key files. 
+##'     Default is current working directory. 
+##' @return A key in the form of a data frame
+##' @author Paul Johnson
+##' 
 keyTemplate <- function(dframe, cnames = c(oldname = "oldname",
                                            newname = "newname",
                                            oldclass = "oldclass",
                                            newclass = "newclass",
                                            recodes = "recodes",
-                                           missings = "missings"))
+                                           missings = "missings"),
+                        file = "key.csv", outdir = getwd())
 {
     df.class <- sapply(dframe, function(x)class(x)[1])
-    data.frame(oldname = colnames(dframe), newname = "", oldclass = df.class,
-               newclass = "", recodes = "", missings = "")
+    key <- data.frame(oldname = colnames(dframe), newname = "", oldclass = df.class,
+                      newclass = "", recodes = "", missings = "")
+    
+    write.csv(key, paste0(outdir, "/", file), row.names = FALSE)
+    key
 }
 
     
@@ -151,18 +169,23 @@ keyTemplate <- function(dframe, cnames = c(oldname = "oldname",
 ##' @param sort Default FALSE. Should the rows representing the
 ##'     variables be sorted alphabetically? Otherwise, they appear in
 ##'     the order in which they were included in the original dataset.
-##' @param filebase A text string for the output file's base name. CSV
-##'     and XLSX files are created.
-##' @param outdir The output directory for the new variable key files
+##' @param file A text string for the output file's base name. 
+##'     Defaut is "key.csv"    
+##' @param outdir The output directory for the new variable key files. 
+##'     Default is current working directory.
 ##' @param maxvalues Default = 10.
+##' @export
 ##' @importFrom utils write.csv
 ##' @return A data frame including the variable key. Creates a file named "key.csv".
 ##' @author Paul Johnson <pauljohn@@ku.edu> and Ben Kite
 ##'     <bakite@@ku.edu>
+##' @examples
 ##' set.seed(234234)
 ##' N <- 200
 ##' mydf <- data.frame(x5 = rnorm(N), x4 = rnorm(N),
-##'                    x3 = ordered(sample(c("lo", "med", "hi"), size = N, replace=TRUE), levels = c("lo", "med", "hi")),
+##'                    x3 = ordered(sample(c("lo", "med", "hi"),
+##'                    size = N, replace=TRUE),
+##'                    levels = c("lo", "med", "hi")),
 ##'                    x2 = letters[sample(1:24, 200, replace = TRUE)],
 ##'                    x1 = factor(sample(c("cindy", "bobby", "marsha",
 ##'                                         "greg", "chris"), 200, replace = TRUE)),
@@ -170,9 +193,10 @@ keyTemplate <- function(dframe, cnames = c(oldname = "oldname",
 ##' keyTemplateLong(mydf)
 ##' \donttest{
 ##' if (require(openxlsx)){
-##'    write.xlsx(key, paste0(outdir, filebase, ".xlsx"))
+##'    write.xlsx(key, file = "natlongsurv.key.csv")
 ##' }
 ##' }
+##' 
 keyTemplateLong <- function(dframe, cnames = c(oldname = "oldname",
                                                newname = "newname",
                                                oldclass = "oldclass",
@@ -225,7 +249,7 @@ keyTemplateLong <- function(dframe, cnames = c(oldname = "oldname",
     
     colnamesReplace(key, newnames = cnames)
      
-    write.csv(key, paste0(outdir, file), row.names = FALSE)
+    write.csv(key, paste0(outdir, "/", file), row.names = FALSE)
     key
 }
 
