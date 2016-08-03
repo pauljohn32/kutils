@@ -124,17 +124,25 @@ cleanDF <- function(dframe, key){
 
 ##' Create a 'wide format' variable key table
 ##'
-##' This is the original style of the variable key. It is more compact,
-##' probably easier for experts to use, but perhaps more complicated
-##' for non-programmers.
+##' This is the original style of the variable key. It is more
+##' compact, probably easier for experts to use, but perhaps more
+##' complicated for non-programmers.
 ##' @param dframe A data frame
-##' @param cnames The column names to be created in the new variable key
-##' @param file A text string for the output file's base name. 
-##'     Defaut is "key.csv"    
-##' @param outdir The output directory for the new variable key files. 
+##' @param cnames The column names to be created in the new variable
+##'     key
+##' @param sort Default FALSE. Should the rows representing the
+##'     variables be sorted alphabetically? Otherwise, they appear in
+##'     the order in which they were included in the original dataset.
+##' @param file A text string for the output file's base name.  Defaut
+##'     is "key.csv"
+##' @param outdir The output directory for the new variable key files.
 ##'     Default is current working directory.
-##' @param maxvalues Default = 10.
-##' @return A key in the form of a data frame
+##' @param maxvalues Default = 15. When enumerating existing values
+##'     for a variable, what is the maximum number of valuses that
+##'     should be included in the variable key?
+##' @return A key in the form of a data frame. The output formats will
+##'     be described in the Details section.
+##' @export
 ##' @author Paul Johnson
 ##' @examples
 ##' set.seed(234234)
@@ -145,8 +153,7 @@ cleanDF <- function(dframe, key){
 ##'                    levels = c("lo", "med", "hi")),
 ##'                    x2 = letters[sample(1:24, 200, replace = TRUE)],
 ##'                    x1 = factor(sample(c("cindy", "bobby", "marsha",
-##'                                         "greg", "chris"), 200, replace = TRUE)),
-##'                    stringsAsFactors = FALSE)
+##'                                         "greg", "chris"), 200, replace = TRUE)))
 ##' key <- keyTemplate(mydf, file = "mydfkey.csv")
 ##'
 ##' data(natlongsurv)
@@ -161,38 +168,45 @@ keyTemplate <- function(dframe, cnames = c(oldname = "oldname",
                                            newvalue = "newvalue",
                                            recodes = "recodes",
                                            missings = "missings"),
-                        file = "key.csv", outdir = getwd(), maxvalues = 10)
+                        sort = FALSE,  file = "key.csv",
+                        outdir = getwd(), maxvalues = 15)
 {
     df.class <- sapply(dframe, function(x)class(x)[1])
     key <- data.frame(oldname = colnames(dframe), newname = "",
                       oldclass = df.class, newclass = "",
                       oldvalue = as.character(""), newvalue = "", 
                       recodes = "", missings = "", stringsAsFactors = FALSE)
-    rownames(key) <- key$oldname
     
     oldvals <- sapply(names(df.class), function(x) {
         y <- dframe[ , x]
         z <- ""
         if (df.class[x] == "integer" || df.class[x] == "logical"){
-            z <- paste(sort(unique(y)[1:min(maxvalues, length(unique(y)))], collapse = "|"))
+            z <- paste(unique(y)[1:min(maxvalues, length(unique(y)))], collapse = "|")
             return(z)
         }
+        if (df.class[x] == "ordered"){
+            z <- paste(unique(y)[1:min(maxvalues, length(unique(y)))], collapse = "<")
+        }
         if (df.class[x] == "factor"){
-            z <- paste(levels(y)[1:min(maxvalues, length(unique(y)))], collapse = "|")
+            z <- paste(levels(y), collapse = "|")
             return(z)
         }
         if (df.class[x] =="character" | df.class[x] == "Date"){
-            z <- paste(unique(x)[1:min(maxvalues, length(unique(y)))], collapse = "|")
+            z <- paste(unique(y)[1:min(maxvalues, length(unique(y)))], collapse = "|")
             return(z)
         }
         z
     })
+
+    ## TODO Can't get this to go vectorized, so have to for loop. Get help!
     for(i in names(oldvals)){
         key[i , "oldvalue"] <- oldvals[i]
     }        
     if (!is.null(file) | !is.na(file)){
         write.csv(key, paste0(outdir, "/", file), row.names = FALSE)
     }
+
+    if (sort) key <- key[order(key$oldname), ]
     key
 }
 
@@ -200,8 +214,9 @@ keyTemplate <- function(dframe, cnames = c(oldname = "oldname",
 ##' Create a variable key template in the long form
 ##'
 ##' A variable key is a human readable document that can be
-##' interpreted by R to import and recode data. This function generates
-##' the long form variable key, in which the rows represent possible values that a variable might take on.
+##' interpreted by R to import and recode data. This function
+##' generates the long form variable key, in which the rows represent
+##' possible values that a variable might take on.
 ##'
 ##' This function creates a table in an output file that researchers, even
 ##' ones who do not use R, can enter new variable names, new values, and so forth.
@@ -213,14 +228,17 @@ keyTemplate <- function(dframe, cnames = c(oldname = "oldname",
 ##' @param sort Default FALSE. Should the rows representing the
 ##'     variables be sorted alphabetically? Otherwise, they appear in
 ##'     the order in which they were included in the original dataset.
-##' @param file A text string for the output file's base name. 
-##'     Defaut is "key.csv"    
-##' @param outdir The output directory for the new variable key files. 
+##' @param file A text string for the output file's base name.  Defaut
+##'     is "key.csv"
+##' @param outdir The output directory for the new variable key files.
 ##'     Default is current working directory.
-##' @param maxvalues Default = 10.
+##' @param maxvalues Default = 10. When enumerating existing values
+##'     for a variable, what is the maximum number of valuses that should be included in the variable
+##'     key?  There will be one row per value.
 ##' @export
 ##' @importFrom utils write.csv
-##' @return A data frame including the variable key. Creates a file named "key.csv".
+##' @return A data frame including the variable key. Creates a file
+##'     named "key.csv".
 ##' @author Paul Johnson <pauljohn@@ku.edu> and Ben Kite
 ##'     <bakite@@ku.edu>
 ##' @examples
@@ -254,7 +272,7 @@ keyTemplateLong <- function(dframe, cnames = c(oldname = "oldname",
                                                newvalue = "newvalue",
                                                missings = "missings"),
                             file = "key.csv", outdir = getwd(),
-                            maxvalues = 10, sort = FALSE, stringsAsFactors = FALSE)
+                            maxvalues = 10, sort = FALSE)
 {
     cn <- colnames(dframe)
     df.class <- sapply(dframe, function(x)class(x)[1])
@@ -295,7 +313,7 @@ keyTemplateLong <- function(dframe, cnames = c(oldname = "oldname",
     key[key$oldvalue %in% c("", " ", "  "), "oldvalue"] <- "NA"
     key$newvalue <- ifelse(is.na(key$oldvalue), "NA", "")
     key$newvalue <- ifelse(key$oldvalue  == ".", ".", "")
-    if (sort) key <- key[order(key$oldnames), ]
+    if (sort) key <- key[order(key$oldname), ]
     
     colnamesReplace(key, newnames = cnames)
     if (!is.null(file) | !is.na(file)){
