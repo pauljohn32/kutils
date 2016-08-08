@@ -1,22 +1,30 @@
 
 ##' Scrub a variable's missings away
 ##'
-##' The missings have to be carefully written out in the key file, or
-##' else this fails
-##' @param avar A variable
+##' The missings values have to be carefully written, depending on
+##' the type of variable that is being processed.
+##' @param x A variable
 ##' @param missings A string with a vector of values or R expressions.
 ##'     These are done differently for integer, numeric, factor, and
-##'     character variables. For integer variables, use a vector of
+##'     character variables.
+##'\enumerate{
+##' \item For integer variables, use a vector of
 ##'     missings, as in c(8,9,10) or part of an R expression such
-##'     "> 8". For numerics, use a range such as "> 99".  If a
+##'     "> 8". For numerics, use a range such as "> 99".
+##' \item    For factors, include a vector of levels to be
+##'         marked as missing and removed from the list of levels.
+##'         \item For character variables, a character vector of
+##'         values to be marked as missing.
+##' \item    If a
 ##'     variable is real-valued, exact comparisons with == are
-##'     unreliable, so don't ask for them.  use a two value vector to
+##'     unreliable, so don't ask for them.  Use a two value vector to
 ##'     indicate a range that should be set to missing. For example,
 ##'     c("> 99", "< 101") will set values between 99 and 101 as
 ##'     NA. For factors and character variables, it should be a set of
 ##'     levels to be marked as NA, as in c("low", "high") or a vector
 ##'     of numbers referring to existing levels as returned by
 ##'     \code{levels()}.
+##' }
 ##' @return A (hopefully) cleaned column of data
 ##' @export
 ##' @author Paul Johnson
@@ -35,55 +43,63 @@
 ##' 
 ##' missings <- " > 11"
 ##' assignMissing(x, missings)
-## ## 2. strings
-## x <- c("low", "low", "med", "high")
-## missings <- c("low", "high")
-## assignMissing(x, missings)
-## missings <- c("med", "doesnot exist")
-## assignMissing(x, missings)
-## ## 3. factors (same as strings inside assignMissing)
-## x <- factor(c("low", "low", "med", "high"))
-## missings <- c("low", "high")
-## assignMissing(x, missings)
-## missings <- c("med", "doesnot exist")
-## assignMissing(x, missings)
-## ## 4. Real-valued variable
-## set.seed(234234)
-## x <- rnorm(10)
-## missings <- "< 0"
-## assignMissing(x, missings)
-## missings <- c("> 0.1", "< 0.7")
-## assignMissing(x, missings)
-## ## Inclusive 
-## x <- round(x, 2)
-## missings <- c(">= 0.1", "<= 0.14")
-## assignMissing(x, missings)
-## ## If you need to remove the low and the high,
-## ## necessary to set missings as a string with a semi-colon separator.
-## missings <- c("< 0 ; > 2")
-## assignMissing(x2, missings[2])
-assignMissing <- function(avar, missings){
-    if (is.factor(avar) | is.character(avar)){
-        avar[avar %in% missings] <- NA
-        avar <- factor(avar)
-        return(avar)
-    } else if (is.integer(avar)) {
-        if (is.integer(avar) && !is.character(missings)) mysep = "==" else mysep = ""
-        conditional <- paste(paste(quote(avar), mysep, missings), collapse = " | ")
-        avarcheck <- eval(parse(text = conditional))
-        avar[avarcheck] <- NA
-        return(avar)
-    } else if (is.double(avar)) { 
-        conditional <- paste(paste(quote(avar), missings), collapse = " & ")
-        avarcheck <- eval(parse(text = conditional))
-        avar[avarcheck] <- NA
-        return(avar)
+##' ## 2. strings
+##' x <- c("low", "low", "med", "high")
+##' missings <- c("low", "high")
+##' assignMissing(x, missings)
+##' missings <- c("med", "doesnot exist")
+##' assignMissing(x, missings)
+##' ## 3. factors (same as strings inside assignMissing)
+##' x <- factor(c("low", "low", "med", "high"), levels = c("low", "med", "high"))
+##' missings <- c("low", "high")
+##' assignMissing(x, missings)
+##' missings <- c("med", "doesnot exist")
+##' assignMissing(x, missings)
+##' ## ordered factor:
+##' x <- ordered(c("low", "low", "med", "high"), levels = c("low", "med", "high"))
+##' missings <- c("low", "high")
+##' assignMissing(x, missings)
+##' ## 4. Real-valued variable
+##' set.seed(234234)
+##' x <- rnorm(10)
+##' missings <- "< 0"
+##' assignMissing(x, missings)
+##' missings <- c("> 0.1", "< 0.7")
+##' assignMissing(x, missings)
+##' ## Inclusive, easier to see with rounded decimals
+##' ## x <- round(x, 2)
+##' ## missings <- c(">= 0.1", "<= 0.14")
+##' ## assignMissing(x, missings)
+##' ## ## If you need to remove the low and the high,
+##' ## ## necessary to set missings as a string with a semi-colon separator.
+##' ## missings <- c("< 0 && > 2")
+##' ## assignMissing(x2, missings[2])
+assignMissing <- function(x, missings){
+      if (is.character(x)){
+        x[x %in% missings] <- NA
+        return(x)
+    } else if (is.factor(x)){
+        ## not needed??
+        ## x[x %in% missings] <- NA
+        levels(x)[which(levels(x) %in% missings)] <- NA
+        return(x)
+    } else if (is.integer(x)) {
+        if (!is.character(missings)) mysep = "==" else mysep = ""
+        conditional <- paste(paste(quote(x), mysep, missings), collapse = " | ")
+        xcheck <- eval(parse(text = conditional))
+        x[xcheck] <- NA
+        return(x)
+    } else if (is.double(x)) { 
+        conditional <- paste(paste(quote(x), missings), collapse = " & ")
+        xcheck <- eval(parse(text = conditional))
+        x[xcheck] <- NA
+        return(x)
     } else {
         messg <- "Sorry, no missings assigned because variable type was unhandled"
         warning(messg)
     }
     ## return unchanced input, didn't see what to do
-    avar 
+    x 
 }
  
 
@@ -93,12 +109,12 @@ assignMissing <- function(avar, missings){
 ##' file to figure out which variables need cleaning, then it loops
 ##' through them.
 ##' @param dframe The data frame to be cleaned
-##' @param key The key, a data frame in which columns named \code{oldname},
-##'    \code{newname}, and \code{missings} must exist.
+##' @param key The key, a data frame in which columns named \code{name_old},
+##'    \code{name_new}, and \code{missings} must exist.
 ##' @return A new data frame
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 cleanDF <- function(dframe, key){
-    if (any(!isTRUE(c("oldname", "newname", "missings") %in% colnames(key)))){
+    if (any(!isTRUE(c("name_old", "name_new", "missings") %in% colnames(key)))){
         messg <- "missings variable is not a column in the key"
         stop(messg)
     }
@@ -110,12 +126,12 @@ cleanDF <- function(dframe, key){
     
     key <- key[hasmissings, ]
 
-    for (i in key[ , "oldname"]){
-        mvals <- key[key[ , "oldname" == i], "missings"]
+    for (i in key[ , "name_old"]){
+        mvals <- key[key[ , "name_old" == i], "missings"]
         print(mvals)
         exprs <- unlist(strsplit(mvals, ";"))
         for(j in exprs){
-            dframe[ , key[i, "newname"]] <- assignMissing(dframe[, i], j)
+            dframe[ , key[i, "name_new"]] <- assignMissing(dframe[, i], j)
         }
     }
     dframe
@@ -128,8 +144,6 @@ cleanDF <- function(dframe, key){
 ##' compact, probably easier for experts to use, but perhaps more
 ##' complicated for non-programmers.
 ##' @param dframe A data frame
-##' @param cnames The column names to be created in the new variable
-##'     key
 ##' @param sort Default FALSE. Should the rows representing the
 ##'     variables be sorted alphabetically? Otherwise, they appear in
 ##'     the order in which they were included in the original dataset.
@@ -137,7 +151,7 @@ cleanDF <- function(dframe, key){
 ##'     is "key.csv"
 ##' @param outdir The output directory for the new variable key files.
 ##'     Default is current working directory.
-##' @param maxvalues Default = 15. When enumerating existing values
+##' @param max.levels Default = 15. When enumerating existing values
 ##'     for a variable, what is the maximum number of valuses that
 ##'     should be included in the variable key?
 ##' @return A key in the form of a data frame. The output formats will
@@ -157,56 +171,46 @@ cleanDF <- function(dframe, key){
 ##' key <- keyTemplate(mydf, file = "mydfkey.csv")
 ##'
 ##' data(natlongsurv)
-##' key2 <- keyTemplate(natlongsurv, file = "natlongsurvkey.csv", maxvalues = 15,
+##' key2 <- keyTemplate(natlongsurv, file = "natlongsurvkey.csv", max.levels = 15,
 ##'     sort = TRUE)
 ##' 
-keyTemplate <- function(dframe, cnames = c(oldname = "oldname",
-                                           newname = "newname",
-                                           oldclass = "oldclass",
-                                           newclass = "newclass",
-                                           oldvalue = "oldvalue",
-                                           newvalue = "newvalue",
-                                           recodes = "recodes",
-                                           missings = "missings"),
-                        sort = FALSE,  file = "key.csv",
-                        outdir = getwd(), maxvalues = 15)
+keyTemplate <- function(dframe, sort = FALSE,  file = "key.csv",
+                        outdir = getwd(), max.levels = 15)
 {
     df.class <- sapply(dframe, function(x)class(x)[1])
-    key <- data.frame(oldname = colnames(dframe), newname = "",
-                      oldclass = df.class, newclass = "",
-                      oldvalue = as.character(""), newvalue = "", 
+    key <- data.frame(name_old = colnames(dframe), name_new = colnames(dframe),
+                      class_old = df.class, class_new = df.class,
+                      value_old = as.character(""), value_new = "", 
                       recodes = "", missings = "", stringsAsFactors = FALSE)
     
-    oldvals <- sapply(names(df.class), function(x) {
-        y <- dframe[ , x]
-        z <- ""
-        if (df.class[x] == "integer" || df.class[x] == "logical"){
-            z <- paste(unique(y)[1:min(maxvalues, length(unique(y)))], collapse = "|")
-            return(z)
-        }
-        if (df.class[x] == "ordered"){
-            z <- paste(unique(y)[1:min(maxvalues, length(unique(y)))], collapse = "<")
-        }
-        if (df.class[x] == "factor"){
-            z <- paste(levels(y), collapse = "|")
-            return(z)
-        }
-        if (df.class[x] =="character" | df.class[x] == "Date"){
-            z <- paste(unique(y)[1:min(maxvalues, length(unique(y)))], collapse = "|")
-            return(z)
-        }
-        z
-    })
 
-    ## TODO Can't get this to go vectorized, so have to for loop. Get help!
-    for(i in names(oldvals)){
-        key[i , "oldvalue"] <- oldvals[i]
-    }        
+    for (i in names(df.class)){
+        getValues <- function(x){
+            y <- dframe[ , x]
+            z <- ""
+            if (df.class[x] %in% c("integer", "logical", "character", "Date")) {
+                z <- paste0(unique(y)[1:min(max.levels, length(unique(y)))], collapse = "|")
+                return(z)
+            }
+            if (df.class[x] == "ordered"){
+                z <- paste0(levels(y), collapse = "<")
+            }
+            if (df.class[x] == "factor"){
+                z <- paste0(levels(y), collapse = "|")
+                return(z)
+            }
+            z
+        }
+        key[i, "value_old"] <- getValues(i)
+    }
+
+    key[ , "value_new"] <- key[ , "value_old"]
+    
     if (!is.null(file) | !is.na(file)){
         write.csv(key, paste0(outdir, "/", file), row.names = FALSE)
     }
 
-    if (sort) key <- key[order(key$oldname), ]
+    if (sort) key <- key[order(key$name_old), ]
     key
 }
 
@@ -222,9 +226,6 @@ keyTemplate <- function(dframe, cnames = c(oldname = "oldname",
 ##' ones who do not use R, can enter new variable names, new values, and so forth.
 ##' 
 ##' @param dframe A data frame
-##' @param cnames Vector of column names desired in the output
-##'     file. It will hardly ever be necessary to change these, but it
-##'     is allowed.
 ##' @param sort Default FALSE. Should the rows representing the
 ##'     variables be sorted alphabetically? Otherwise, they appear in
 ##'     the order in which they were included in the original dataset.
@@ -232,7 +233,7 @@ keyTemplate <- function(dframe, cnames = c(oldname = "oldname",
 ##'     is "key.csv"
 ##' @param outdir The output directory for the new variable key files.
 ##'     Default is current working directory.
-##' @param maxvalues Default = 10. When enumerating existing values
+##' @param max.levels Default = 10. When enumerating existing values
 ##'     for a variable, what is the maximum number of valuses that should be included in the variable
 ##'     key?  There will be one row per value.
 ##' @export
@@ -250,12 +251,13 @@ keyTemplate <- function(dframe, cnames = c(oldname = "oldname",
 ##'                    levels = c("lo", "med", "hi")),
 ##'                    x2 = letters[sample(1:24, 200, replace = TRUE)],
 ##'                    x1 = factor(sample(c("cindy", "bobby", "marsha",
-##'                                         "greg", "chris"), 200, replace = TRUE)),
+##'                                         "greg", "chris"), 200,
+##'                    replace = TRUE)),
 ##'                    stringsAsFactors = FALSE)
-##' key <- keyTemplateLong(mydf, file = "mydfkey.csv")
+##' key <- keyTemplateLong(mydf, file = "mydfkeylong.csv")
 ##'
 ##' data(natlongsurv)
-##' key2 <- keyTemplateLong(natlongsurv, file = "natlongsurvkey.csv", maxvalues = 15,
+##' key2 <- keyTemplateLong(natlongsurv, file = "natlongsurvkey.csv", max.levels = 15,
 ##'     sort = TRUE)
 ##' 
 ##' \donttest{
@@ -264,58 +266,38 @@ keyTemplate <- function(dframe, cnames = c(oldname = "oldname",
 ##' }
 ##' }
 ##' 
-keyTemplateLong <- function(dframe, cnames = c(oldname = "oldname",
-                                               newname = "newname",
-                                               oldclass = "oldclass",
-                                               newclass = "newclass",
-                                               oldvalue = "oldvalue",
-                                               newvalue = "newvalue",
-                                               missings = "missings"),
-                            file = "key.csv", outdir = getwd(),
-                            maxvalues = 10, sort = FALSE)
+keyTemplateLong <- function(dframe, file = "key.csv", outdir = getwd(),
+                            max.levels = 10, sort = FALSE)
 {
     cn <- colnames(dframe)
     df.class <- sapply(dframe, function(x)class(x)[1])
+    getUnique <- function(xname){
+        if (df.class[[xname]] == "numeric") return ("")
+        if (df.class[[xname]] %in% c("integer", "character")){
+            xunique <- sort(unique(dframe[ , xname]))
+            return (xunique[1:min(max.levels, length(xunique))])
+        }
+        if (df.class[[xname]] %in% c("factor", "ordered")){
+            return(levels(dframe[ , xname]))
+        }
+    }
 
-    df.unique <- lapply(dframe, unique)
+    key <- do.call("rbind", lapply(cn, function(x){
+        expand.grid(name = x,
+                    class = df.class[[x]],
+                    value = getUnique(x))}))
     
-    df.unique <- lapply(df.unique, sort, na.last = TRUE)
-    df.length <- sapply(df.unique, length)
 
-    df.length2 <- ifelse(df.class %in% c("factor", "ordered"), df.length,
-                  ifelse(df.class %in% c("character", "integer") & df.length <= maxvalues, df.length,
-                  ifelse(df.class %in% c("character", "integer"), maxvalues,
-                  ifelse(df.class %in% c("numeric"), 1, 1))))
-
-    names(df.length2) <- names(df.class)
-    df.unique2 <- lapply(names(df.unique), function(x) df.unique[[x]][seq.int(df.length2[[x]])])
-
-    ppp <- sapply(names(df.class), function(x){
-        sss <- df.length2[[x]] ## This line and the one below deal with variables with all missing!
-        ssss <- ifelse(sss == 0, 1, sss)
-        vname <- rep(x, each = ssss)
-        vname
-    })
-   
-
-    key <- data.frame(oldname = unlist(ppp), newname = "",  stringsAsFactors = FALSE)
-    key$oldclass <- df.class[key$oldname]
-    key$newclass <- rep(" ", nrow(key))
-    key$seq <- unlist(tapply(key$oldname, key$oldname, seq_along))
+    key <- data.frame(name_old = key$name,
+                      name_new = key$name,
+                      class_old = key$class,
+                      class_new = key$class,
+                      value_old = key$value,
+                      value_new = key$value)
     
-    xxx <- lapply(df.unique2, function(x) as.character(x[seq_along(x)]))
-    key$oldvalue <- unlist(xxx)
-    ## This wasn't working properly. function for the ppp object fixed it.
-    key$seq <- NULL
-    key$oldvalue <- ifelse(key$oldclass == "numeric", ".", key$oldvalue)
-    key$oldvalue <- ifelse(key$oldclass == "integer", ifelse(nchar(key$oldvalue) >= 4, ".", key$oldvalue), key$oldvalue)
-    key[is.na(key$oldvalue), "oldvalue"] <- "NA"
-    key[key$oldvalue %in% c("", " ", "  "), "oldvalue"] <- "NA"
-    key$newvalue <- ifelse(is.na(key$oldvalue), "NA", "")
-    key$newvalue <- ifelse(key$oldvalue  == ".", ".", "")
-    if (sort) key <- key[order(key$oldname), ]
+    if (sort) key <- key[order(key$name_old), ]
+    key$expr <- ""
     
-    colnamesReplace(key, newnames = cnames)
     if (!is.null(file) | !is.na(file)){
         write.csv(key, paste0(outdir, "/", file), row.names = FALSE)
     }
@@ -328,8 +310,8 @@ keyTemplateLong <- function(dframe, cnames = c(oldname = "oldname",
 ## importWithKeyLong <- (dframe, key){
 
 ##     ## First, apply missings
-##     ## Then apply numeric recodes with the newvalue parsed
-##     ## Then apply factors with the newvalues as they are
+##     ## Then apply numeric recodes with the value_new parsed
+##     ## Then apply factors with the value_news as they are
 
 
 ##     ## clean up key column names, then
@@ -341,9 +323,182 @@ keyTemplateLong <- function(dframe, cnames = c(oldname = "oldname",
 ## importWithKeyShort <- function(dframe, key){
 
 ##     for (i in colnames(dframe)){
-##         dframe[ , key[key$oldname == i, "newname"]] <- cleanVar("nlsdat", i, key[key$var2 == i , "missings"])
+##         dframe[ , key[key$name_old == i, "name_new"]] <- cleanVar("nlsdat", i, key[key$var2 == i , "missings"])
 ## }
 
 
+
+## }
+
+
+##' Convert character variable values that include only white space values to NA
+##'
+##' Using regular expression matching, any variable that has "nothing", including
+##' "", or " ", or any number of spaces, or a tab, and no other characters, is changed to
+##' R missing value (NA).
+##' @param x A character vector
+##' @return A vector with white space values replaced by NA
+##' @author Paul Johnson <pauljohn@@ku.edu>
+##' @export
+##' @examples
+##' gg <- c("", " ", "   ", "\t", "\t some", "some\t", " space first")
+##' (n2NA(gg))
+n2NA <- function(x){
+    if (!is.character(x)) stop("n2NA requires a character variable")
+    x[grep("^\\s*$", x)] <- NA
+    x
+}
+NULL
+
+##' Convert leading or trailing white space and tab characters to nothing.
+##'
+##' This eliminates any characters matched by the regular expression `\\s` if
+##' they appear at the beginning of a string or at its end. It does not alter
+##' spaces in the interior of a string
+##' @param x A character vector
+##' @return A character vector with leading and trailing white space values removed.
+##' @author Paul Johnson <pauljohn@@ku.edu>
+##' @export
+##' @examples
+##' gg <- c("", " ", "   ", "\t", "\t some", "some\t", " space first")
+##' (zapspace(gg))
+zapspace <- function(x){
+    if (!is.character(x)){
+        warning("zapspace does nothing to non-character variables")
+        return(x)
+    }
+    y <- gsub("^\\s*", "", x)
+    y <- gsub("\\s*$", "", y)
+    y
+}
+
+
+
+##' Import a key formatted variable key
+##'
+##' After researcher has updated the key by filling in
+##' new names and values, we import that key file.
+##' @param file file name, csv or xlsx
+##' @param long Is this a long format key file? 
+##' @param ... additional arguments for read.csv or read.xlsx.
+##' @param keynames If key column names differ from
+##'     what we expect, declare the new names in a named vector.
+##' @param sepold The separators we use are "|" and "<", but
+##'     if for whatever reason those were altered, say so here.
+##' @param sepnew Ditto sepold
+##' @param missingare Values in the value_new column which
+##'     will be treated as NA in the key.
+##' @importFrom utils read.csv
+##' @export
+##' @return A data frame.
+##' @author Paul Johnson
+keyimport <- function(file, long = FALSE, ...,
+                      keynames = c(name_old = "name_old",
+                                   name_new = "name_new",
+                                   class_old = "class_old",
+                                   class_new = "class_new",
+                                   value_old = "value_old",
+                                   value_new = "value_new",
+                                   missings = "missings"),
+                      sepold = c(character = "|", logical = "|",
+                              integer = "|", factor = "|",
+                              ordered = "<", numeric = "|"),
+                      sepnew = sepold,
+                      missingare = c(".", "\\s",  NA)
+                      )
+{
+    ## new strsplit returns input if replacement is NA or blank space or TAB
+    strsplit2 <- function(x, split, fixed = TRUE, perl = FALSE, useBytes = FALSE){
+        if (is.na(n2NA(zapspace(split)))) return(x)
+        strsplit(x, split, fixed = TRUE, perl = FALSE, useBytes = FALSE)
+    }
+   
+    key <- read.csv(file, stringsAsFactors = FALSE, ...)
+    ## get rid of leading and trailing spaces that users sometimes insert in
+    ## key when using a spreadsheet
+    for (j in colnames(key)[sapply(key, is.character)]) {
+        key[ , j] <- zapspace(key[ , j])
+    }
+
+    if ("\\s" %in% missingare){
+        for (j in colnames(key)[sapply(key, is.character)]) {
+            key[ , j] <- n2NA(key[ , j])
+        }
+    }
+         
+    key$value_old2 <- NA
+    key$value_new2 <- NA
+
+    key$value_old2 <- mapply(strsplit2, key$value_old, sepold[key$class_old], fixed = TRUE)
+    key$value_new2 <- mapply(strsplit2, key$value_new, sepnew[key$class_new], fixed = TRUE)
+
+  
+    
+}
+
+
+
+## applyKey <- function(key, dframe, keynames = c(name_old = "name_old",
+##                                                name_new = "name_new",
+##                                                class_old = "class_old",
+##                                                class_new = "class_new",
+##                                                value_old = "value_old",
+##                                                value_new = "value_new",
+##                                                missings = "missings"))
+## {
+##     key <- colnamesReplace(key, keynames)
+
+##     ## if(!is.null(key[ , keynames["missings"]])){
+##     ##     keymissing <- key[ , c(name_old, missings)]
+##     ##     keymissing[!is.na(keymissing[ , "missings"])]
+        
+##     ##     for (i in keymissing$name_old) {
+##     ##         dframe[ ,i] <- assignMissing(dframe[ ,i], keymissing[keymissing[ , "name_old"] == i, "missings"])
+##     ##     }
+##     ## }
+
+
+
+##     ## go down the rows applying the changes
+##     for (i in 1:NROW(key)){
+##         if (all(is.na(key$value_old2[[i]]))) next()
+##         old_value <- key$value_old2[[i]]
+##         new_value <- key$value_new2[[i]]
+##         if(length(old_value) != length(new_value)) {
+##             messg <- paste("Variable ", key$name_old[i], " had different lengths of value old and new.\n", "We are going to ignore rather than fail.")
+##             warning(messg)
+##             next()
+##         }
+       
+##         dframe[ , key$name_old[i]] <-  mapvalues(dframe[ , key$name_old[i]], key$value_old2[[i]], key$value_new2[[i]])
+##     }
+##     dframe
+## }
+
+
+
+
+
+    
+## applyKeyLong <- function(key, dframe, keynames = c(name_old = "name_old",
+##                                                name_new = "name_new",
+##                                                class_old = "class_old",
+##                                                class_new = "class_new",
+##                                                value_old = "value_old",
+##                                                value_new = "value_new",
+##                                                missings = "missings"))
+## {
+##     key <- colnamesReplace(key, keynames)
+    
+##     if(!is.null(key[ , keynames["missings"]])){
+        
+##         keymissing <- key[ , c(keynames["name_old"], keynames["missings"])]
+##         keymissing[!is.na(keymissing[ , "missings"])]
+        
+##         for (i in key$name_old){
+##             dframe[ ,i] <- assignMissing(dframe[ ,i], key[key$name_old == i, "missings"])
+##         }
+##     }
+    
 
 ## }
