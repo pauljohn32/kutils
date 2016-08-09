@@ -159,16 +159,16 @@ cleanDF <- function(dframe, key){
 ##' @export
 ##' @author Paul Johnson
 ##' @examples
-##' set.seed(234234)
-##' N <- 200
-##' mydf <- data.frame(x5 = rnorm(N), x4 = rnorm(N),
-##'                    x3 = ordered(sample(c("lo", "med", "hi"),
-##'                    size = N, replace=TRUE),
-##'                    levels = c("lo", "med", "hi")),
-##'                    x2 = letters[sample(1:24, 200, replace = TRUE)],
-##'                    x1 = factor(sample(c("cindy", "bobby", "marsha",
-##'                                         "greg", "chris"), 200, replace = TRUE)))
-##' key <- keyTemplate(mydf, file = "mydfkey.csv")
+set.seed(234234)
+N <- 200
+mydf <- data.frame(x5 = rnorm(N), x4 = rnorm(N),
+                   x3 = ordered(sample(c("lo", "med", "hi"),
+                   size = N, replace=TRUE),
+                   levels = c("lo", "med", "hi")),
+                   x2 = letters[sample(1:24, 200, replace = TRUE)],
+                   x1 = factor(sample(c("cindy", "bobby", "marsha",
+                                        "greg", "chris"), 200, replace = TRUE)))
+key <- keyTemplate(mydf, file = "mydfkey.csv")
 ##'
 ##' data(natlongsurv)
 ##' key2 <- keyTemplate(natlongsurv, file = "natlongsurvkey.csv", max.levels = 15,
@@ -206,11 +206,12 @@ keyTemplate <- function(dframe, sort = FALSE,  file = "key.csv",
 
     key[ , "value_new"] <- key[ , "value_old"]
     
+    if (sort) key <- key[order(key$name_old), ]
+
     if (!is.null(file) | !is.na(file)){
         write.csv(key, paste0(outdir, "/", file), row.names = FALSE)
     }
 
-    if (sort) key <- key[order(key$name_old), ]
     key
 }
 
@@ -254,7 +255,7 @@ keyTemplate <- function(dframe, sort = FALSE,  file = "key.csv",
 ##'                                         "greg", "chris"), 200,
 ##'                    replace = TRUE)),
 ##'                    stringsAsFactors = FALSE)
-##' key <- keyTemplateLong(mydf, file = "mydfkeylong.csv")
+##' keylong <- keyTemplateLong(mydf, file = "mydfkeylong.csv")
 ##'
 ##' data(natlongsurv)
 ##' key2 <- keyTemplateLong(natlongsurv, file = "natlongsurvkey.csv", max.levels = 15,
@@ -285,7 +286,7 @@ keyTemplateLong <- function(dframe, file = "key.csv", outdir = getwd(),
     key <- do.call("rbind", lapply(cn, function(x){
         expand.grid(name = x,
                     class = df.class[[x]],
-                    value = getUnique(x))}))
+                    value = getUnique(x), stringsAsFactors = FALSE) } ) )
     
 
     key <- data.frame(name_old = key$name,
@@ -293,10 +294,12 @@ keyTemplateLong <- function(dframe, file = "key.csv", outdir = getwd(),
                       class_old = key$class,
                       class_new = key$class,
                       value_old = key$value,
-                      value_new = key$value)
+                      value_new = key$value,
+                      stringsAsFactors = FALSE)
     
     if (sort) key <- key[order(key$name_old), ]
-    key$expr <- ""
+    key$missings <- ""
+    key$recodes <- ""
     
     if (!is.null(file) | !is.na(file)){
         write.csv(key, paste0(outdir, "/", file), row.names = FALSE)
@@ -402,14 +405,18 @@ keyimport <- function(file, long = FALSE, ...,
                                    missings = "missings"),
                       sepold = c(character = "|", logical = "|",
                               integer = "|", factor = "|",
-                              ordered = "<", numeric = "|"),
-                      sepnew = sepold,
+                              ordered = "<", numeric = "|")
+                     ,
+                      sepnew = sepold
+                     ,
                       missingare = c(".", "\\s",  NA)
                       )
 {
-    ## new strsplit returns input if replacement is NA or blank space or TAB
+    ## if x is "", return NA
+    ## if "split" is NA or blank space or TAB, return unchanged x
     strsplit2 <- function(x, split, fixed = TRUE, perl = FALSE, useBytes = FALSE){
         if (is.na(n2NA(zapspace(split)))) return(x)
+        if (is.na(n2NA(zapspace(x)))) return(NA)
         strsplit(x, split, fixed = TRUE, perl = FALSE, useBytes = FALSE)
     }
    
@@ -420,20 +427,65 @@ keyimport <- function(file, long = FALSE, ...,
         key[ , j] <- zapspace(key[ , j])
     }
 
-    if ("\\s" %in% missingare){
-        for (j in colnames(key)[sapply(key, is.character)]) {
-            key[ , j] <- n2NA(key[ , j])
-        }
-    }
-         
-    key$value_old2 <- NA
-    key$value_new2 <- NA
-
-    key$value_old2 <- mapply(strsplit2, key$value_old, sepold[key$class_old], fixed = TRUE)
-    key$value_new2 <- mapply(strsplit2, key$value_new, sepnew[key$class_new], fixed = TRUE)
-
-  
+    ## if ("\\s" %in% missingare){
+    ##     for (j in colnames(key)[sapply(key, is.character)]) {
+    ##         key[ , j] <- n2NA(key[ , j])
+    ##     }
+    ## }
     
+    if (!long){
+        ## It is a short key
+        keysplit <- split(key, key$name_old, drop = FALSE)
+
+        keylist <- lapply(keysplit, function(keyds) {
+          
+            keyds$value_old.orig <- keyds$value_old
+            keyds$value_new.orig <- keyds$value_new
+            keyds$value_old <- NA
+            keyds$value_new <- NA
+            
+            val_old <- mapply(strsplit2, keyds$value_old.orig, sepold[keyds$class_old], fixed = TRUE)
+            val_new <- mapply(strsplit2, keyds$value_new.orig, sepnew[keyds$class_new], fixed = TRUE)
+            recodes <- unlist(strsplit2(keyds$recodes, ";", fixed = TRUE))
+            missings <- unlist(strsplit2(keyds$missings, ";", fixed = TRUE))
+            ## key3 <- expand.grid(name_old = keyds$name_old, name_new = keyds$name_new,
+            ##                    class_old = keyds$class_old, class_new = keyds$class_new,
+            ##                    value_old = unlist(val_old))
+            ## key3[ , "value_new"] <- unlist(val_new)
+            list(name_old = keyds$name_old, name_new = keyds$name_new,
+                 class_old = keyds$class_old, class_new = keyds$class_new,
+                 value_old = val_old, value_new = val_new,
+                 recodes = recodes, missings = missings)
+        }
+        )  
+    } else {
+        ## It was a long key
+        ## like unique, but it throws away white space, NA
+        unique2 <- function(x){
+            y <- unique(na.omit(n2NA(zapspace(x))))
+            if (length(y) > 1){
+                messg <- paste("Value of", deparse(substitute(x)), "not unique")
+                stop (messg)
+            }
+            y
+            }
+        keysplit <- split(key, key$name_old, drop = FALSE)
+
+        keylist <- lapply(keysplit, function(keyds){
+            name_old <- unique2(keyds$name_old)
+            name_new <- unique2(keyds$name_new)
+            class_old <- unique2(keyds$class_old)
+            class_new <- unique2(keyds$class_new)
+            recodes <- unique(na.omit(n2NA(zapspace(keyds$recodes))))
+            missings <- unlist(na.omit(n2NA(zapspace(keyds$missings))))
+            list(name_old = name_old, name_new = name_new,
+                 class_old = class_old, class_new = class_new,
+                 value_old = keyds$value_old, value_new = keyds$value_new,
+                 recodes = recodes, missings = missings)
+        }
+        )
+    }
+    keylist
 }
 
 
