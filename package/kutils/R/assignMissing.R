@@ -10,27 +10,33 @@
 ##'\enumerate{
 ##' \item For integer variables, use a vector of
 ##'     missings, as in c(8,9,10) or part of an R expression such
-##'     "> 8". For numerics, use a range such as "> 99".
-##' \item    For factors, include a vector of levels to be
+##'     "> 8", ">= 8", "< 7", or "<= 7". Only expressions beginning with > or < are allowed.
+##'
+##' \item For numerics, use an inequality such as "> 99". The only
+##'    other alternative we have allowed is a pair such as c(99, 101),
+##'    to mean that values greater than OR equal to 99 and less than
+##'    OR equal to 101 will be set as missing.
+##' 
+##' \item For factors, include a vector of levels to be
 ##'         marked as missing and removed from the list of levels.
-##'         \item For character variables, a character vector of
+##'
+##' \item For character variables, a character vector of
 ##'         values to be marked as missing.
-##' \item    If a
-##'     variable is real-valued, exact comparisons with == are
-##'     unreliable, so don't ask for them.  Use a two value vector to
-##'     indicate a range that should be set to missing. For example,
-##'     c("> 99", "< 101") will set values between 99 and 101 as
-##'     NA. For factors and character variables, it should be a set of
-##'     levels to be marked as NA, as in c("low", "high") or a vector
-##'     of numbers referring to existing levels as returned by
-##'     \code{levels()}.
 ##' }
+##' One of the concerns is that comparison of real-valued numerics is
+##' not entirely dependable.  Exact comparisons with == are
+##' unreliable, so don't ask for them.
+##'
+##' For factors, integers, and characters, particular values can
+##' be listed. If a particular variable does not have observations
+##' with the indicated values, the request will be ignored.
+##' 
 ##' @return A (hopefully) cleaned column of data
 ##' @export
 ##' @author Paul Johnson
 ##' @examples
-## 1.  Integers.
-## must be very sure these are truly integers, or else fails
+##' ## 1.  Integers.
+##' ## must be very sure these are truly integers, or else fails
 ##' x <- seq.int(2L, 22L, by = 2L)
 ##' missings <- c(2)
 ##' assignMissing(x, missings)
@@ -59,46 +65,51 @@
 ##' x <- ordered(c("low", "low", "med", "high"), levels = c("low", "med", "high"))
 ##' missings <- c("low", "high")
 ##' assignMissing(x, missings)
-##' ## 4. Real-valued variable
+## 4. Real-valued variable
 ##' set.seed(234234)
 ##' x <- rnorm(10)
 ##' missings <- "< 0"
 ##' assignMissing(x, missings)
-##' missings <- c("> 0.1", "< 0.7")
+##' missings <- "> -0.2"
 ##' assignMissing(x, missings)
-##' ## Inclusive, easier to see with rounded decimals
-##' ## x <- round(x, 2)
-##' ## missings <- c(">= 0.1", "<= 0.14")
-##' ## assignMissing(x, missings)
-##' ## ## If you need to remove the low and the high,
-##' ## ## necessary to set missings as a string with a semi-colon separator.
-##' ## missings <- c("< 0 && > 2")
-##' ## assignMissing(x2, missings[2])
+##' missings <- "c(0.1, 0.7)"
+##' assignMissing(x, missings)
 assignMissing <- function(x, missings){
-      if (is.character(x)){
+    if (is.character(missings)) missings <- zapspace(missings)
+    if (is.character(x)){
         x[x %in% missings] <- NA
         return(x)
-    } else if (is.factor(x)){
-        ## not needed??
-        ## x[x %in% missings] <- NA
+    }
+    if (is.factor(x)){
         levels(x)[which(levels(x) %in% missings)] <- NA
         return(x)
-    } else if (is.integer(x)) {
+    }
+    if (is.integer(x)){
         if (!is.character(missings)) mysep = "==" else mysep = ""
         conditional <- paste(paste(quote(x), mysep, missings), collapse = " | ")
         xcheck <- eval(parse(text = conditional))
         x[xcheck] <- NA
         return(x)
-    } else if (is.double(x)) { 
-        conditional <- paste(paste(quote(x), missings), collapse = " & ")
-        xcheck <- eval(parse(text = conditional))
-        x[xcheck] <- NA
-        return(x)
-    } else {
-        messg <- "Sorry, no missings assigned because variable type was unhandled"
-        warning(messg)
     }
-    ## return unchanced input, didn't see what to do
+    if (is.double(x)) {
+        if(substr(missings, 1, 1) %in% c(">", "<")){
+            conditional <- paste(quote(x), missings)
+            xcheck <- eval(parse(text = conditional))
+            x[xcheck] <- NA
+        } else if (substr(missings, 1, 1) == "c"){
+            misvec <- eval(parse(text = missings))
+            if (length(misvec) > 2) stop("Missings interval has more than 2 values")
+            if (!is.numeric(misvec)) stop("Missings vector must be numeric")
+            if (any(is.na(misvec))) stop("Missings interval should not have any NA values")
+            misvec <- sort(misvec)
+            x[x >= misvec[1] & x <= misvec[2]] <- NA
+        }
+        return(x)
+    }
+    
+    messg <- "Sorry, no missings assigned because variable type was unhandled"
+    warning(messg)
+    ## return unchanged input, didn't see what to do
     x 
 }
  
@@ -159,19 +170,19 @@ cleanDF <- function(dframe, key){
 ##' @export
 ##' @author Paul Johnson
 ##' @examples
-set.seed(234234)
-N <- 200
-mydf <- data.frame(x5 = rnorm(N), x4 = rnorm(N),
-                   x3 = ordered(sample(c("lo", "med", "hi"),
-                   size = N, replace=TRUE),
-                   levels = c("lo", "med", "hi")),
-                   x2 = letters[sample(1:24, 200, replace = TRUE)],
-                   x1 = factor(sample(c("cindy", "bobby", "marsha",
-                                        "greg", "chris"), 200, replace = TRUE)))
-key <- keyTemplate(mydf, file = "mydfkey.csv")
+##' set.seed(234234)
+##' N <- 200
+##' mydf <- data.frame(x5 = rnorm(N), x4 = rnorm(N),
+##'                    x3 = ordered(sample(c("lo", "med", "hi"),
+##'                    size = N, replace=TRUE),
+##'                    levels = c("lo", "med", "hi")),
+##'                    x2 = letters[sample(1:24, 200, replace = TRUE)],
+##'                    x1 = factor(sample(c("cindy", "bobby", "marsha",
+##'                                         "greg", "chris"), 200, replace = TRUE)))
+##' key <- keyTemplate(mydf, file = "mydf.key.csv")
 ##'
 ##' data(natlongsurv)
-##' key2 <- keyTemplate(natlongsurv, file = "natlongsurvkey.csv", max.levels = 15,
+##' key2 <- keyTemplate(natlongsurv, file = "natlongsurv.key.csv", max.levels = 15,
 ##'     sort = TRUE)
 ##' 
 keyTemplate <- function(dframe, sort = FALSE,  file = "key.csv",
@@ -255,19 +266,19 @@ keyTemplate <- function(dframe, sort = FALSE,  file = "key.csv",
 ##'                                         "greg", "chris"), 200,
 ##'                    replace = TRUE)),
 ##'                    stringsAsFactors = FALSE)
-##' keylong <- keyTemplateLong(mydf, file = "mydfkeylong.csv")
+##' keylong <- keyTemplateLong(mydf, file = "mydfkey.long.csv")
 ##'
 ##' data(natlongsurv)
-##' key2 <- keyTemplateLong(natlongsurv, file = "natlongsurvkey.csv", max.levels = 15,
+##' key2 <- keyTemplateLong(natlongsurv, file = "natlongsurv.longkey.csv", max.levels = 15,
 ##'     sort = TRUE)
 ##' 
 ##' \donttest{
 ##' if (require(openxlsx)){
-##'    write.xlsx(key2, file = "natlongsurv.key.xlsx")
+##'    write.xlsx(key2, file = "natlongsurv.longkey.xlsx")
 ##' }
 ##' }
 ##' 
-keyTemplateLong <- function(dframe, file = "key.csv", outdir = getwd(),
+keyTemplateLong <- function(dframe, file = "key.long.csv", outdir = getwd(),
                             max.levels = 10, sort = FALSE)
 {
     cn <- colnames(dframe)
@@ -308,47 +319,46 @@ keyTemplateLong <- function(dframe, file = "key.csv", outdir = getwd(),
 }
 
 
-
-
-## importWithKeyLong <- (dframe, key){
-
-##     ## First, apply missings
-##     ## Then apply numeric recodes with the value_new parsed
-##     ## Then apply factors with the value_news as they are
-
-
-##     ## clean up key column names, then
-##     ## colnamesReplace
-    
-## }
-
-
-## importWithKeyShort <- function(dframe, key){
-
-##     for (i in colnames(dframe)){
-##         dframe[ , key[key$name_old == i, "name_new"]] <- cleanVar("nlsdat", i, key[key$var2 == i , "missings"])
-## }
-
-
-
-## }
-
-
-##' Convert character variable values that include only white space values to NA
+##' Convert nothing to R NA (nothing = white space or other indications of missing value)
 ##'
-##' Using regular expression matching, any variable that has "nothing", including
-##' "", or " ", or any number of spaces, or a tab, and no other characters, is changed to
-##' R missing value (NA).
+##' Using regular expression matching, any value that has nothing
+##' except for the indicated "nothing" values is converted to NA.  The
+##' "nothing" values included by default are a period by itself (A SAS
+##' missing value), an empty string, or white space, meaning " ", or
+##' any number of spaces, or a tab.
 ##' @param x A character vector
-##' @return A vector with white space values replaced by NA
+##' @param nothings A vector of values to be matched by regular
+##'     expressions as missing.  The default vector is c("\\.",
+##'     "\\s"), where "\\." means a literal period (backslashes needed
+##'     to escape the symbol which would otherwise match anything in a
+##'     regular expression).
+##' @param zapspace Should leading and trailing white space be
+##'     ignored, so that, for example " . " and "." are both treated
+##'     as missing.
+##' @return A vector with "nothing" values replaced by R's NA symbol.
+##'     Does not alter other values in the vector. Previous version
+##'     had applied zapspace to non-missing values, but it no longer
+##'     does so.
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @export
 ##' @examples
-##' gg <- c("", " ", "   ", "\t", "\t some", "some\t", " space first")
-##' (n2NA(gg))
-n2NA <- function(x){
+##' gg <- c("", " ", "   ", "\t", "\t some", "some\t", " space first", ".", " . ")
+##' n2NA(x = gg)
+##' n2NA(x = gg, zapspace = FALSE)
+##' n2NA(x = gg, nothings = c("\\s"), zapspace = FALSE)
+##' n2NA(x = gg, nothings = c("\\."), zapspace = TRUE)
+##' n2NA(x = gg, nothings = c("\\."), zapspace = FALSE)
+n2NA <- function(x, nothings = c("\\.", "\\s"), zapspace = TRUE){
     if (!is.character(x)) stop("n2NA requires a character variable")
-    x[grep("^\\s*$", x)] <- NA
+    if (!zapspace){
+        for(j in seq_along(nothings)){
+            x[grep(paste0("^", nothings[j], "*$"), x)] <- NA
+        }
+    } else {
+        for(j in seq_along(nothings)){
+            x[grep(paste0("^\\s*", nothings[j], "*\\s*$"), x)] <- NA
+        }
+    }
     x
 }
 NULL
@@ -377,7 +387,7 @@ zapspace <- function(x){
 
 
 
-##' Import a key formatted variable key
+##' Import a variable key
 ##'
 ##' After researcher has updated the key by filling in
 ##' new names and values, we import that key file.
@@ -393,7 +403,7 @@ zapspace <- function(x){
 ##'     will be treated as NA in the key.
 ##' @importFrom utils read.csv
 ##' @export
-##' @return A data frame.
+##' @return A list with one element per variable name
 ##' @author Paul Johnson
 keyimport <- function(file, long = FALSE, ...,
                       keynames = c(name_old = "name_old",
@@ -456,8 +466,7 @@ keyimport <- function(file, long = FALSE, ...,
                  class_old = keyds$class_old, class_new = keyds$class_new,
                  value_old = val_old, value_new = val_new,
                  recodes = recodes, missings = missings)
-        }
-        )  
+        })  
     } else {
         ## It was a long key
         ## like unique, but it throws away white space, NA
@@ -485,6 +494,7 @@ keyimport <- function(file, long = FALSE, ...,
         }
         )
     }
+    class(keylist) <- "keylist"
     keylist
 }
 
