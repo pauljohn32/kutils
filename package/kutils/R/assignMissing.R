@@ -192,7 +192,7 @@ keyTemplate <- function(dframe, sort = FALSE,  file = "key.csv",
     key <- data.frame(name_old = colnames(dframe), name_new = colnames(dframe),
                       class_old = df.class, class_new = df.class,
                       value_old = as.character(""), value_new = "", 
-                      recodes = "", missings = "", stringsAsFactors = FALSE)
+                      missings = "",  recodes = "",stringsAsFactors = FALSE)
     
 
     for (i in names(df.class)){
@@ -306,6 +306,8 @@ keyTemplateLong <- function(dframe, file = "key.long.csv", outdir = getwd(),
                       class_new = key$class,
                       value_old = key$value,
                       value_new = key$value,
+                      missings = "",
+                      recodes = "",
                       stringsAsFactors = FALSE)
     
     if (sort) key <- key[order(key$name_old), ]

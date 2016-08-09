@@ -1,3 +1,10 @@
+2016-08-09  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/assignMissing.R (n2NA): n2NA accepts more arguments for
+	types of values to be removed; zapspace argument.
+
+	* ../R/assignMissing.R (zapspace): remove leading and trailing spaces.
+
 2016-08-03  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/assignMissing.R (keyTemplateLong): remove usage of openxlsx
