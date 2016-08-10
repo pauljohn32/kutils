@@ -1,3 +1,8 @@
+20160810: 
+
+In peek, make number of missings show in histogram for
+numeric variables.
+
 2016-03-03
 
 Create .gitignore file, ignore backups, etc.
