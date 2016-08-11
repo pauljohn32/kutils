@@ -143,6 +143,7 @@ initProject <- function(dir = NULL, ddir = "data",
         messg4 <- paste("The git executable was not found.",
                         "Thus, a git repo was not created in the working directory.",
                         "Please install it and use it faithfully")
+        cat(messg4)
     }
     dir
 }
