@@ -1,3 +1,11 @@
+2016-08-11  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/assignMissing.R (getUnique): pack the keyTemplateLong and
+	keyTemplate functions into one single function with the argument
+	long = TRUE/FALSE to differentiate them. 
+
+	* ../R/project.R (initProject): output "there is no git" message.
+
 2016-08-11  Paul Johnson  <pauljohn@dellap14>
 
 	* ../R/assignMissing.R (recodeDF): first working version

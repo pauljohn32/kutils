@@ -127,24 +127,51 @@ assignMissing <- function(x, missings){
  
 
 
-##' Create a 'wide format' variable key table
+##' Create variable key
 ##'
-##' This is the original style of the variable key. It is more
-##' compact, probably easier for experts to use, but perhaps more
-##' complicated for non-programmers.
+##' A variable key is a human readable document that can be
+##' interpreted by R to import and recode data. This might also be
+##' referred to as a "programmable codebook."  This function inspects
+##' a data frame, takes notice of its variable names, their classes,
+##' and legal values, and then it creates a table summarizing that
+##' information. The aim is to create a document that principal
+##' investigators and research assistants can use to keep a project
+##' well organize.  Please see the vignette in this package.
+##'
+##' The variable key can be created in two formats.  The original
+##' style of the variable key has one row per variable. It has a style
+##' for compact notation about current values and required recodes.
+##' That is more compact, probably easier for experts to use, but
+##' perhaps more complicated for non-programmers. The long style
+##' variable key has one row per value per variable.  Thus, in a
+##' larger project, the long style key can be quite voluminous. However,
+##' in a larger project, the long style key seems to be more likely to
+##' generate the intended result.
+##'
+##' After a key is created, it should be re-imported into R with the
+##' \code{kutils::keyimport} function.  Then the key structure can
+##' guide the importation and recoding of the data set.
+##' 
 ##' @param dframe A data frame
+##' @param long Default FALSE.
 ##' @param sort Default FALSE. Should the rows representing the
 ##'     variables be sorted alphabetically? Otherwise, they appear in
 ##'     the order in which they were included in the original dataset.
-##' @param file A text string for the output file's base name.  The
-##'     file name should end in a suffix ".csv", ".rds", or
-##'     ".xlsx". If spreadsheet output in an XLSX file is requested,
-##'     user should make sure the openxlsx package is installed.
+##' @param file DEFAULT NULL, meaning no file is produced. The primary
+##'     purpose of this function is to create the output file, so
+##'     users should write a text string for the output file's base
+##'     name.  We planned for 3 storage formats, comma separate
+##'     variables, MS Excel XLSX format, or R's RDS.  To designate
+##'     which format will be used, the user should specify a file name
+##'     that ends in a suffix ".csv", ".rds", or ".xlsx". If
+##'     spreadsheet output in an XLSX file is requested, user should
+##'     make sure the openxlsx package is installed.
 ##' @param outdir The output directory for the new variable key files.
 ##'     Default is current working directory.
-##' @param max.levels Default = 15. When enumerating existing values
-##'     for a variable, what is the maximum number of valuses that
-##'     should be included in the variable key?
+##' @param max.levels When enumerating existing values for a variable,
+##'     what is the maximum number of valuses that should be included
+##'     in the variable key? Default = 15 for long keys, 10 for wide
+##'     keys.
 ##' @return A key in the form of a data frame. May also be saved on
 ##'     disk.
 ##' @export
@@ -166,49 +193,104 @@ assignMissing <- function(x, missings){
 ##'                    stringsAsFactors = FALSE)
 ##' mydf$x4[sample(1:N, 10)] <- 999
 ##' mydf$x5[sample(1:N, 10)] <- -999
+##' 
+##' write.csv(mydf, file = "../inst/extdata/mydf.csv")
+##' 
+##' mydf.key <- keyTemplate(mydf, file = "mydf.key.csv")
+##' mydf.keylong <- keyTemplate(mydf, long = TRUE, file = "mydfkey.long.csv")
 ##'
-##' key <- keyTemplate(mydf, file = "mydf.key.csv")
-##' keyxlsx <- keyTemplate(mydf, file = "mydf.key.xlsx")
-##' 
+##' ## Try with the national longitudinal study data
 ##' data(natlongsurv)
-##' key2 <- keyTemplate(natlongsurv, file = "natlongsurv.key.csv", max.levels = 15,
-##'     sort = TRUE)
+##' natlong.key <- keyTemplate(natlongsurv, file = "natlongsurv.key.csv",
+##'                            max.levels = 15, sort = TRUE)
+##'
+##' natlong.keylong <- keyTemplate(natlongsurv, long = TRUE,
+##'                    file = "natlongsurv.keylong.csv", sort = TRUE)
 ##' 
-keyTemplate <- function(dframe, sort = FALSE,  file = NULL,
-                        outdir = getwd(), max.levels = 15)
+##' \donttest{
+##' if (require(openxlsx)){
+##'    write.xlsx(natlong.key, file = "natlongsurv.key.xlsx")
+##'    write.xlsx(natlong.keylong, file = "natlongsurv.keylong.xlsx")
+##' }
+##' }
+##'  
+keyTemplate <- function(dframe, long = FALSE, sort = FALSE, file = NULL,
+                        outdir = getwd(), max.levels = 10)
 {
     df.class <- sapply(dframe, function(x)class(x)[1])
-    key <- data.frame(name_old = colnames(dframe), name_new = colnames(dframe),
-                      class_old = df.class, class_new = df.class,
-                      value_old = as.character(""), value_new = "", 
-                      missings = "",  recodes = "", stringsAsFactors = FALSE)
-    
-
-    for (i in names(df.class)){
-        getValues <- function(x){
-            y <- dframe[ , x]
-            z <- ""
-            if (df.class[x] %in% c("integer", "logical", "character", "Date")) {
-                z <- paste0(sort(unique(y)[1:min(max.levels, length(unique(y)))]), collapse = "|")
-                return(z)
+    cn <- colnames(dframe)
+    ## Make a long key
+    if(isTRUE(long)){
+        if (missing(max.levels)) max.levels = 15
+           
+        getUnique <- function(xname){
+            if (df.class[[xname]] == "numeric") return ("")
+            if (df.class[[xname]] %in% c("integer", "character")){
+                xunique <- sort(unique(dframe[ , xname]))
+                return (xunique[1:min(max.levels, length(xunique))])
             }
-            if (df.class[x] == "ordered"){
-                z <- paste0(levels(y), collapse = "<")
+            if (df.class[[xname]] %in% c("factor", "ordered")){
+                return(levels(dframe[ , xname]))
             }
-            if (df.class[x] == "factor"){
-                z <- paste0(levels(y), collapse = "|")
-                return(z)
-            }
-            z
         }
-        key[i, "value_old"] <- getValues(i)
+
+        key <- do.call("rbind", lapply(cn, function(x){
+            expand.grid(name = x,
+                        class = df.class[[x]],
+                        value = getUnique(x), stringsAsFactors = FALSE)}))
+                
+        key <- data.frame(name_old = key$name,
+                          name_new = key$name,
+                          class_old = key$class,
+                          class_new = key$class,
+                          value_old = key$value,
+                          value_new = key$value,
+                          missings = "",
+                          recodes = "",
+                          stringsAsFactors = FALSE)
+        
+        if (sort) key <- key[order(key$name_old), ]
+        key$missings <- ""
+        key$recodes <- ""
+              
+        class(key) <- c("keylong", class(key))
+    } else {
+        
+        ## else !long, so make a wide key
+        key <- data.frame(name_old = colnames(dframe), name_new = colnames(dframe),
+                          class_old = df.class, class_new = df.class,
+                          value_old = as.character(""), value_new = "", 
+                          missings = "",  recodes = "", stringsAsFactors = FALSE)
+        
+        
+        for (i in cn){
+            getValues <- function(x){
+                y <- dframe[ , x]
+                z <- ""
+                if (df.class[x] %in% c("integer", "logical", "character", "Date")) {
+                    z <- paste0(sort(unique(y)[1:min(max.levels, length(unique(y)))]), collapse = "|")
+                    return(z)
+                }
+                if (df.class[x] == "ordered"){
+                    z <- paste0(levels(y), collapse = "<")
+                    return(z)
+                }
+                if (df.class[x] == "factor"){
+                    z <- paste0(levels(y), collapse = "|")
+                    return(z)
+                }
+                z
+            }
+            key[i, "value_old"] <- getValues(i)
+        }
+        
+        key[ , "value_new"] <- key[ , "value_old"]
+        
+        if (sort) key <- key[order(key$name_old), ]
+        class(key) <- c("key", class(key))
     }
-
-    key[ , "value_new"] <- key[ , "value_old"]
-    
-    if (sort) key <- key[order(key$name_old), ]
-
-    if (!is.null(file) | !is.na(file)){
+   
+    if (!missing(file) & !is.null(file)){
         fp <- paste0(outdir, "/", file)
         if (length(grep("csv$", tolower(file))) > 0){
             write.csv(key, file = fp, row.names = FALSE)
@@ -216,7 +298,7 @@ keyTemplate <- function(dframe, sort = FALSE,  file = NULL,
             if (require(openxlsx)){
                 write.xlsx(key, file = fp)
             } else {
-                stop("xlsx output created but openxlsx is not installed")
+                warning("xlsx output requested but openxlsx is not installed")
             }
         } else if (length(grep("rds$", tolower(file)))){
             saveRDS(key, file = fp)
@@ -224,110 +306,40 @@ keyTemplate <- function(dframe, sort = FALSE,  file = NULL,
             warning("Proposed key name did not end in csv, xlsx, or rds, so no file created")
         }
     }
-    
-    class(key) <- c("key", class(key))
     key
 }
 
     
-##' Create a variable key template in the long form
-##'
-##' A variable key is a human readable document that can be
-##' interpreted by R to import and recode data. This function
-##' generates the long form variable key, in which the rows represent
-##' possible values that a variable might take on.
-##'
-##' This function creates a table in an output file that researchers, even
-##' ones who do not use R, can enter new variable names, new values, and so forth.
-##' 
-##' @param dframe A data frame
-##' @param sort Default FALSE. Should the rows representing the
-##'     variables be sorted alphabetically? Otherwise, they appear in
-##'     the order in which they were included in the original dataset.
-##' @param file A text string for the output file's base name.  Defaut
-##'     is "key.csv"
-##' @param outdir The output directory for the new variable key files.
-##'     Default is current working directory.
-##' @param max.levels Default = 10. When enumerating existing values
-##'     for a variable, what is the maximum number of valuses that should be included in the variable
-##'     key?  There will be one row per value.
-##' @export
-##' @importFrom utils write.csv
-##' @return A data frame including the variable key. Creates a file
-##'     named "key.csv".
-##' @author Paul Johnson <pauljohn@@ku.edu> and Ben Kite
-##'     <bakite@@ku.edu>
-##' @examples
-##' set.seed(234234)
-##' N <- 200
-##' mydf <- data.frame(x5 = rnorm(N),
-##'                    x4 = rpois(N, lambda = 3),
-##'                    x3 = ordered(sample(c("lo", "med", "hi"),
-##'                    size = N, replace=TRUE),
-##'                    levels = c("med", "lo", "hi")),
-##'                    x2 = letters[sample(c(1:4,6), 200, replace = TRUE)],
-##'                    x1 = factor(sample(c("cindy", "bobby", "marcia",
-##'                                         "greg", "peter"), 200,
-##'                    replace = TRUE)),
-##'                    x7 = ordered(letters[sample(c(1:4,6), 200, replace = TRUE)]),
-##'                    x6 = sample(c(1:5), 200, replace = TRUE),
-##'                    stringsAsFactors = FALSE)
-##' mydf$x4[sample(1:N, 10)] <- 999
-##' mydf$x5[sample(1:N, 10)] <- -999
-##' keylong <- keyTemplateLong(mydf, file = "mydfkey.long.csv")
-##'
-##' data(natlongsurv)
-##' key2 <- keyTemplateLong(natlongsurv, file = "natlongsurv.longkey.csv", max.levels = 15,
-##'     sort = TRUE)
-##' 
-##' \donttest{
-##' if (require(openxlsx)){
-##'    write.xlsx(key2, file = "natlongsurv.longkey.xlsx")
-##' }
-##' }
-##' 
-keyTemplateLong <- function(dframe, file = "key.long.csv", outdir = getwd(),
-                            max.levels = 10, sort = FALSE)
-{
-    cn <- colnames(dframe)
-    df.class <- sapply(dframe, function(x)class(x)[1])
-    getUnique <- function(xname){
-        if (df.class[[xname]] == "numeric") return ("")
-        if (df.class[[xname]] %in% c("integer", "character")){
-            xunique <- sort(unique(dframe[ , xname]))
-            return (xunique[1:min(max.levels, length(xunique))])
-        }
-        if (df.class[[xname]] %in% c("factor", "ordered")){
-            return(levels(dframe[ , xname]))
-        }
-    }
-
-    key <- do.call("rbind", lapply(cn, function(x){
-        expand.grid(name = x,
-                    class = df.class[[x]],
-                    value = getUnique(x), stringsAsFactors = FALSE) } ) )
-    
-
-    key <- data.frame(name_old = key$name,
-                      name_new = key$name,
-                      class_old = key$class,
-                      class_new = key$class,
-                      value_old = key$value,
-                      value_new = key$value,
-                      missings = "",
-                      recodes = "",
-                      stringsAsFactors = FALSE)
-    
-    if (sort) key <- key[order(key$name_old), ]
-    key$missings <- ""
-    key$recodes <- ""
-    
-    if (!is.null(file) | !is.na(file)){
-        write.csv(key, paste0(outdir, "/", file), row.names = FALSE)
-    }
-    class(key) <- c("keylong", class(key))
-    key
-}
+## ##' Create a variable key template in the long form
+## ##'
+## ##'
+## ##' This function creates a table in an output file that researchers, even
+## ##' ones who do not use R, can enter new variable names, new values, and so forth.
+## ##' 
+## ##' @param dframe A data frame
+## ##' @param sort Default FALSE. Should the rows representing the
+## ##'     variables be sorted alphabetically? Otherwise, they appear in
+## ##'     the order in which they were included in the original dataset.
+## ##' @param file A text string for the output file's base name.  Defaut
+## ##'     is "key.csv"
+## ##' @param outdir The output directory for the new variable key files.
+## ##'     Default is current working directory.
+## ##' @param max.levels Default = 10. When enumerating existing values
+## ##'     for a variable, what is the maximum number of valuses that should be included in the variable
+## ##'     key?  There will be one row per value.
+## ##' @export
+## ##' @importFrom utils write.csv
+## ##' @return A data frame including the variable key. Creates a file
+## ##'     named "key.csv".
+## ##' @author Paul Johnson <pauljohn@@ku.edu> and Ben Kite
+## ##'     <bakite@@ku.edu>
+## ##' @examples
+## ##' 
+## keyTemplateLong <- function(dframe, file = "key.long.csv", outdir = getwd(),
+##                             max.levels = 10, sort = FALSE)
+## {
+  
+##}
 
 
 ##' Convert nothing to R NA (nothing = white space or other indications of missing value)
@@ -337,7 +349,8 @@ keyTemplateLong <- function(dframe, file = "key.long.csv", outdir = getwd(),
 ##' "nothing" values included by default are a period by itself (A SAS
 ##' missing value), an empty string, or white space, meaning " ", or
 ##' any number of spaces, or a tab.
-##' @param x A character vector
+##' @param x A character vector. If x is not a character vector, it is
+##'     returned unaltered without warning.
 ##' @param nothings A vector of values to be matched by regular
 ##'     expressions as missing.  The default vector is c("\\.",
 ##'     "\\s"), where "\\." means a literal period (backslashes needed
@@ -360,7 +373,9 @@ keyTemplateLong <- function(dframe, file = "key.long.csv", outdir = getwd(),
 ##' n2NA(x = gg, nothings = c("\\."), zapspace = TRUE)
 ##' n2NA(x = gg, nothings = c("\\."), zapspace = FALSE)
 n2NA <- function(x, nothings = c("\\.", "\\s"), zapspace = TRUE){
-    if (!is.character(x)) stop("n2NA requires a character variable")
+    if (!is.character(x)) {
+        return(x)
+    }
     if (!zapspace){
         for(j in seq_along(nothings)){
             x[grep(paste0("^", nothings[j], "*$"), x)] <- NA
@@ -376,11 +391,13 @@ NULL
 
 ##' Convert leading or trailing white space and tab characters to nothing.
 ##'
-##' This eliminates any characters matched by the regular expression `\\s` if
-##' they appear at the beginning of a string or at its end. It does not alter
-##' spaces in the interior of a string
+##' This eliminates any characters matched by the regular expression
+##' `\\s` if they appear at the beginning of a string or at its
+##' end. It does not alter spaces in the interior of a string
 ##' @param x A character vector
-##' @return A character vector with leading and trailing white space values removed.
+##' @return If x is a character vector, return is a character vector
+##'     with leading and trailing white space values removed. If x is
+##'     not a character vector, an unaltered x is returned.
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @export
 ##' @examples
@@ -388,7 +405,6 @@ NULL
 ##' (zapspace(gg))
 zapspace <- function(x){
     if (!is.character(x)){
-        warning("zapspace does nothing to non-character variables")
         return(x)
     }
     y <- gsub("^\\s*", "", x)
@@ -402,6 +418,13 @@ zapspace <- function(x){
 ##'
 ##' After researcher has updated the key by filling in new names and
 ##' values, we import that key file.
+##'
+##' The return value is a list, with one element per variable, but
+##' some attributes that may be helpful are worth keeping in mind. The
+##' value of the attribute \code{"class_new"} may be helpful as an
+##' argument in a function like \code{read.csv("mydf.key.csv", colClasses =
+##' attr(keylist, "class_new")}. 
+##' 
 ##' @param key A key object or a file name, csv, xlsx or rds.
 ##' @param long Is this a long format key file? If \code{key} is an
 ##'     object of class key or keylong, the value of long will be
@@ -414,11 +437,15 @@ zapspace <- function(x){
 ##'     regular expressions.
 ##' @param sepnew Ditto sepold
 ##' @param missingare Values in the value_new column which will be
-##'     treated as NA in the key.
+##'     treated as NA in the key. The defaults will prevent a new
+##'     value like "" or " ", so if one intends to insert white space,
+##'     change the missingare vector.
 ##' @importFrom utils read.csv
 ##' @export
-##' @return A list with one element per variable name
-##' @author Paul Johnson mydf.keylist <-
+##' @return A list with one element per variable name, along with some
+##'     attributes like class_old and class_new. The class is set as
+##'     well, "keylist". 
+##' @author Paul Johnson mydf.keylist <- mydf.keylist <-
 ##' mydf.keylist <-  keyimport("../inst/extdata/mydf.key_new.csv")
 keyimport <- function(key, long = FALSE, ...,
                       keynames = c(name_old = "name_old",
@@ -535,76 +562,14 @@ keyimport <- function(key, long = FALSE, ...,
         
         keylist <- lapply(keysplit, makeOneVar)
     }
+
+    attr(keylist, "class_old") <- sapply(keylist, function(keyds) keyds$class_old)
+    attr(keylist, "class_new") <- sapply(keylist, function(keyds) keyds$class_new)
     class(keylist) <- "keylist"
     keylist
 }
 
 
-
-## applyKey <- function(key, dframe, keynames = c(name_old = "name_old",
-##                                                name_new = "name_new",
-##                                                class_old = "class_old",
-##                                                class_new = "class_new",
-##                                                value_old = "value_old",
-##                                                value_new = "value_new",
-##                                                missings = "missings"))
-## {
-##     key <- colnamesReplace(key, keynames)
-
-##     ## if(!is.null(key[ , keynames["missings"]])){
-##     ##     keymissing <- key[ , c(name_old, missings)]
-##     ##     keymissing[!is.na(keymissing[ , "missings"])]
-        
-##     ##     for (i in keymissing$name_old) {
-##     ##         dframe[ ,i] <- assignMissing(dframe[ ,i], keymissing[keymissing[ , "name_old"] == i, "missings"])
-##     ##     }
-##     ## }
-
-
-
-##     ## go down the rows applying the changes
-##     for (i in 1:NROW(key)){
-##         if (all(is.na(key$value_old2[[i]]))) next()
-##         old_value <- key$value_old2[[i]]
-##         new_value <- key$value_new2[[i]]
-##         if(length(old_value) != length(new_value)) {
-##             messg <- paste("Variable ", key$name_old[i], " had different lengths of value old and new.\n", "We are going to ignore rather than fail.")
-##             warning(messg)
-##             next()
-##         }
-       
-##         dframe[ , key$name_old[i]] <-  mapvalues(dframe[ , key$name_old[i]], key$value_old2[[i]], key$value_new2[[i]])
-##     }
-##     dframe
-## }
-
-
-
-
-
-    
-## applyKeyLong <- function(key, dframe, keynames = c(name_old = "name_old",
-##                                                name_new = "name_new",
-##                                                class_old = "class_old",
-##                                                class_new = "class_new",
-##                                                value_old = "value_old",
-##                                                value_new = "value_new",
-##                                                missings = "missings"))
-## {
-##     key <- colnamesReplace(key, keynames)
-    
-##     if(!is.null(key[ , keynames["missings"]])){
-        
-##         keymissing <- key[ , c(keynames["name_old"], keynames["missings"])]
-##         keymissing[!is.na(keymissing[ , "missings"])]
-        
-##         for (i in key$name_old){
-##             dframe[ ,i] <- assignMissing(dframe[ ,i], key[key$name_old == i, "missings"])
-##         }
-##     }
-    
-
-## }
 
 
 
@@ -703,9 +668,7 @@ recodeDF <- function(dframe, keylist){
         ## Or "factor" to "ordered"
         if(class(dframe[ ,vn])[1] != class_new.key) dframe[ ,vn] <- as(dframe[ , vn], class_new.key)
     }
-
-
-    
+   
     dframe <- colnamesReplace(dframe,  sapply(keylist, function(x) x$name_old), sapply(keylist, function(x) x$name_new))
     
     xx <- merge(dframe,  dforig, by = "row.names",  all = TRUE, suffixes = c("", ".orig"))
