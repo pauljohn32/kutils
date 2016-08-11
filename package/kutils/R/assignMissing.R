@@ -410,16 +410,16 @@ zapspace <- function(x){
 ##' @param keynames If key column names differ from what we expect,
 ##'     declare the new names in a named vector.
 ##' @param sepold The separators we currently use are "|" and "<", but
-##'     if for whatever reason those were altered, say so here.
+##'     if for whatever reason those were altered, say so here. Use
+##'     regular expressions.
 ##' @param sepnew Ditto sepold
 ##' @param missingare Values in the value_new column which will be
 ##'     treated as NA in the key.
 ##' @importFrom utils read.csv
 ##' @export
 ##' @return A list with one element per variable name
-##' @author Paul Johnson
-##' mydf.keylist <- keyimport("../inst/extdata/mydf.key_new.csv")
-##' 
+##' @author Paul Johnson mydf.keylist <-
+##' mydf.keylist <-  keyimport("../inst/extdata/mydf.key_new.csv")
 keyimport <- function(key, long = FALSE, ...,
                       keynames = c(name_old = "name_old",
                                    name_new = "name_new",
@@ -429,9 +429,9 @@ keyimport <- function(key, long = FALSE, ...,
                                    value_new = "value_new",
                                    missings = "missings")
                      ,
-                      sepold = c(character = "|", logical = "|",
-                              integer = "|", factor = "|",
-                              ordered = "<", numeric = "|")
+                      sepold = c(character = "\\|", logical = "\\|",
+                              integer = "\\|", factor = "[\\|<]",
+                              ordered = "[\\|<]", numeric = "\\|")
                      ,
                       sepnew = sepold
                      ,
@@ -440,14 +440,14 @@ keyimport <- function(key, long = FALSE, ...,
 {
     ## if x is "", return NA
     ## if "split" is NA or blank space or TAB, return unchanged x
-    strsplit2 <- function(x, split, fixed = TRUE, perl = FALSE, useBytes = FALSE){
+    strsplit2 <- function(x, split, fixed = FALSE, perl = FALSE, useBytes = FALSE){
         if (is.na(n2NA(zapspace(split)))) return(x)
         if (is.na(n2NA(zapspace(x)))) return(NA)
-        strsplit(x, split, fixed = TRUE, perl = FALSE, useBytes = FALSE)
+        strsplit(x, split, fixed = fixed, perl = perl, useBytes = useBytes)
     }
 
     ## if it is already a key list, return with no changes
-    if (class(key) == "keylist") return(keylist)
+    if (inherits(key,"keylist")) return(keylist)
     if (inherits(key, "key")) {
         long <- FALSE
     } else if (inherits(key, "keylong")){
@@ -495,15 +495,11 @@ keyimport <- function(key, long = FALSE, ...,
             keyds$value_old <- NA
             keyds$value_new <- NA
             
-            val_old <- mapply(strsplit2, keyds$value_old.orig, sepold[keyds$class_old], fixed = TRUE)
-            val_new <- mapply(strsplit2, keyds$value_new.orig, sepnew[keyds$class_new], fixed = TRUE)
+            val_old <- unlist(strsplit2(keyds$value_old.orig, sepold[keyds$class_old]))
+            val_new <- unlist(strsplit2(keyds$value_new.orig, sepnew[keyds$class_new]))
             val_new[val_new %in% missingare] <- NA
             recodes <- unlist(strsplit2(keyds$recodes, ";", fixed = TRUE))
             missings <- unlist(strsplit2(keyds$missings, ";", fixed = TRUE))
-            ## key3 <- expand.grid(name_old = keyds$name_old, name_new = keyds$name_new,
-            ##                    class_old = keyds$class_old, class_new = keyds$class_new,
-            ##                    value_old = unlist(val_old))
-            ## key3[ , "value_new"] <- unlist(val_new)
             list(name_old = keyds$name_old, name_new = keyds$name_new,
                  class_old = keyds$class_old, class_new = keyds$class_new,
                  value_old = val_old, value_new = val_new,
@@ -651,58 +647,66 @@ cleanDF <- function(dframe, key){
 
 
 
-recodeDF(dframe, keylist){
+recodeDF <- function(dframe, keylist){
     dforig <- dframe
     
     ## coerce existing column to type requested in data frame
     ## Wait! Should this happen last or later?
     
-    ## For numeric and integer variables, only accept ">="  and c(a,b) values
+    ## For numeric and integer variables, only accept ">="  and "c(a,b)" values
     for (vn in names(keylist)){
         missings <-  na.omit(keylist[[vn]]$missings)
         if (length(missings) > 0){
             dframe[ , vn] <- assignMissing(dframe[ , vn], missings)
         }
     }
-
+    
     for (vn in names(keylist)){
         class_new.key <- keylist[[vn]]$class_new
+        class_old.key <- keylist[[vn]]$class_old
         class_old.data <- class(dframe[ , vn])[1]
-
+        
+        
         ## If desired class is same, no problem! just flush through the values
-        if (identical(class_new.key, class_old.data)){
-            dframe[ , vn] <- mapvalues(dframe[ , vn], keylist[[vn]]$value_old, keylist[[vn]]$value_new)
-        } 
-
-        else if (class_new.key == "character"){
-            ## map values, then
-            ## coerce
-        }
-        
-        else if (class_new.key == "numeric" && class_old.data == "integer"){
-            ## mapvalues first, then
-            ## coerce to numeric do the right thing
-        }
-        
-
-        else if (class_new.key %in% c("numeric", "integer") && class_old.data != "character")){
-            ## Do the right thing
-            ## Try map then coerce
-        } 
-        
-        else if (class_new.key == "ordered" && class_old.data %in% c("integer", "factor", "character")){
-            ## Map then coerce
-            dframe[ , vn] <- mapvalues(dframe[ , vn], keylist[[vn]]$value_old, keylist[[vn]]$value_new)
-            newlevels <- keylist[[vn]]$value_new
-            ## FIX ME FIX ME.
-            oldlevels <- levels(factor(dframe[ , vn]))
-            ## What if number of new levels is not correct?
-            if (class_old.data == "factor"){
-                if (levels(factor(dframe[ , vn])), 
-                dframe[ , vn] <- ordered(dframe[ , vn], levels = newlevels2)
+        ## Consider taking easy road and using this as a big hammer, but only if value_old
+        ## is not NA or "" 
+        ##if (identical(class_new.key, class_old.data)){
+        if(class_new.key %in% c("ordered", "factor")){
+            if (all(is.na(keylist[[vn]]$value_old))){
+                if (any(!is.na(keylist[[vn]]$value_new))){
+                    mytext <- paste(class_new.key, "(dframe[ , vn], levels = keylist[[vn]]$value_new)")
+                    dframe[ , vn] <- eval(parse(text = mytext))
+                } else {
+                    ## value_old was NA and value_new is NA, so do nothing.
+                    next()
+                }
+            } else if (length(keylist[[vn]]$value_old) == length(keylist[[vn]]$value_old)){
+                ## browser()
+                mytext <- paste(class_new.key, "(dframe[ , vn], levels = keylist[[vn]]$value_old,
+                                 labels =  keylist[[vn]]$value_new)")
+                dframe[ , vn] <- eval(parse(text = mytext))
+            } else {
+                stop("Can't understand why value_old and value_new are not equal in length")
             }
-        }
-
+        } else {
+            if (length(keylist[[vn]]$value_old) == length(keylist[[vn]]$value_old)){
+                dframe[ , vn] <- mapvalues(dframe[ , vn], keylist[[vn]]$value_old, keylist[[vn]]$value_new)
+            } else {
+                messg <- paste(vn, "is neither factor not ordered.",
+                               "Why are new and old value vectors not same in length?")
+                stop(messg)
+            }
+        } 
+        
+        ## coerce data to class type in key if that differs
+        ## from data. Key may have changed "numeric" to "integer", for example.
+        ## Or "factor" to "ordered"
+        if(class(dframe[ ,vn])[1] != class_new.key) dframe[ ,vn] <- as(dframe[ , vn], class_new.key)
     }
 
+
+    
+    dframe <- colnamesReplace(dframe,  sapply(keylist, function(x) x$name_old), sapply(keylist, function(x) x$name_new))
+    
+    xx <- merge(dframe,  dforig, by = "row.names",  all = TRUE, suffixes = c("", ".orig"))
 }
