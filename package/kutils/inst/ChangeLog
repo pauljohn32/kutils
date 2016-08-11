@@ -1,3 +1,7 @@
+2016-08-11  Paul Johnson  <pauljohn@dellap14>
+
+	* ../R/assignMissing.R (recodeDF): first working version
+
 2016-08-10  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/assignMissing.R (cleanDF): rough in work to
@@ -9,6 +13,14 @@
 	types of values to be removed; zapspace argument.
 
 	* ../R/assignMissing.R (zapspace): remove leading and trailing spaces.
+
+2016-08-08  Paul Johnson  <pauljohn@dellap14>
+
+	* ../R/assignMissing.R (unique2): In keyimport, chose plan to
+	create an output list.
+
+	* ../R/assignMissing.R (keyTemplateLong): make strings, not
+	factors in new key.
 
 2016-08-03  Paul Johnson  <pauljohn@delllap-16>
 
