@@ -1,7 +1,13 @@
-
+##' Discern nesting pattern of SEM coefficients
+##'
+##' Receives a list of models and orders them by best guess at intended nesting
+##' @param models A List of lavaan-fitted SEM models
+##' @export
+##' @return matrix indicating nesting relationships
+##' @author Ben Kite
 detectNested <- function(models){
-    dfval <- ifelse("df.scaled" %in% fitMeasures(models[[1]]), "df.scaled", "df")
-    dfs <- lapply(models, fitMeasures, dfval)
+    dfval <- ifelse("df.scaled" %in% lavaan::fitMeasures(models[[1]]), "df.scaled", "df")
+    dfs <- lapply(models, lavaan::fitMeasures, dfval)
     dfsrank <- rank(unlist(dfs))
     names(dfsrank) <- names(models)
     sortedmods <- sort(dfsrank)
@@ -50,6 +56,8 @@ detectNested <- function(models){
 ##' @param chidif should the nested models be compared by using the anova function? The anova function may pass the model comparison on to another lavaan function.  The results are added to the last three columns of the comparison table. The default value is TRUE.   
 ##' @param tex path and name of .tex file created for the table. If NULL, no file is created.  The default value is NULL.
 ##' @author Benjamin Arthur Kite
+##' @export
+##' @importFrom stats anova update
 ##' @examples
 ##' library(lavaan)
 ##' library(xtable)
@@ -116,7 +124,8 @@ compareCFA <- function(models,
     }
     estimators <- lapply(models, function(x) x@Options$estimator)
     if (length(unlist(unique(estimators))) > 1L){
-        stop("The models provided do not have the same estimator. This function cannot handle models with different estimators.")
+        stop(paste("The models provided do not have the same estimator.",
+                   "This function cannot handle models with different estimators."))
     }
     if(is.null(nesting)){
         nestedPairs <- detectNested(models)
@@ -126,7 +135,10 @@ compareCFA <- function(models,
         mods <- names(models)
         xx %in% c(ops, mods)
         if (prod(xx %in% c(ops, mods)) != 1){
-            stop("There is something wrong with your nesting argument. The only legal entries are \">\", \"+\", and the names of models provided in the models list, and these entries must be separated by spaces!")
+            stop(paste("There is something wrong with your nesting argument.",
+                       "The only legal entries are \">\", \"+\", and the names",
+                       "of models provided in the models list, and these entries",
+                       "must be separated by spaces!"))
         }
         yy <- grep(">", xx)
         parents <- xx[c(yy-1)]
@@ -141,7 +153,7 @@ compareCFA <- function(models,
         nestedPairs <- pairs
     }
     fitmeas_f <- if(scaled) c(fitmeas, paste0(fitmeas, ".scaled")) else  fitmeas
-    observed <- names(fitMeasures(models[[1]], fitmeas_f[fitmeas_f %in% names(fitMeasures(models[[1]]))]))
+    observed <- names(lavaan::fitMeasures(models[[1]], fitmeas_f[fitmeas_f %in% names(lavaan::fitMeasures(models[[1]]))]))
     for (i in fitmeas){
         if(paste0(i, ".scaled") %in% observed){
             observed[which(observed == i)] <- paste0(i, ".scaled")
@@ -152,7 +164,7 @@ compareCFA <- function(models,
     for (i in nestedPairs[,"nested"]){
         orderedMods[[i]] <- models[[i]]
     }
-    modelsums <- lapply(orderedMods, function(x) fitMeasures(x, observed))
+    modelsums <- lapply(orderedMods, function(x) lavaan::fitMeasures(x, observed))
     sumtable <- do.call(rbind, modelsums)
     sumtable <- apply(sumtable, 2, round, 3)
     sumtable <- data.frame(sumtable)

@@ -175,6 +175,8 @@ assignMissing <- function(x, missings){
 ##' @return A key in the form of a data frame. May also be saved on
 ##'     disk.
 ##' @export
+##' @importFrom utils write.csv
+##' @importFrom methods as
 ##' @author Paul Johnson
 ##' @examples
 ##' set.seed(234234)
@@ -210,8 +212,8 @@ assignMissing <- function(x, missings){
 ##' 
 ##' \donttest{
 ##' if (require(openxlsx)){
-##'    write.xlsx(natlong.key, file = "natlongsurv.key.xlsx")
-##'    write.xlsx(natlong.keylong, file = "natlongsurv.keylong.xlsx")
+##'    openxlsx::write.xlsx(natlong.key, file = "natlongsurv.key.xlsx")
+##'    openxlsx::write.xlsx(natlong.keylong, file = "natlongsurv.keylong.xlsx")
 ##' }
 ##' }
 ##'  
@@ -296,11 +298,7 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE, file = NULL,
         if (length(grep("csv$", tolower(file))) > 0){
             write.csv(key, file = fp, row.names = FALSE)
         } else if ((length(grep("xlsx$", tolower(file))))){
-            if (require(openxlsx)){
-                write.xlsx(key, file = fp)
-            } else {
-                warning("xlsx output requested but openxlsx is not installed")
-            }
+            openxlsx::write.xlsx(key, file = fp)
         } else if (length(grep("rds$", tolower(file)))){
             saveRDS(key, file = fp)
         } else {
@@ -442,15 +440,18 @@ zapspace <- function(x){
 ##'     value like "" or " ", so if one intends to insert white space,
 ##'     change the missingare vector.
 ##' @importFrom utils read.csv
+##' @importFrom openxlsx read.xlsx write.xlsx
 ##' @export
 ##' @return A list with one element per variable name, along with some
 ##'     attributes like class_old and class_new. The class is set as
 ##'     well, "keylist". 
 ##' @author Paul Johnson mydf.keylist <- mydf.keylist <-
-##' mydf.keylist <-  keyimport("../inst/extdata/mydf.key_new.csv")
+##' mydf.key.path <- system.file("extdata", "mydf.key_new.csv", package = "kutils")
+##' mydf.keylist <-  keyimport(mydf.key.path)
 ##' fixclasses <- attr(mydf.keylist, "class_old")
 ##' fixclasses <- gsub("ordered", "factor", fixclasses)
-##' mydf <- read.csv("../inst/extdata/mydf.csv", colClasses = fixclasses, stringsAsFactors = FALSE)
+##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
+##' mydf <- read.csv(mydf.path, colClasses = fixclasses, stringsAsFactors = FALSE)
 ##' mydf2 <- applyVariableKey(mydf, mydf.keylist)
 keyimport <- function(key, long = FALSE, ...,
                       keynames = c(name_old = "name_old",
@@ -487,8 +488,7 @@ keyimport <- function(key, long = FALSE, ...,
     } else if (is.character(key)){
         ## key is file name, so scan for suffix
         if (length(grep("xlsx$", tolower(key))) > 0){
-            require(openxlsx)
-            studat <- read.xlsx(fn, colNames = TRUE, check.names = FALSE)
+            studat <- openxlsx::read.xlsx(key, colNames = TRUE, check.names = FALSE)
         } else if (length(grep("csv$", tolower(key))) > 0){
             key <- read.csv(key, stringsAsFactors = FALSE, ...)
         } else if (length(grep("rds$", tolower(key))) > 0){
@@ -587,16 +587,19 @@ keyimport <- function(key, long = FALSE, ...,
 ##'     variables be kept, along with the new versions? Creates
 ##'     variables with ".orig" as suffix for recoded variables.
 ##' @return A recoded version of dframe
+##' @export
+##' @importFrom plyr mapvalues
 ##' @examples
 ##' mydf.key.path <- system.file("extdata", "mydf.key_new.csv", package = "kutils")
 ##' mydf.keylist <-  keyimport(mydf.key.path)
 ##' ## The column class "ordered" is not allowed in read.csv, but "factor" is. 
 ##' fixclasses <- attr(mydf.keylist, "class_old")
 ##' fixclasses <- gsub("ordered", "factor", fixclasses)
-##' mydf <- read.csv("../inst/extdata/mydf.csv", colClasses = fixclasses, stringsAsFactors = FALSE)
+##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
+##' mydf <- read.csv(mydf.path, colClasses = fixclasses, stringsAsFactors = FALSE)
 ##' mydf2 <- applyVariableKey(mydf, mydf.keylist)
 applyVariableKey <- function(dframe, keylist, keepold = TRUE){
-    require(plyr)
+    
     if (keepold) dforig <- dframe
     
     ## coerce existing column to type requested in data frame
@@ -639,7 +642,7 @@ applyVariableKey <- function(dframe, keylist, keepold = TRUE){
             }
         } else {
             if (length(keylist[[vn]]$value_old) == length(keylist[[vn]]$value_old)){
-                dframe[ , vn] <- mapvalues(dframe[ , vn], keylist[[vn]]$value_old, keylist[[vn]]$value_new)
+                dframe[ , vn] <- plyr::mapvalues(dframe[ , vn], keylist[[vn]]$value_old, keylist[[vn]]$value_new)
             } else {
                 messg <- paste(vn, "is neither factor not ordered.",
                                "Why are new and old value vectors not same in length?")

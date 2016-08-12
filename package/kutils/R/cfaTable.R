@@ -110,7 +110,7 @@ cfaTable <-
     }else{
         names(fit) <- names_fit
     }
-    fitmeas <- fitMeasures(object)[]
+    fitmeas <- lavaan::fitMeasures(object)[]
     fitmeas <- sapply(fitmeas, function(x) formatC(round(x, 3), format = 'f', digits = 2))
     chimeas <- object@Fit@test[[1]]
     chimeas$stat <- formatC(round(chimeas$stat, 3), format = 'f', digits = 2)

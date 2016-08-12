@@ -1,8 +1,15 @@
+2016-08-12  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/cfaTable.R (cfaTable): fitMeasures -> lavaan::fitMeasures
+
+	* ../R/modelcomparison.R (compareCFA): fitMeasures -> lavaan::fitMeasures
+	(compareCFA): break long lines in stop with paste()
+
 2016-08-11  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/assignMissing.R (getUnique): pack the keyTemplateLong and
 	keyTemplate functions into one single function with the argument
-	long = TRUE/FALSE to differentiate them. 
+	long = TRUE/FALSE to differentiate them.
 
 	* ../R/project.R (initProject): output "there is no git" message.
 
