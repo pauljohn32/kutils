@@ -2,15 +2,24 @@
 ## save(natlongsurv, file = "../data/natlongsurv.RData", compress = TRUE)
 
 
-##' Happiness, etcetera
+##' Smoking, Happiness, and other survey responses
 ##'
-##' A selection of 29 variables from the US National Longitudinal Survey,
-##' including 5159 rows. All variables are for the 2003 year, except where otherwise noted.
+##' An idiosyncratic selection of 29 variables from the Original
+##' Cohort-Young Women 1968-2003 edition of the US National
+##' Longitudinal Survey.  This originally included 5159 rows, but
+##' subset includes only 2867 rows, so sample frequencies will not
+##' match the values listed in the codebook.  A snapshot of the
+##' codebook, "natlongsurv.cdb.txt", which we have trimmed down, is
+##' included in the package.
+##' 
+##' All variables are for the 2003 year, except where otherwise noted.
 ##'
 ##' @name natlongsurv
 ##' @docType data
 ##' @usage data(natlongsurv)
-##' @format A data frame with rows and variables:
+##' @author US Bureau of Labor Statistics
+##' @references \url{https://www.nlsinfo.org/investigator}
+##' @format A data frame with 2867 rows and 29 variables:
 ##'
 ##'\itemize{
 ##'   \item	R0000100	IDENTIFICATION CODE

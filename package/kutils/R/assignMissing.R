@@ -194,7 +194,8 @@ assignMissing <- function(x, missings){
 ##' mydf$x4[sample(1:N, 10)] <- 999
 ##' mydf$x5[sample(1:N, 10)] <- -999
 ##' 
-##' write.csv(mydf, file = "../inst/extdata/mydf.csv")
+##' ## Should be same as content of
+##' ## write.csv(mydf, file = "../inst/extdata/mydf.csv")
 ##' 
 ##' mydf.key <- keyTemplate(mydf, file = "mydf.key.csv")
 ##' mydf.keylong <- keyTemplate(mydf, long = TRUE, file = "mydfkey.long.csv")
@@ -447,6 +448,10 @@ zapspace <- function(x){
 ##'     well, "keylist". 
 ##' @author Paul Johnson mydf.keylist <- mydf.keylist <-
 ##' mydf.keylist <-  keyimport("../inst/extdata/mydf.key_new.csv")
+##' fixclasses <- attr(mydf.keylist, "class_old")
+##' fixclasses <- gsub("ordered", "factor", fixclasses)
+##' mydf <- read.csv("../inst/extdata/mydf.csv", colClasses = fixclasses, stringsAsFactors = FALSE)
+##' mydf2 <- applyVariableKey(mydf, mydf.keylist)
 keyimport <- function(key, long = FALSE, ...,
                       keynames = c(name_old = "name_old",
                                    name_new = "name_new",
@@ -512,7 +517,7 @@ keyimport <- function(key, long = FALSE, ...,
     ## }
     
     if (!long){
-        ## It is a short key
+        ## It is a wide/short key
         keysplit <- split(key, key$name_old, drop = FALSE)
 
         keylist <- lapply(keysplit, function(keyds) {
@@ -573,47 +578,26 @@ keyimport <- function(key, long = FALSE, ...,
 
 
 
-
-##' Create a new, cleaned data frame
+##' Apply variable key to data frame to recode data
 ##'
-##' This depends on the assignMissing function. It looks at the key
-##' file to figure out which variables need cleaning, then it loops
-##' through them.
-##' @param dframe The data frame to be cleaned
-##' @param key The key, a data frame in which columns named \code{name_old},
-##'    \code{name_new}, and \code{missings} must exist.
-##' @return A new data frame
-##' @author Paul Johnson <pauljohn@@ku.edu>
-cleanDF <- function(dframe, key){
-    if (any(!isTRUE(c("name_old", "name_new", "missings") %in% colnames(key)))){
-        messg <- "missings variable is not a column in the key"
-        stop(messg)
-    }
-
-    ## Names of variables that have something under "missing"
-    hasmissings <- names(na.omit(apply(key, 1, function(arow) {
-        hasmiss <- nzchar(arow["missings"], keepNA = TRUE)
-    })))
-    
-    key <- key[hasmissings, ]
-
-    for (i in key[ , "name_old"]){
-        mvals <- key[key[ , "name_old" == i], "missings"]
-        print(mvals)
-        exprs <- unlist(strsplit(mvals, ";"))
-        for(j in exprs){
-            dframe[ , key[i, "name_new"]] <- assignMissing(dframe[, i], j)
-        }
-    }
-    dframe
-}
-
-
-
-
-
-recodeDF <- function(dframe, keylist){
-    dforig <- dframe
+##' This is the main objective of the variable key system.
+##' @param dframe An R data frame
+##' @param keylist A keylist object
+##' @param keepold Default TRUE: Should the original versions of the
+##'     variables be kept, along with the new versions? Creates
+##'     variables with ".orig" as suffix for recoded variables.
+##' @return A recoded version of dframe
+##' @examples
+##' mydf.key.path <- system.file("extdata", "mydf.key_new.csv", package = "kutils")
+##' mydf.keylist <-  keyimport(mydf.key.path)
+##' ## The column class "ordered" is not allowed in read.csv, but "factor" is. 
+##' fixclasses <- attr(mydf.keylist, "class_old")
+##' fixclasses <- gsub("ordered", "factor", fixclasses)
+##' mydf <- read.csv("../inst/extdata/mydf.csv", colClasses = fixclasses, stringsAsFactors = FALSE)
+##' mydf2 <- applyVariableKey(mydf, mydf.keylist)
+applyVariableKey <- function(dframe, keylist, keepold = TRUE){
+    require(plyr)
+    if (keepold) dforig <- dframe
     
     ## coerce existing column to type requested in data frame
     ## Wait! Should this happen last or later?
@@ -670,6 +654,8 @@ recodeDF <- function(dframe, keylist){
     }
    
     dframe <- colnamesReplace(dframe,  sapply(keylist, function(x) x$name_old), sapply(keylist, function(x) x$name_new))
-    
-    xx <- merge(dframe,  dforig, by = "row.names",  all = TRUE, suffixes = c("", ".orig"))
+
+    if (keepold) dframe <- merge(dframe,  dforig, by = "row.names",
+                                 all = TRUE, suffixes = c("", ".orig"))
+    dframe
 }
