@@ -1,185 +1,66 @@
-##' Generate a "storage" data.frame
-##'
-##' Generating "storage" (data.frame) to store global fit indices of models,
-##' while user don't have specify the arguments here, they are all set up
-##' through the CFAModComptab function
-##' @param est, different estimates will generate storages with different column
-##' @param namesOfRow the name of each row in storage
-##' @return a data.frame that can store the results (fittness info) for models
-##' @author Po-Yi Chen <poyichen@@ku.edu>
-storageGen <- function(est, namesOfRow){
 
-    numOFrow <- length(namesOfRow)
-
-    ## tell lavaan what kinds of fit indices it should extract for different estimators and establish the corresponding data.frame storage
-    ## currently only allow three kinds of estimators, ML, MLR, WLSMV
-    if(est == "ML"){
-        fit.measures <-  c("chisq", "df", "deltaChisq", "pvalue", "deltaDf", "nestPvalue",
-                           "rmsea", "cfi", "tli", "srmr", "aic", "bic")
-        resultStorage <- as.data.frame(matrix(999, numOFrow, length(fit.measures)))
-        colnames(resultStorage) <- fit.measures
-        rownames(resultStorage) <- namesOfRow
-
-    } else if (est == "MLR"){
-
-        ## note: fit.measures here mean the colnames of the final outPutStorage
-        fit.measures <- c("chisq.scaled", "df.scaled", "pvalue",
-                          "deltaChisq", "deltaDf", "nestPvalue",
-                          "cfi.scaled", "rmsea.scaled", "tli.scaled",
-                          "srmr", "aic", "bic")
-        resultStorage <- as.data.frame(matrix(999, numOFrow, length(fit.measures)))
-        colnames(resultStorage) <- fit.measures
-        rownames(resultStorage) <- namesOfRow
-
-    } else if (est == "WLSMV"){
-
-        fit.measures <- c("chisq.scaled", "df.scaled", "pvalue", "deltaChisq",
-                          "deltaDf",  "nestPvalue", "cfi.scaled", "rmsea.scaled",
-                          "tli.scaled", "srmr_mplus", "aic", "bic")
-        resultStorage <- as.data.frame(matrix(999, numOFrow, length(fit.measures)))
-        colnames(resultStorage) <- fit.measures
-        rownames(resultStorage) <- namesOfRow
-
-    }
-
-    resultStorage
-}
-
-##' Checking whether the models put in nesModPairs & nonNestMod are legal or not
-##'
-##' Checking whether the models put in nesModPairs & nonNestMod are
-##' legal or not Specifically, models must be lavaan, cfa objects; the
-##' df.nested should > df.baseline; when conducting nested model
-##' comparison, estimator of two models must be identical
-##' @param nestModPairs list of objects representing nested models
-##' @param nonNestMod list of objects to be compared as non-nested models
-##' @return No return
-##' @author Po-Yi Chen <poyichen@@ku.edu>
-modelcheck <- function(nestModPairs, nonNestMod){
-
-    classCheck <- function(x){
-        result <- FALSE
-        if(class(x)[1] != "lavaan" || x@Options$model.type != "cfa"){result <- TRUE}
-        result
-    }
-
-    if(is.null(nestModPairs) != TRUE){
-        result <- sapply(nestModPairs[!sapply(nestModPairs, is.na)], classCheck)
-        if(sum(result) > 0){stop("some models are not lavaan CFA objects")}
-    }
-
-    if(is.null(nonNestMod) != TRUE){
-        result <- sapply(nonNestMod, classCheck)
-        if(sum(result) > 0){stop("some models are not lavaan CFA objects")}
-    }
-
-    if(!is.null(nestModPairs)){
-        basewMod <- nestModPairs[seq(from = 1, to = length(nestModPairs),2)]
-        compMod <- nestModPairs[seq(from = 2, to = length(nestModPairs),2)]
-
-        for(i in 1:length(basewMod)){
-
-            if(is.na(basewMod[i]) !=TRUE && is.na(compMod[i]) != TRUE){
-
-                if(inspect(compMod[[i]],"fit")["df"] >=  inspect(basewMod[[i]],"fit")["df"]){stop("some models are not nested")}
-                if(basewMod[[i]]@Options$estimator != compMod[[i]]@Options$estimator){stop("nested models must be estimated through the same estimator")}
+detectNested <- function(models){
+    dfval <- ifelse("df.scaled" %in% fitMeasures(models[[1]]), "df.scaled", "df")
+    dfs <- lapply(models, fitMeasures, dfval)
+    dfsrank <- rank(unlist(dfs))
+    names(dfsrank) <- names(models)
+    sortedmods <- sort(dfsrank)
+    nested <- matrix(NA, length(sortedmods), length(sortedmods))
+    diag(nested) <- 0
+    colnames(nested) <- names(sortedmods)
+    rownames(nested) <- names(sortedmods)
+    ## Columns represent the possible larger model, rows inform about
+    ## whether or not the model is nested in the column
+    for (i in rownames(nested)){
+        for (j in colnames(nested)){
+            if(i != j){
+                dfnest <- dfsrank[i] > dfsrank[j]
+                iparams <- data.frame(models[[i]]@ParTable)[,c("lhs", "op", "rhs")]
+                jparams <- data.frame(models[[j]]@ParTable)[,c("lhs", "op", "rhs")]
+                iparams <- apply(iparams, 1, paste, collapse = "")
+                jparams <- apply(jparams, 1, paste, collapse = "")
+                iparams <- iparams[!iparams %in% iparams[grep("==", iparams)]]
+                jparams <- jparams[!jparams %in% jparams[grep("==", jparams)]]
+                parnest <- prod(jparams %in% iparams)
+                nested[i,j] <- ifelse(dfnest*parnest == 1, 1, 0)
             }
         }
     }
-    NULL
-}
-
-
-##' Add stars
-##'
-##' Adding stars to the chisq and deltal chisq statistic according to their level of significance.
-##' @param store the storage of fit indices of all models fit indices
-##'     inside
-##' @param globStar if globStar = TRUE, three stars will be added
-##'     aside to the global chisq if p < 0.001, two stars for p < 0.01,
-##'     one star for p < 0.05
-##' @param nestStar if nestStar = TRUE, three stars will be added
-##'     aside to the delta chisq if p < 0.001, two stars for p < 0.01, one
-##'     star for p < 0.05
-##' @return storage data frame
-##' @author Po-Yi Chen
-pValRePresent <- function(store, globStar = TRUE, nestStar = TRUE){
-    for (i in 1:length(store[,"pvalue"])){
-        if(is.numeric(store[i,"pvalue"])){
-            if(store[i,"pvalue"] < 0.001 && globStar == TRUE){
-
-                store[i,"chisq"] <- paste0(as.character(store[i,"chisq"]), "***")
-
-            }else if(store[i,"pvalue"] < 0.01 && globStar == TRUE){
-
-                store[i,"chisq"] <- paste0(as.character(store[i,"chisq"]), "**")
-
-            }else if (store[i,"pvalue"] < 0.05 && globStar == TRUE){
-
-                store[i,"chisq"] <- paste0(as.character(store[i,"chisq"]), "*")
-            }
+    pairs <- matrix(NA, nrow(nested), 2)
+    rownames(pairs) <- rownames(nested)
+    colnames(pairs) <- c("nested", "parent")
+    ## Make nested pairs
+    for(i in rownames(nested)){
+        pairs[i,"nested"] <- i
+        nestedin <- which(nested[i,] == 1)
+        if (length(nestedin) > 0){
+            pairs[i,"parent"] <- names(nestedin[max(nestedin)])
         }
     }
-
-    for (i in 1:length(store[,"nestPvalue"])){
-
-        if(store[i,"nestPvalue"] != "-"){
-
-            if(as.numeric(store[i,"nestPvalue"]) < 0.001 &&  nestStar == TRUE){
-
-                store[i,"deltaChisq"] <- paste0(as.character(store[i,"deltaChisq"]), "***")
-
-            }else if(as.numeric(store[i,"nestPvalue"]) < 0.01 &&  nestStar == TRUE){
-
-                store[i,"deltaChisq"] <- paste0(as.character(store[i,"deltaChisq"]), "**")
-
-            }else if (as.numeric(store[i,"nestPvalue"]) < 0.05 &&  nestStar == TRUE){
-
-                store[i,"deltaChisq"] <- paste0(as.character(store[i,"deltaChisq"]), "*")
-            }
-        }
-    }
-    store
+    pairs
 }
 
-
-
-
-
-
-##' CFA Model table
+##' Compare CFA Tables
 ##'
-##' comparing the nested and non-nested model. the lavaan object be
-##' listed in the arugment :nestModPairs" will be compared as a pair.
-##' e.g., if nestModPairs = c(mod1, mod2, mod3, mod4, mod5, NA),  mod1 will
-##' be nestly compared to mod2 (df mod1 < df mod2); mod3 will be nestly compared to mod3; mod5
-##' will not be nestly compared to any models. On the other hand, as for the lavaan objects
-##' be listed in the argument "nonNestMod", their fit indices will directly be
-##' presented in rows above the results of nested model comparison
-##'
-##' @param nestModPairs a list contains lavaan objects that will benestedly compared.
-##' @param nestRowName a vector of the names of the row
-##' @param nonNestMod a vector contains lavaan CFA objects that will
-##'     be nonNestly comapred
-##' @param nonNestRowName row name of the non-nested model in the final output table
-##' @param est so far only allow MLR, WLSMVor ML
-##' @param fitDrop the fit indices you want to drop, the default only
-##' @param footNote contents that you want to put as the footnote of the table
-##' @param tabTitle tile of the name
-##' @param texFilename the name of the out .tex file
-##' @import lavaan
-##' @export
-##' @return a .tex file that can be open with lyx and gnerate the table
-##' @author Po-Yi Chen <poyichen@@ku.edu>
+##' @title compareCFA
+##' @param models list of lavaan cfa models to be compared. The models can be named in the elements of the list.
+##' @param fitmeas vector of fit measures on which to compare the models. By default, fitmeas = c("chisq", "df",  "pvalue", "rmsea", "cfi", "tli", "srmr", "aic", "bic", "srmr", "aic", "bic", "srmr_mplus").  Fit measures that are request but not found are ignored.
+##' @param nesting character string indicating the nesting structure of the models.  Must only contain model names, ">", and "+" separated by spaces.  The model to the left of a ">" is the parent model for all models to the right of the same ">", up until another ">" is reached. When multiple models are nested in the same parent, they are separated by a "+". 
+##' @param scaled should scaled versions of the fit measures requested be used if available?  The scaled statistic is determined by the model estimation method.  The defaul value is TRUE.
+##' @param chidif should the nested models be compared by using the anova function? The anova function may pass the model comparison on to another lavaan function.  The results are added to the last three columns of the comparison table. The default value is TRUE.   
+##' @param tex path and name of .tex file created for the table. If NULL, no file is created.  The default value is NULL.
+##' @author Benjamin Arthur Kite
 ##' @examples
 ##' library(lavaan)
 ##' library(xtable)
-##'  
+##' set.seed(123)
 ##' genmodel <- "f1 =~ .7*v1 + .7*v2 + .7*v3 + .7*v4 + .7*v5 + .7*v6
 ##' f1 ~~ 1*f1"
-##'  
-##' dat1 <- simulateData(genmodel, sample.nobs = 100)
-##' dat2 <- simulateData(genmodel, sample.nobs = 100)
+##' genmodel2 <- "f1 =~ .7*v1 + .7*v2 + .7*v3 + .7*v4 + .7*v5 + .2*v6
+##' f1 ~~ 1*f1"
+##' 
+##' dat1 <- simulateData(genmodel, sample.nobs = 300)
+##' dat2 <- simulateData(genmodel2, sample.nobs = 300)
 ##' dat1$group <- 0
 ##' dat2$group <- 1
 ##' dat <- rbind(dat1, dat2)
@@ -219,162 +100,95 @@ pValRePresent <- function(store, globStar = TRUE, nestStar = TRUE){
 ##' cc2 <- cfa(weakModel, data=dat, group="group", meanstructure=TRUE, estimator = "MLR")
 ##' cc21 <- cfa(partialweakModel, data=dat, group="group", meanstructure=TRUE, estimator = "MLR")
 ##' cc3 <- cfa(partialstrongModel1, data=dat, group="group", meanstructure=TRUE, estimator = "MLR")
-##'  
-##' datFemale <- dat[dat$group == 0,]
-##' datFemale <- datFemale[colnames(datFemale) != "group"]
-##'  
-##' ccFemale <- cfa(congModel, data = datFemale , meanstructure=TRUE, estimator = "MLR")
-##'  
-##' datMale <- dat[dat$group == 1,]
-##' datMale <- datMale[colnames(datMale) != "group"]
-##'  
-##' ccMale <- cfa(congModel, data = datMale , meanstructure=TRUE, estimator = "MLR")
-##'  
-##' CFAModComptab(nestModPairs = c(cc1, NA, cc2, cc1, cc21, cc1, cc3, cc21),
-##' nestRowName = c("configural", "weak", "partial weak", "partial strong"),
-##' nonNestMod = c(ccFemale, ccMale), nonNestRowName = c("female", "male"),
-##' est = "MLR", fitDrop = c("pvalue", "nestPvalue", "bic"),
-##' footNote = "Note: hello!", tabTitle = "model comparison",
-##' texFilename = "table03")
+##'
+##' models <- list(cc1, cc2, cc21, cc3)
+##' compareCFA(models, nesting = NULL)
+##'
+##' models <- list("Configural" = cc1, "Metric" = cc2, "PartialMetric" = cc21, "Scalar" = cc3)
+##' compareCFA(models, nesting = "Configural > Metric + PartialMetric > Scalar")
+##' compareCFA(models, fitmeas = c("chisq", "df"), nesting = "Configural > Metric + PartialMetric > Scalar", tex = "table.tex")
 
-CFAModComptab <- function(nestModPairs = NULL, nestRowName = NULL,
-             nonNestMod = NULL, nonNestRowName = NULL, est = "ML",
-             fitDrop = c("pvalue", "nestPvalue"), footNote = "",
-             tabTitle, texFilename)
-{
-
-    suppressWarnings(modelcheck(nestModPairs, nonNestMod))
-
-    if(est == "ML"){
-
-        fitMeasureGrep <-  c("chisq", "df",  "pvalue", "rmsea", "cfi", "tli", "srmr", "aic", "bic")
-        fitMeasureStore <- fitMeasureGrep
-
-    } else if(est == "MLR"){
-
-        fitMeasureGrep <-  c("chisq.scaled", "df.scaled", "pvalue","cfi.scaled",
-                             "rmsea.scaled", "tli.scaled", "srmr", "aic", "bic")
-        fitMeasureStore <- fitMeasureGrep 
-
-    } else if(est == "WLSMV"){
-
-        fitMeasureGrep <-  c("chisq.scaled", "df.scaled", "pvalue", "cfi.scaled",
-                             "rmsea.scaled", "tli.scaled", "srmr_mplus")
-        fitMeasureStore <- fitMeasureGrep 
-
-    } else {stop("please set est = ML, MLR, or WLSMV)")}
-
-    if(is.null(nestModPairs) && is.null(nonNestMod)){
-        stop(paste("please put at least one",
-                   "lavaan object in arguments"))
+compareCFA <- function(models,
+                       fitmeas = c("chisq", "df",  "pvalue", "rmsea", "cfi", "tli", "srmr", "aic", "bic"),
+                       nesting = NULL, scaled = TRUE, chidif = TRUE, tex = NULL){
+    if (is.null(names(models))){
+        names(models) <- paste0("Model", seq(1, length(models)))
     }
-    if(length(nestModPairs) %% 2 != 0){stop("the length of nestModPairs has to be a even number")}
-    if(length(nestModPairs) != 2*length(nestRowName)) {stop("each pair of nested model needs to have its own name")}
-    if(length(nonNestMod) != length(nonNestRowName))  {stop("each non- nested model needs to have its own name")}
-
-    if(sum(!fitDrop %in% c("chisq", "df", "deltaChisq", "pvalue", "deltaDf",
-                          "nestPvalue", "rmsea", "cfi", "tli", "srmr", "aic", "bic")) != 0){
-        stop(paste0("fit indices you can drop are chisq, df, deltaChisq, pvalue, deltaDf, nestPvalue, rmsea, cfi, tli, srmr, aic, or bic"))
+    estimators <- lapply(models, function(x) x@Options$estimator)
+    if (length(unlist(unique(estimators))) > 1L){
+        stop("The models provided do not have the same estimator. This function cannot handle models with different estimators.")
     }
-
-    if(!is.null(nestModPairs)){
-        NestResStor <- storageGen(est, nestRowName)
-    } else {NestResStor <- NULL}
-
-    if(!is.null(nonNestMod)){
-        nonNestResStor <- storageGen(est, nonNestRowName)
-    } else {nonNestResStor <- NULL}
-
-    if(!is.null(NestResStor)){
-
-        basewMod <- nestModPairs[seq(from = 1, to = length(nestModPairs),2)]
-        compMod <- nestModPairs[seq(from = 2, to = length(nestModPairs),2)]
-
-        for (i in 1:length(basewMod)){
-
-            NestResStor[i,fitMeasureStore] <- inspect(basewMod[[i]],'fit')[fitMeasureGrep]
-
-            if (is.na(compMod[i])){
-
-                NestResStor[,"deltaDf"][i] <- "-"
-                NestResStor[,"deltaChisq"][i] <- "-"
-                NestResStor[,"nestPvalue"][i] <- "-"
-
-            } else if (est == "ML"){
-
-                NestResStor[,"deltaDf"][i] <- -(inspect(compMod[[i]], 'fit')["df"] - inspect(basewMod[[i]], 'fit')["df"])
-                NestResStor[,"deltaChisq"][i] <- -(round(inspect(compMod[[i]], 'fit')["chisq"] - inspect(basewMod[[i]], 'fit')["chisq"], 3))
-                NestResStor[, "nestPvalue"][i] <- anova(compMod[[i]], basewMod[[i]])$Pr[2]
-
-            } else if (est == "MLR" || est == "WLSMV"){
-
-                NestResStor[,"deltaDf"][i] <- -(inspect(compMod[[i]], 'fit')["df.scaled"] - inspect(basewMod[[i]], 'fit')["df.scaled"])
-                NestResStor[,"deltaChisq"][i] <- -(round(inspect(compMod[[i]], 'fit')["chisq.scaled"] - inspect(basewMod[[i]], 'fit')["chisq.scaled"], 3))
-                NestResStor[,"nestPvalue"][i] <- anova(compMod[[i]], basewMod[[i]])$Pr[2]
+    if(is.null(nesting)){
+        nestedPairs <- detectNested(models)
+    }else{
+        xx <- unlist(strsplit(nesting, " "))
+        ops <- c("+", ">")
+        mods <- names(models)
+        xx %in% c(ops, mods)
+        if (prod(xx %in% c(ops, mods)) != 1){
+            stop("There is something wrong with your nesting argument. The only legal entries are \">\", \"+\", and the names of models provided in the models list, and these entries must be separated by spaces!")
+        }
+        yy <- grep(">", xx)
+        parents <- xx[c(yy-1)]
+        nested <- list()
+        for (i in parents){
+            nested[[i]] <-  strsplit(unlist(strsplit(paste0(xx[which(xx == i):length(xx)], collapse = ""), ">"))[2], "\\+")
+        }
+        pairs <- cbind("nested" = names(nested[1]), "parent" = NA)
+        for (i in 1:length(nested)){
+            pairs <- rbind(pairs, cbind("nested" = nested[[i]][[1]], "parent" = names(nested)[i]))
+        }
+        nestedPairs <- pairs
+    }
+    fitmeas_f <- if(scaled) c(fitmeas, paste0(fitmeas, ".scaled")) else  fitmeas
+    observed <- names(fitMeasures(models[[1]], fitmeas_f[fitmeas_f %in% names(fitMeasures(models[[1]]))]))
+    for (i in fitmeas){
+        if(paste0(i, ".scaled") %in% observed){
+            observed[which(observed == i)] <- paste0(i, ".scaled")
+        }
+    }
+    observed <- observed[!duplicated(observed)]
+    orderedMods <- list()
+    for (i in nestedPairs[,"nested"]){
+        orderedMods[[i]] <- models[[i]]
+    }
+    modelsums <- lapply(orderedMods, function(x) fitMeasures(x, observed))
+    sumtable <- do.call(rbind, modelsums)
+    sumtable <- apply(sumtable, 2, round, 3)
+    sumtable <- data.frame(sumtable)
+    if(chidif){
+        sumtable[,c("dchi", "ddf", "npval")] <- "-"
+        letter <- 1
+        noteinfo <- list()
+        for (i in rownames(sumtable)){
+            comparison <- nestedPairs[which(nestedPairs[,"nested"] == i),]
+            if (!is.na(comparison["parent"])){
+                tmp <- round(anova(models[[comparison["nested"]]], models[[comparison["parent"]]])[2,c("Chisq diff", "Df diff", "Pr(>Chisq)")], 3)
+                sumtable[i, c("dchi", "ddf", "npval")] <- tmp
+                sumtable[i, "dchi"] <- paste0(sumtable[i, "dchi"], letters[letter])
+                noteinfo[[letter]] <- paste0(letters[letter], " = ", comparison["nested"], " .vs ", comparison["parent"])
+                letter <- letter + 1      
             }
         }
+        output <- list(sumtable, unlist(noteinfo))
+    }else{
+        output <- list(sumtable)
     }
-
-    if (!is.null(nonNestResStor)){
-
-        for (i in 1:length(nonNestMod)){
-
-            nonNestResStor[i,fitMeasureStore] <- round(inspect(nonNestMod[[i]],'fit')[fitMeasureGrep],2)
-            nonNestResStor[,"deltaDf"][i] <- "-"
-            nonNestResStor[,"deltaChisq"][i] <- "-"
-            nonNestResStor[,"nestPvalue"][i] <- "-"
+    if(!is.null(tex)){
+        tableinfo <- output[[1]]
+        names(tableinfo) <- gsub(".scaled", "", names(tableinfo))
+        texcode <- print(xtable(tableinfo))
+        name_old <- c("chisq", "pvalue", "dchi", "ddf", "npval")
+        name_new <- c("$\\\\chi^{2}$", "\\\\textit{p}-value", "$\\\\Delta\\\\chi^{2}$", "$\\\\Delta df$", "\\\\textit{p}")
+        for (i in 1:length(name_old)){
+            texcode <- gsub(name_old[i], name_new[i], texcode)
         }
+        str(texcode)
+        write(texcode, file = tex)
     }
-
-    if(is.null(nonNestResStor) != TRUE && is.null(NestResStor) != TRUE){
-
-        resultStorage <- rbind(nonNestResStor, NestResStor)
-
-    } else if(is.null(nonNestResStor) && is.null(NestResStor) != TRUE){
-
-        resultStorage <-  NestResStor
-
-    } else if(is.null(nonNestResStor) != TRUE && is.null(NestResStor)){
-
-       resultStorage <-  nonNestResStor
-
-    }
-
-    if (est == "MLR" || est == "WLSMV"){colnames(resultStorage) <- gsub(".scaled", "", colnames(resultStorage))}
-    resultStorage[,"chisq"] <- round(resultStorage[,"chisq"], 2)
-    resultStorage <- pValRePresent(resultStorage)
-
-    colnames(resultStorage)[colnames(resultStorage) == "srmr_mplus"] <- "wrmr"
-
-    if (is.null(fitDrop) != TRUE){
-        for (i in fitDrop){resultStorage <-  resultStorage[colnames(resultStorage) != i]}
-    }
-
-    if(est == "WLSMV"){resultStorage <-  resultStorage[colnames(resultStorage) != "aic"]}
-    if(est == "WLSMV"){resultStorage <-  resultStorage[colnames(resultStorage) != "bic"]}
-
-    comment <- list()
-    comment$pos <- list()
-    comment$pos[[1]] <- c(nrow(resultStorage))
-    comment$command  <- c(paste("\\hline \n", footNote, sep = ""))
-
-
-    mystring <- print(xtable(resultStorage, caption = tabTitle), add.to.row = comment, hline.after = c(-1, 0),
-                      caption.placement = 'top')
-    mystring <- gsub("chisq", "$\\\\chi^{2}$", mystring)
-    mystring <- gsub("deltaChisq","$\\\\chi_{diff}^{2}$", mystring)
-    mystring <- gsub("deltaDf", "$\\\\Delta df$", mystring)
-    mystring <- gsub("ptarget", "\\\\textit{p}", mystring)
-    mystring <- gsub("pvalue", "\\\\textit{p}-value", mystring)
-
-    mystring2 <- paste0(texFilename, ".tex")
-    write(file = mystring2, print(mystring))
-
-    if(est == "WLSMV"){
-        warning(paste0("The pvalues of nested model comparisons are obtained from anova(lavaanObje1, lavaanObje2),",
-                     "rather than the widely-used DIFFTEST function in Mplus"))
-    }
+    output
 }
+
 
 
 
