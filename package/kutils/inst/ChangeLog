@@ -1,5 +1,7 @@
 2016-08-12  Paul Johnson  <pauljohn@delllap-16>
 
+	* ../R/modelcomparison.R (compareCFA): insert @export and @importFrom
+
 	* ../R/cfaTable.R (cfaTable): fitMeasures -> lavaan::fitMeasures
 
 	* ../R/modelcomparison.R (compareCFA): fitMeasures -> lavaan::fitMeasures
