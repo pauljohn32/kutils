@@ -106,7 +106,7 @@ detectNested <- function(models){
 ##'
 ##' models <- list("Configural" = cc1, "Metric" = cc2, "PartialMetric" = cc21, "Scalar" = cc3)
 ##' compareCFA(models, nesting = "Configural > Metric + PartialMetric > Scalar")
-##' compareCFA(models, fitmeas = c("chisq", "df"), nesting = "Configural > Metric + PartialMetric > Scalar", tex = "table.tex")
+##' compareCFA(models, fitmeas = c("chisq", "df", "cfi", "rmsea", "tli"), nesting = "Configural > Metric + PartialMetric > Scalar", tex = "table.tex")
 
 compareCFA <- function(models,
                        fitmeas = c("chisq", "df",  "pvalue", "rmsea", "cfi", "tli", "srmr", "aic", "bic"),
@@ -183,7 +183,9 @@ compareCFA <- function(models,
         for (i in 1:length(name_old)){
             texcode <- gsub(name_old[i], name_new[i], texcode)
         }
-        str(texcode)
+        if(length(output) > 1){
+            texcode <- paste0(texcode, "\n", paste0(output[[2]], collapse = ", "))
+        }
         write(texcode, file = tex)
     }
     output
