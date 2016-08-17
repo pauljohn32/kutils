@@ -170,7 +170,9 @@ peek <-
         t1 <- do.call("table", targz)
         if (!freq) t1 <- t1/margin.table(t1)
         names(t1) <- ifelse(is.na(names(t1)), "NA", names(t1))
-
+        ## decision 1: brute force chop
+        ## names(t1) <- shorten(names(t1), k = LIMIT, unique = TRUE)
+        names(t1) <- sapply(stringbreak, 15)
         args <- list(t1, main = i,
                      xlab = paste(xlabstub,  i, if (freq)"Frequencies" else "(Proportion)"))
         barargz <- modifyList(args, dots)
@@ -196,6 +198,9 @@ peek <-
         }
     }
 
+    ## limit on character strings for barplots
+    LIMIT <- 20
+    
     ## We get lots of warnings about inappropriate arguments to functions.
     ## Focus on most likely objections by getting names unique to
     ## hist and removing them from the bar portion, and
@@ -250,8 +255,12 @@ peek <-
                     "pagecentre", "colormodel", "useDingbats", "useKerning",
                     "fillOddEven", "compress")
     dotsForPDF <- dots[pdfFormals[pdfFormals %in% names(dots)]]
+
+    deviceFormals <- c("width", "height")
+    dotsForDevice <- dots[deviceFormals[deviceFormals %in% names(dots)]]
     dots[names(dotsForPDF)] <- NULL
 
+     
     
     ## Unless user sets ask, we assume TRUE if there is no file argument
     if (missing(ask)) {
@@ -263,7 +272,10 @@ peek <-
         pdfargs <- list(file = file, onefile = TRUE)
         pdfargz <- modifyList(pdfargs, dotsForPDF)
         do.call("pdf", pdfargz)
+    } else {
+        do.call("dev.new", dotsForDevice)
     }
+    
     if (is.null(file) || isTRUE(ask)) devAskNewPage(TRUE)
     
     for (i in names(colTypes)){
