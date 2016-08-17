@@ -192,7 +192,7 @@ stringbreak <- function(x, k = 20){
     ## iterate on successive pairs of xseq, but exclude last one
     res <- ""
     for(i in seq_along(xseq[-length(xseq)])){
-        res <- paste0(res, paste0(substr(x, xseq[i], (xseq[i+1] - 1)), "\n"))
+        res <- paste0(res, paste0(substr(x, xseq[i], (xseq[i+1] - 1)), "\\n"))
     }
     if (xseq[i] < xlength) res <- paste0(res, substr(x, xseq[i + 1], xlength))
     res
