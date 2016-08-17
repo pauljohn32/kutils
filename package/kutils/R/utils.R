@@ -159,6 +159,7 @@ mgsub <- function(pattern, replacement, x, ... ){
 ##' @param unique Default FALSE
 ##' @return vector of character variables no longer than k
 ##' @author Paul Johnson
+##' @export
 ##' @examples
 ##' x <- c("Washington", "Washingham", "Washmylaundry")
 ##' shorten(x, 4)
@@ -171,19 +172,24 @@ shorten <- function(x, k = 20, unique = FALSE){
 }
 
 
-##' Insert "\n" after the k'th character in a string
+##' Insert "\\n" after the k'th character in a string
 ##'
-##' If a string is long, insert linebreak "\n"
-##' @param x Character string
-##' @param k Number of characters after which to insert "\n". Default is 20
-##' @return Character with "\n" inserted
+##' If a string is long, insert linebreak "\\n"
+##'
+##' If x is not a character string, x is returned without alteration. And
+##' without a warning
+##' @param x Character string.
+##' @param k Number of characters after which to insert "\\n". Default is 20
+##' @return Character with "\\n" inserted
 ##' @author Paul Johnson
+##' @export
 ##' @examples
 ##' x <- "abcdef ghijkl mnopqrs tuvwxyz abc def ghi jkl mno pqr stv"
 ##' stringbreak(x, 10)
 ##' stringbreak(x, 20)
 ##' stringbreak(x, 25)
 stringbreak <- function(x, k = 20){
+    if (!is.character) return(x)
     xlength <- nchar(x)
     if (xlength < k) return (x)
     
@@ -192,7 +198,7 @@ stringbreak <- function(x, k = 20){
     ## iterate on successive pairs of xseq, but exclude last one
     res <- ""
     for(i in seq_along(xseq[-length(xseq)])){
-        res <- paste0(res, paste0(substr(x, xseq[i], (xseq[i+1] - 1)), "\\n"))
+        res <- paste0(res, paste0(substr(x, xseq[i], (xseq[i+1] - 1)), "\n"))
     }
     if (xseq[i] < xlength) res <- paste0(res, substr(x, xseq[i + 1], xlength))
     res
