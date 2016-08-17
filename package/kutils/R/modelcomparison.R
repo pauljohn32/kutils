@@ -49,15 +49,33 @@ detectNested <- function(models){
 ##' Compare CFA Tables
 ##'
 ##' @title compareCFA
-##' @param models list of lavaan cfa models to be compared. The models can be named in the elements of the list.
-##' @param fitmeas vector of fit measures on which to compare the models. By default, fitmeas = c("chisq", "df",  "pvalue", "rmsea", "cfi", "tli", "srmr", "aic", "bic", "srmr", "aic", "bic", "srmr_mplus").  Fit measures that are request but not found are ignored.
-##' @param nesting character string indicating the nesting structure of the models.  Must only contain model names, ">", and "+" separated by spaces.  The model to the left of a ">" is the parent model for all models to the right of the same ">", up until another ">" is reached. When multiple models are nested in the same parent, they are separated by a "+". 
-##' @param scaled should scaled versions of the fit measures requested be used if available?  The scaled statistic is determined by the model estimation method.  The defaul value is TRUE.
-##' @param chidif should the nested models be compared by using the anova function? The anova function may pass the model comparison on to another lavaan function.  The results are added to the last three columns of the comparison table. The default value is TRUE.   
-##' @param tex path and name of .tex file created for the table. If NULL, no file is created.  The default value is NULL.
+##' @param models list of lavaan cfa models to be compared. The models
+##'     can be named in the elements of the list.
+##' @param fitmeas vector of fit measures on which to compare the
+##'     models. By default, fitmeas = c("chisq", "df", "pvalue",
+##'     "rmsea", "cfi", "tli", "srmr", "aic", "bic", "srmr", "aic",
+##'     "bic", "srmr_mplus").  Fit measures that are request but not
+##'     found are ignored.
+##' @param nesting character string indicating the nesting structure
+##'     of the models.  Must only contain model names, ">", and "+"
+##'     separated by spaces.  The model to the left of a ">" is the
+##'     parent model for all models to the right of the same ">", up
+##'     until another ">" is reached. When multiple models are nested
+##'     in the same parent, they are separated by a "+".
+##' @param scaled should scaled versions of the fit measures requested
+##'     be used if available?  The scaled statistic is determined by
+##'     the model estimation method.  The defaul value is TRUE.
+##' @param chidif should the nested models be compared by using the
+##'     anova function? The anova function may pass the model
+##'     comparison on to another lavaan function.  The results are
+##'     added to the last three columns of the comparison table. The
+##'     default value is TRUE.
+##' @param tex path and name of .tex file created for the table. If
+##'     NULL, no file is created.  The default value is NULL.
 ##' @author Benjamin Arthur Kite
 ##' @export
 ##' @importFrom stats anova update
+##' @importFrom plyr mapvalues
 ##' @examples
 ##' library(lavaan)
 ##' library(xtable)
@@ -114,7 +132,8 @@ detectNested <- function(models){
 ##'
 ##' models <- list("Configural" = cc1, "Metric" = cc2, "PartialMetric" = cc21, "Scalar" = cc3)
 ##' compareCFA(models, nesting = "Configural > Metric + PartialMetric > Scalar")
-##' compareCFA(models, fitmeas = c("chisq", "df", "cfi", "rmsea", "tli"), nesting = "Configural > Metric + PartialMetric > Scalar", tex = "table.tex")
+##' compareCFA(models, fitmeas = c("chisq", "df", "cfi", "rmsea", "tli"),
+##' nesting = "Configural > Metric + PartialMetric > Scalar", tex = "table.tex")
 
 compareCFA <- function(models,
                        fitmeas = c("chisq", "df",  "pvalue", "rmsea", "cfi", "tli", "srmr", "aic", "bic"),
@@ -175,7 +194,7 @@ compareCFA <- function(models,
         for (i in rownames(sumtable)){
             comparison <- nestedPairs[which(nestedPairs[,"nested"] == i),]
             if (!is.na(comparison["parent"])){
-                tmp <- round(anova(models[[comparison["nested"]]], models[[comparison["parent"]]])[2,c("Chisq diff", "Df diff", "Pr(>Chisq)")], 3)
+                tmp <- round(lavaan::anova(models[[comparison["nested"]]], models[[comparison["parent"]]])[2,c("Chisq diff", "Df diff", "Pr(>Chisq)")], 3)
                 sumtable[i, c("dchi", "ddf", "npval")] <- tmp
                 sumtable[i, "dchi"] <- paste0(sumtable[i, "dchi"], letters[letter])
                 noteinfo[[letter]] <- paste0(letters[letter], " = ", comparison["nested"], " .vs ", comparison["parent"])
