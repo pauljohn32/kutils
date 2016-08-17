@@ -172,7 +172,7 @@ peek <-
         names(t1) <- ifelse(is.na(names(t1)), "NA", names(t1))
         ## decision 1: brute force chop
         ## names(t1) <- shorten(names(t1), k = LIMIT, unique = TRUE)
-        names(t1) <- sapply(stringbreak, 15)
+        names(t1) <- sapply(names(t1), stringbreak, k = LIMIT)
         args <- list(t1, main = i,
                      xlab = paste(xlabstub,  i, if (freq)"Frequencies" else "(Proportion)"))
         barargz <- modifyList(args, dots)
@@ -199,7 +199,7 @@ peek <-
     }
 
     ## limit on character strings for barplots
-    LIMIT <- 20
+    LIMIT <- 30
     
     ## We get lots of warnings about inappropriate arguments to functions.
     ## Focus on most likely objections by getting names unique to

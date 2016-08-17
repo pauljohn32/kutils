@@ -189,9 +189,9 @@ shorten <- function(x, k = 20, unique = FALSE){
 ##' stringbreak(x, 20)
 ##' stringbreak(x, 25)
 stringbreak <- function(x, k = 20){
-    if (!is.character) return(x)
+    if (!is.character(x)) return(x)
     xlength <- nchar(x)
-    if (xlength < k) return (x)
+    if (xlength <= k) return (x)
     
     xseq <- seq(1, xlength, by = k)
 
