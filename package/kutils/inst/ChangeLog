@@ -1,3 +1,13 @@
+2016-08-17  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/utils.R (stringbreak): New function to insert "\n" into strings
+
+	* ../R/peek.R (quickbar): barplot error because some category
+	values too ridiculously long. Now implement LIMIT, will later
+	insert line breaks
+
+	* ../R/utils.R (shorten): add shorten funtion with unique
+
 2016-08-12  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/modelcomparison.R (compareCFA): insert @export and @importFrom

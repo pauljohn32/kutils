@@ -145,3 +145,55 @@ mgsub <- function(pattern, replacement, x, ... ){
     x
 }
     
+
+
+##' Reduce each in a vector of strings to a given length
+##'
+##' This is a simple "chop" at k characters, no fancy truncation at
+##' spaces or such. Optionally, this will make unique the resulting
+##' truncated strings. That way, truncation at character 4 of
+##' "Washington" and "Wash" and "Washingham" will not result in 3
+##' values of "Wash", but rather "Wash", "Wash.1", and "Wash.2"
+##' @param x character string
+##' @param k integer limit on length of string. Default is 20
+##' @param unique Default FALSE
+##' @return vector of character variables no longer than k
+##' @author Paul Johnson
+##' @examples
+##' x <- c("Washington", "Washingham", "Washmylaundry")
+##' shorten(x, 4)
+##' shorten(x, 4, unique = TRUE)
+shorten <- function(x, k = 20, unique = FALSE){
+    if(!is.character(x)) stop("shorten: x must be a character variable")
+    y <- substr(x, 1, k)
+    if (unique) y <- make.unique(y)
+    y
+}
+
+
+##' Insert "\n" after the k'th character in a string
+##'
+##' If a string is long, insert linebreak "\n"
+##' @param x Character string
+##' @param k Number of characters after which to insert "\n". Default is 20
+##' @return Character with "\n" inserted
+##' @author Paul Johnson
+##' @examples
+##' x <- "abcdef ghijkl mnopqrs tuvwxyz abc def ghi jkl mno pqr stv"
+##' stringbreak(x, 10)
+##' stringbreak(x, 20)
+##' stringbreak(x, 25)
+stringbreak <- function(x, k = 20){
+    xlength <- nchar(x)
+    if (xlength < k) return (x)
+    
+    xseq <- seq(1, xlength, by = k)
+
+    ## iterate on successive pairs of xseq, but exclude last one
+    res <- ""
+    for(i in seq_along(xseq[-length(xseq)])){
+        res <- paste0(res, paste0(substr(x, xseq[i], (xseq[i+1] - 1)), "\n"))
+    }
+    if (xseq[i] < xlength) res <- paste0(res, substr(x, xseq[i + 1], xlength))
+    res
+}
