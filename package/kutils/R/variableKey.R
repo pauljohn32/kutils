@@ -47,12 +47,14 @@
 ##' 
 ##' missings <- " > 11"
 ##' assignMissing(x, missings)
+##' 
 ##' ## 2. strings
 ##' x <- c("low", "low", "med", "high")
 ##' missings <- "c(\"low\", \"high\")"
 ##' assignMissing(x, missings)
 ##' missings <- c("med", "doesnot exist")
 ##' assignMissing(x, missings)
+##' 
 ##' ## 3. factors (same as strings inside assignMissing)
 ##' x <- factor(c("low", "low", "med", "high"), levels = c("low", "med", "high"))
 ##' missings <- c("low", "high")
@@ -63,7 +65,8 @@
 ##' x <- ordered(c("low", "low", "med", "high"), levels = c("low", "med", "high"))
 ##' missings <- c("low", "high")
 ##' assignMissing(x, missings)
-## 4. Real-valued variable
+##' 
+##' ## 4. Real-valued variable
 ##' set.seed(234234)
 ##' x <- rnorm(10)
 ##' missings <- "< 0"
@@ -168,10 +171,12 @@ assignMissing <- function(x, missings){
 ##'     make sure the openxlsx package is installed.
 ##' @param outdir The output directory for the new variable key files.
 ##'     Default is current working directory.
-##' @param max.levels When enumerating existing values for a variable,
-##'     what is the maximum number of valuses that should be included
-##'     in the variable key? Default = 15 for long keys, 10 for wide
-##'     keys.
+##' @param max.levels This is to regulate the enumeration of values
+##'     for integer, character, and Date variables. When enumerating
+##'     existing values for a variable, what is the maximum number of
+##'     levels that should be included in the key? Default = 15. This
+##'     does not affect variables declared as factor or ordered
+##'     variables, for which all levels are included in all cases.
 ##' @return A key in the form of a data frame. May also be saved on
 ##'     disk.
 ##' @export
@@ -218,19 +223,23 @@ assignMissing <- function(x, missings){
 ##' }
 ##'  
 keyTemplate <- function(dframe, long = FALSE, sort = FALSE, file = NULL,
-                        outdir = getwd(), max.levels = 10)
+                        outdir = getwd(), max.levels = 15)
 {
     df.class <- sapply(dframe, function(x)class(x)[1])
     cn <- colnames(dframe)
     ## Make a long key
     if(isTRUE(long)){
-        if (missing(max.levels)) max.levels = 15
-           
+                   
         getUnique <- function(xname){
             if (df.class[[xname]] == "numeric") return ("")
             if (df.class[[xname]] %in% c("integer", "character")){
                 xunique <- sort(unique(dframe[ , xname]))
-                return (xunique[1:min(max.levels, length(xunique))])
+                if(length(xunique) <= max.levels) {
+                    return (xunique[1:min(max.levels, length(xunique))])
+                } else {
+                    return ("")
+                }
+                     
             }
             if (df.class[[xname]] %in% c("factor", "ordered")){
                 return(levels(dframe[ , xname]))
@@ -271,7 +280,11 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE, file = NULL,
                 y <- dframe[ , x]
                 z <- ""
                 if (df.class[x] %in% c("integer", "logical", "character", "Date")) {
-                    z <- paste0(sort(unique(y)[1:min(max.levels, length(unique(y)))]), collapse = "|")
+                    if (length(unique(y)) <= max.levels){
+                        z <- paste0(sort(unique(y)[1:min(max.levels, length(unique(y)))]), collapse = "|")
+                    } else {
+                        z <- ""
+                    }
                     return(z)
                 }
                 if (df.class[x] == "ordered"){
