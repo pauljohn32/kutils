@@ -149,7 +149,7 @@ assignMissing <- function(x, missings){
 ##' generate the intended result.
 ##'
 ##' After a key is created, it should be re-imported into R with the
-##' \code{kutils::keyimport} function.  Then the key structure can
+##' \code{kutils::keyImport} function.  Then the key structure can
 ##' guide the importation and recoding of the data set.
 ##' 
 ##' @param dframe A data frame
@@ -447,13 +447,13 @@ zapspace <- function(x){
 ##'     well, "keylist". 
 ##' @author Paul Johnson mydf.keylist <- mydf.keylist <-
 ##' mydf.key.path <- system.file("extdata", "mydf.key_new.csv", package = "kutils")
-##' mydf.keylist <-  keyimport(mydf.key.path)
+##' mydf.keylist <-  keyImport(mydf.key.path)
 ##' fixclasses <- attr(mydf.keylist, "class_old")
 ##' fixclasses <- gsub("ordered", "factor", fixclasses)
 ##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
 ##' mydf <- read.csv(mydf.path, colClasses = fixclasses, stringsAsFactors = FALSE)
 ##' mydf2 <- applyVariableKey(mydf, mydf.keylist)
-keyimport <- function(key, long = FALSE, ...,
+keyImport <- function(key, long = FALSE, ...,
                       keynames = c(name_old = "name_old",
                                    name_new = "name_new",
                                    class_old = "class_old",
@@ -591,14 +591,14 @@ keyimport <- function(key, long = FALSE, ...,
 ##' @importFrom plyr mapvalues
 ##' @examples
 ##' mydf.key.path <- system.file("extdata", "mydf.key_new.csv", package = "kutils")
-##' mydf.keylist <-  keyimport(mydf.key.path)
+##' mydf.keylist <-  keyImport(mydf.key.path)
 ##' ## The column class "ordered" is not allowed in read.csv, but "factor" is. 
 ##' fixclasses <- attr(mydf.keylist, "class_old")
 ##' fixclasses <- gsub("ordered", "factor", fixclasses)
 ##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
 ##' mydf <- read.csv(mydf.path, colClasses = fixclasses, stringsAsFactors = FALSE)
-##' mydf2 <- applyVariableKey(mydf, mydf.keylist)
-applyVariableKey <- function(dframe, keylist, keepold = TRUE){
+##' mydf2 <- keyApply(mydf, mydf.keylist)
+keyApply <- function(dframe, keylist, keepold = TRUE){
     
     if (keepold) dforig <- dframe
     
