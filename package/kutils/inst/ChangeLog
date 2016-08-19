@@ -1,3 +1,11 @@
+2016-08-19  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (getValues): max.levels change. If integer or
+	character is over the limit, then just print one line in key, just
+	as we do for real number variables.
+	* vignette/variablekey.lyx: revise commentary about keyTemplate to
+	match new interpretation of max.values.
+
 2016-08-17  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/utils.R (stringbreak): New function to insert "\n" into strings
