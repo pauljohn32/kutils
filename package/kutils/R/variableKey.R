@@ -75,9 +75,13 @@
 ##' assignMissing(x, missings)
 ##' missings <- "c(0.1, 0.7)"
 ##' assignMissing(x, missings)
-assignMissing <- function(x, missings){
-    if (is.na(missings) | is.null(missings) | missing(missings)) return(x)
+assignMissing <- function(x, missings = NULL){
+
     if (is.character(missings)) missings <- zapspace(missings)
+    missings <-  na.omit(missings)
+    ## If no NA  missings to remove, then return
+    if (is.null(missings) | length(missings) == 0) return(x)
+
     if (is.character(x)){
         x[x %in% missings] <- NA
         return(x)
@@ -98,7 +102,9 @@ assignMissing <- function(x, missings){
             misvec <- sort(misvec)
             x[x >= misvec[1] & x <= misvec[2]] <- NA
         } else {
-            messg <- paste0("missings for variable ", deparse(substitute(x)), "not understandable")
+            print(x)
+            print(missings)
+            messg <- paste0("missings for variable ", deparse(substitute(x)), " not understandable")
             stop(messg)
         }
         return(x)
@@ -116,7 +122,7 @@ assignMissing <- function(x, missings){
             misvec <- sort(misvec)
             x[x >= misvec[1] & x <= misvec[2]] <- NA
         } else {
-            messg <- paste0("missings for variable ", deparse(substitute(x)), "not understandable")
+            messg <- paste0("missings for variable ", deparse(substitute(x)), " not understandable")
             stop(messg)
         }
         return(x)
@@ -321,38 +327,6 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE, file = NULL,
     key
 }
 
-    
-## ##' Create a variable key template in the long form
-## ##'
-## ##'
-## ##' This function creates a table in an output file that researchers, even
-## ##' ones who do not use R, can enter new variable names, new values, and so forth.
-## ##' 
-## ##' @param dframe A data frame
-## ##' @param sort Default FALSE. Should the rows representing the
-## ##'     variables be sorted alphabetically? Otherwise, they appear in
-## ##'     the order in which they were included in the original dataset.
-## ##' @param file A text string for the output file's base name.  Defaut
-## ##'     is "key.csv"
-## ##' @param outdir The output directory for the new variable key files.
-## ##'     Default is current working directory.
-## ##' @param max.levels Default = 10. When enumerating existing values
-## ##'     for a variable, what is the maximum number of valuses that should be included in the variable
-## ##'     key?  There will be one row per value.
-## ##' @export
-## ##' @importFrom utils write.csv
-## ##' @return A data frame including the variable key. Creates a file
-## ##'     named "key.csv".
-## ##' @author Paul Johnson <pauljohn@@ku.edu> and Ben Kite
-## ##'     <bakite@@ku.edu>
-## ##' @examples
-## ##' 
-## keyTemplateLong <- function(dframe, file = "key.long.csv", outdir = getwd(),
-##                             max.levels = 10, sort = FALSE)
-## {
-  
-##}
-
 
 ##' Convert nothing to R NA (nothing = white space or other indications of missing value)
 ##'
@@ -466,6 +440,8 @@ zapspace <- function(x){
 ##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
 ##' mydf <- read.csv(mydf.path, colClasses = fixclasses, stringsAsFactors = FALSE)
 ##' mydf2 <- applyVariableKey(mydf, mydf.keylist)
+##' mydf.keylong.path <- system.file("extdata", "mydfkey.long_new.csv", package = "kutils")
+##' mydf.keylong.keylist <- keyImport(mydf.keylong.path, long = TRUE)
 keyImport <- function(key, long = FALSE, ...,
                       keynames = c(name_old = "name_old",
                                    name_new = "name_new",
@@ -507,7 +483,7 @@ keyImport <- function(key, long = FALSE, ...,
         } else if (length(grep("rds$", tolower(key))) > 0){
             key <- readRDS(key)
             if (inherits(key, "key")) {
-                long <- FALSE
+                long <- FALSEsapply(keylist, function(keyds) keyds$class_new)
             } else if (inherits(key, "keylong")){
                 long <- TRUE
             } else {
@@ -528,18 +504,24 @@ keyImport <- function(key, long = FALSE, ...,
     ##         key[ , j] <- n2NA(key[ , j])
     ##     }
     ## }
+
+    ## TODO: if name_new is missing or empty, remove that from key
     
+    ## TODO: abstract for "name_old", "name_new"
+    name_old.new <- paste0(key[ , "name_old"], ".", key[ , "name_new"])
+
+
     if (!long){
         ## It is a wide/short key
-        keysplit <- split(key, key$name_old, drop = FALSE)
+        ## Lets protect ourselves from the user's new names
+        key$name_new <- make.names(key$name_new, unique = TRUE)
+        ## Split by old.new combination, allows multiple line per name_old
+        keysplit <- split(key, name_old.new, drop = FALSE)
 
         keylist <- lapply(keysplit, function(keyds) {
-          
             keyds$value_old.orig <- keyds$value_old
             keyds$value_new.orig <- keyds$value_new
-            keyds$value_old <- NA
-            keyds$value_new <- NA
-            
+          
             val_old <- unlist(strsplit2(keyds$value_old.orig, sepold[keyds$class_old]))
             val_new <- unlist(strsplit2(keyds$value_new.orig, sepnew[keyds$class_new]))
             val_new[val_new %in% missingare] <- NA
@@ -549,7 +531,7 @@ keyImport <- function(key, long = FALSE, ...,
                  class_old = keyds$class_old, class_new = keyds$class_new,
                  value_old = val_old, value_new = val_new,
                  recodes = recodes, missings = missings)
-        })  
+        })
     } else {
         ## It was a long key
         ## like unique, but it throws away white space, NA
@@ -560,24 +542,42 @@ keyImport <- function(key, long = FALSE, ...,
                 stop (messg)
             }
             y
-            }
-        keysplit <- split(key, key$name_old, drop = FALSE)
+        }
 
+
+        ## Make best effort to clean up the "name_new" column.
+        ## There's an unsolved problem protecting from user error in name_old
+        ## name_new combinations in long key. If user has forgotten to
+        ## correctly assign name_new, a host of bad things can
+        ## happen. I've tested various heuristics to detect that error, all
+        ## fail on easy test cases. So stop that mission and just validate
+        ## the name_new values
+        name_new.unique <- unique(key$name_new)
+        name_new.clean <- make.names(name_new.unique, unique = TRUE)
+        names(name_new.clean) <- name_new.unique
+        ## TODO: abstract for alternative names inkey, not "name_new"
+        key[ , "name_new"] <- name_new.clean[key[, "name_new"]] 
+            
+       
+        ## Create a keylist member for a given data frame
         makeOneVar <- function(keyds){
             name_old <- unique2(keyds$name_old)
             name_new <- unique2(keyds$name_new)
             class_old <- unique2(keyds$class_old)
             class_new <- unique2(keyds$class_new)
             recodes <- unique(na.omit(n2NA(zapspace(keyds$recodes))))
+            recodes <- if(length(recodes) > 0) unlist(strsplit(recodes, split=";", fixed = TRUE))
             missings <- unlist(na.omit(n2NA(zapspace(keyds$missings))))
+            missings <- if(length(missings) > 0) unlist(strsplit(missings, split= ";", fixed = TRUE))
             value_new <- keyds$value_new
-            val_new[val_new %in% missingare] <- NA
+            value_new[value_new %in% missingare] <- NA
             list(name_old = name_old, name_new = name_new,
                  class_old = class_old, class_new = class_new,
                  value_old = keyds$value_old, value_new = value_new,
                  missings = missings, recodes = recodes)
         }
         
+        keysplit <- split(key, name_old.new, drop = FALSE)
         keylist <- lapply(keysplit, makeOneVar)
     }
 
@@ -596,9 +596,8 @@ keyImport <- function(key, long = FALSE, ...,
 ##' This is the main objective of the variable key system.
 ##' @param dframe An R data frame
 ##' @param keylist A keylist object
-##' @param keepold Default TRUE: Should the original versions of the
-##'     variables be kept, along with the new versions? Creates
-##'     variables with ".orig" as suffix for recoded variables.
+##' @param diagnostic Default TRUE: Compare the old and new
+##'        data frames carefully with the keyDiagnostic function.
 ##' @return A recoded version of dframe
 ##' @export
 ##' @importFrom plyr mapvalues
@@ -611,67 +610,142 @@ keyImport <- function(key, long = FALSE, ...,
 ##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
 ##' mydf <- read.csv(mydf.path, colClasses = fixclasses, stringsAsFactors = FALSE)
 ##' mydf2 <- keyApply(mydf, mydf.keylist)
-keyApply <- function(dframe, keylist, keepold = TRUE){
+keyApply <- function(dframe, keylist, diagnostic = TRUE){
     
-    if (keepold) dforig <- dframe
-    
+    if (diagnostic) dforig <- dframe
+
+    ## Hmm. Need to snapshot class of input variables before changing anything
+    class_old.dframe <- sapply(dframe, function(x) class(x)[1])
+    names(class_old.dframe) <- colnames(dframe)
+
+    ## TODO: figure out what to do if class_old does not match input data
     ## coerce existing column to type requested in data frame
     ## Wait! Should this happen last or later?
+
+    ## a list for collecting new variables.
+    xlist <- list()
     
-    ## For numeric and integer variables, only accept ">="  and "c(a,b)" values
-    for (vn in names(keylist)){
-        missings <-  na.omit(keylist[[vn]]$missings)
-        if (length(missings) > 0){
-            dframe[ , vn] <- assignMissing(dframe[ , vn], missings)
+    for (v in keylist) {
+        name_old <- v$name_old
+        name_new <- v$name_new
+        class_new.key <- v$class_new
+        class_old.key <- v$class_old
+        class_old.data <- class_old.dframe[name_old]
+        
+        ## First apply missings to column. With new design,
+        ## these might differ among rows (same name_old has various missings).
+        xnew <- dframe[ , name_old]
+        ## may be several missings for each variable
+        ## xnew <- assignMissing(dframe[ , name_old], v$missings)
+        if (length(v$missings) > 0){
+            for(m in v$missings){
+                xnew <- assignMissing(xnew, m)
+            }
         }
-    }
-    
-    for (vn in names(keylist)){
-        class_new.key <- keylist[[vn]]$class_new
-        class_old.key <- keylist[[vn]]$class_old
-        class_old.data <- class(dframe[ , vn])[1]
-        
-        
         ## If desired class is same, no problem! just flush through the values
         ## Consider taking easy road and using this as a big hammer, but only if value_old
         ## is not NA or "" 
         ##if (identical(class_new.key, class_old.data)){
-        if(class_new.key %in% c("ordered", "factor")){
-            if (all(is.na(keylist[[vn]]$value_old))){
-                if (any(!is.na(keylist[[vn]]$value_new))){
-                    mytext <- paste(class_new.key, "(dframe[ , vn], levels = keylist[[vn]]$value_new)")
-                    dframe[ , vn] <- eval(parse(text = mytext))
-                } else {
+        
+        if(class_new.key %in% c("ordered", "factor")) {
+            ## if value_old is empty
+            if (all(is.na(v$value_old))){
+                if (any(!is.na(v$value_new))){
+                    mytext <- paste0("xlist[[\"", name_new, "\"]]<- ",
+                                     class_new.key, "(xnew, levels = v$value_new)")
+                    eval(parse(text = mytext))
+                } else { 
                     ## value_old was NA and value_new is NA, so do nothing.
                     next()
                 }
-            } else if (length(keylist[[vn]]$value_old) == length(keylist[[vn]]$value_old)){
+            } else if (length(v$value_old) == length(v$value_old)){
                 ## browser()
-                mytext <- paste(class_new.key, "(dframe[ , vn], levels = keylist[[vn]]$value_old,
-                                 labels =  keylist[[vn]]$value_new)")
-                dframe[ , vn] <- eval(parse(text = mytext))
+                mytext <- paste0("xlist[[\"", name_new, "\"]] <- ", class_new.key,
+                                 "(xnew, levels = v$value_old,
+                                 labels =  v$value_new)")
+                eval(parse(text = mytext))
             } else {
                 stop("Can't understand why value_old and value_new are not equal in length")
             }
         } else {
-            if (length(keylist[[vn]]$value_old) == length(keylist[[vn]]$value_old)){
-                dframe[ , vn] <- plyr::mapvalues(dframe[ , vn], keylist[[vn]]$value_old, keylist[[vn]]$value_new)
+            if (length(v$value_old) == length(v$value_new)){
+                ## got error on numerics or integers where no values were set,
+                ## so only do re-assignment if any value_old are not NA.
+                ## TODO: check mapvalues works with NA on output value
+                if (any(!is.na(v$value_old))){
+                    xnew <- plyr::mapvalues(xnew, v$value_old, v$value_new, warn_missing = FALSE)
+                }
+                ## coerce data to class type in key if that differs
+                ## from data. Key may have changed "numeric" to "integer", for example.
+                if (class(xnew) != class_new.key){
+                    xnew <- as(xnew, class_new.key)
+                }
+                
+                mytext <- paste0("xlist[[\"", name_new, "\"]] <- ", "xnew")
+                eval(parse(text = mytext))
             } else {
                 messg <- paste(vn, "is neither factor not ordered.",
                                "Why are new and old value vectors not same in length?")
                 stop(messg)
             }
-        } 
-        
-        ## coerce data to class type in key if that differs
-        ## from data. Key may have changed "numeric" to "integer", for example.
-        ## Or "factor" to "ordered"
-        if(class(dframe[ ,vn])[1] != class_new.key) dframe[ ,vn] <- as(dframe[ , vn], class_new.key)
+        }
     }
-   
-    dframe <- colnamesReplace(dframe,  sapply(keylist, function(x) x$name_old), sapply(keylist, function(x) x$name_new))
 
-    if (keepold) dframe <- merge(dframe,  dforig, by = "row.names",
-                                 all = TRUE, suffixes = c("", ".orig"))
+    dframe <- do.call(data.frame, xlist)
+    ## TODO: check if following is necessary anymore. 
+    ## dframe <- colnamesReplace(dframe,  sapply(keylist, function(x) x$name_old), sapply(keylist, function(x) x$name_new))
+
+    keyDiagnostic(dforig, dframe, keylist)
     dframe
+}
+
+
+##' Diagnose accuracy of variable key application
+##'
+##' Compare the old and new data frames, checking for accuracy of
+##' calculations in various ways.
+##'
+##' The simplest thing is to crosstabulate new variable versus old variable to
+##' see the mismatch.  For tables of up to 10 values or so, that will be satisfactory.
+##'
+##' For numeric variables, it appears there is no good thing to do
+##' except possibly to re-apply any transformations. Maybe a simple
+##' scatterplot will suffice.
+##' @param dfold Original data frame
+##' @param dfnew The new recoded data frame
+##' @param keylist The imported variable key that was used to
+##'     transform dfold into dfnew.
+##' @param max.values Show up to this number of values for the old
+##'     variable
+##' @param nametrunc Truncate column and row names. Needed if there
+##'     are long factor labels and we want to fit more information on
+##'     table. Default = 6.
+##' @param width Number of characters per row in printed
+##'     output. Suggest very wide screen, default = 200.
+##' @return NULL
+##' @author Paul Johnson <pauljohn@@ku.edu>
+keyDiagnostic <-
+    function(dfold, dfnew, keylist, max.values = 20,
+             nametrunc = 6, width = 200)
+{
+
+    ## TODO if class in dfnew does not match keylist specification, fail
+
+    ## TODO think more deeply on warning signs of bad recoding.
+    ## other summary of match and mismatch.
+    print("Make your display wide")
+    width.orig <- options("width")
+    options(width = width)
+    for (v in keylist){
+        if (length(unique(dfold[ , v$name_old])) <= max.values){
+            name_new.trunc <- substr(v$name_new, 1, min(nchar(v$name_new), nametrunc))
+            name_old.trunc <- paste0(substr(v$name_old, 1, min(nchar(v$name_old), nametrunc)), ".old")
+            print(round(table(dfnew[ , v$name_new], dfold[ , v$name_old], exclude = NULL, dnn = c(name_new.trunc, name_old.trunc)), -1))
+        } else {
+            print("need to write some code to deal with case where number of values is high")
+            print("suggest that for discrete, we take table output and most numerous values.  For numeric variables, how about a missing value table and a scatter plot?")
+        }
+    }
+    options(width = width.orig)
+    NULL
 }
