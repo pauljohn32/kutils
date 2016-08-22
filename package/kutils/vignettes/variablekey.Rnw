@@ -118,7 +118,7 @@
 \title{The Variable Key Data Programming Framework}
 
 
-\author{Paul E. Johnson, Benjamin A. Kite, Leslie Shaw}
+\author{Paul E. Johnson, Benjamin A. Kite}
 \maketitle
 \begin{abstract}
 This essay describes the ``variable key'' approach to importing
@@ -127,7 +127,8 @@ Research Methods and Data Analysis at the University of Kansas to
 deal with the importation of large, complicated data sets. This approach
 improves teamwork, keeps better records, and reduces slippage between
 the intentions of principal investigators the implementation by code
-writers. The framework is implemented in the R package kutils.
+writers. The framework is implemented in the R \citep{RCore} package
+kutils.
 \end{abstract}
 % In document Latex options:
 \fvset{listparameters={\setlength{\topsep}{0em}}}
