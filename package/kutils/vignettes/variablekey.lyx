@@ -191,7 +191,14 @@ variable key
  This approach improves teamwork, keeps better records, and reduces slippage
  between the intentions of principal investigators the implementation by
  code writers.
- The framework is implemented in the R package kutils.
+ The framework is implemented in the R 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "RCore"
+
+\end_inset
+
+ package kutils.
 \end_layout
 
 \begin_layout Standard

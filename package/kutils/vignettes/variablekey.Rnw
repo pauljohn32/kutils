@@ -1,0 +1,766 @@
+%% LyX 2.1.4 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[american,noae]{scrartcl}
+\usepackage{lmodern}
+\renewcommand{\sfdefault}{lmss}
+\renewcommand{\ttdefault}{lmtt}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+\usepackage[authoryear]{natbib}
+
+\makeatletter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LyX specific LaTeX commands.
+%% Because html converters don't know tabularnewline
+\providecommand{\tabularnewline}{\\}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Textclass specific LaTeX commands.
+<<echo=F>>=
+  if(exists(".orig.enc")) options(encoding = .orig.enc)
+@
+\newcommand{\code}[1]{\texttt{#1}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
+%\VignetteIndexEntry{variablekey}
+
+\usepackage{booktabs}
+\usepackage{Sweavel}
+\usepackage{graphicx}
+\usepackage{color}
+
+\usepackage[samesize]{cancel}
+
+
+
+\usepackage{ifthen}
+
+\makeatletter
+
+\renewenvironment{figure}[1][]{%
+
+ \ifthenelse{\equal{#1}{}}{%
+
+   \@float{figure}
+
+ }{%
+
+   \@float{figure}[#1]%
+
+ }%
+
+ \centering
+
+}{%
+
+ \end@float
+
+}
+
+\renewenvironment{table}[1][]{%
+
+ \ifthenelse{\equal{#1}{}}{%
+
+   \@float{table}
+
+ }{%
+
+   \@float{table}[#1]%
+
+ }%
+
+ \centering
+
+%  \setlength{\@tempdima}{\abovecaptionskip}%
+
+%  \setlength{\abovecaptionskip}{\belowcaptionskip}%
+
+% \setlength{\belowcaptionskip}{\@tempdima}%
+
+}{%
+
+ \end@float
+
+}
+
+
+%\usepackage{listings}
+% Make ordinary listings look as if they come from Sweave
+\lstset{tabsize=2, breaklines=true, %,style=Rstyle}
+                        fancyvrb=false,escapechar=`,language=R,%
+                        %%basicstyle={\Rcolor\Sweavesize},%
+                        backgroundcolor=\Rbackground,%
+                        showstringspaces=false,%
+                        keywordstyle=\Rcolor,%
+                        commentstyle={\Rcommentcolor\ttfamily\itshape},%
+                        literate={<<-}{{$\twoheadleftarrow$}}2{~}{{$\sim$}}1{<=}{{$\leq$}}2{>=}{{$\geq$}}2{^}{{$^{\scriptstyle\wedge}$}}1{==}{{=\,=}}1,%
+                        alsoother={$},%
+                        alsoletter={.<-},%
+                        otherkeywords={!,!=,~,$,*,\&,\%/\%,\%*\%,\%\%,<-,<<-,/},%
+                        escapeinside={(*}{*)}}%
+
+
+% In document Latex options:
+\fvset{listparameters={\setlength{\topsep}{0em}}}
+\def\Sweavesize{\scriptsize} 
+\def\Rcolor{\color{black}} 
+\def\Rbackground{\color[gray]{0.90}}
+
+% for sideways table
+\usepackage{rotating}
+
+\makeatother
+
+\usepackage{babel}
+\begin{document}
+
+\title{The Variable Key Data Programming Framework}
+
+
+\author{Paul E. Johnson, Benjamin A. Kite, Leslie Shaw}
+\maketitle
+\begin{abstract}
+This essay describes the ``variable key'' approach to importing
+and recoding data. This method has been developed in the Center for
+Research Methods and Data Analysis at the University of Kansas to
+deal with the importation of large, complicated data sets. This approach
+improves teamwork, keeps better records, and reduces slippage between
+the intentions of principal investigators the implementation by code
+writers. The framework is implemented in the R package kutils.
+\end{abstract}
+% In document Latex options:
+\fvset{listparameters={\setlength{\topsep}{0em}}}
+\SweaveOpts{ae=F,nogin=T}
+
+<<Roptions, echo=F>>=
+options(device = pdf)
+options(width=80, prompt=" ", continue="  ")
+options(useFancyQuotes = FALSE) 
+@
+
+
+\section{Introduction}
+
+The staff of the Center for Research Methods and Data Analysis has
+been asked to help with data importation and recoding from time to
+time. In one very large project, we were asked to combine, recode,
+and integrate variables from 21 different files. The various files
+used different variable names and had different, unique coding schemes.
+A skeptic might have thought that the firm which created the data
+sets intentionally obfuscated the variable names and codings to prevent
+the comparison of variables across a series of surveys. 
+
+In projects like that, the challenge of importing and fixing the data
+seems overwhelming. The challenge seems overwhelming to the graduate
+research assistants who are asked to cobble together thousands of
+lines of ``recodes'' as they rename, regroup, and otherwise harmonize
+the information. From a managerial point of view, that is not the
+main problem. The time of graduate students is, well, there to be
+spent. While it may be tedious to read a codebook and write recodes,
+one after the other, it is not all that difficult. The truly difficult
+part is mustering up the confidence the resulting recoded data. How
+can a supervisor check 1000s of recode statements for accuracy? The
+very extensibility of R itself, its openness to new functions and
+language elements, makes proof-reading more difficult. We might shift
+some of the proof reading duty to the principle investigators, but
+they are sometimes unfamiliar with R (and are not thrilled to wade
+through code). The responsibility for verifying the recodes falls
+on the project supervisors. While most supervisors with whom we are
+personally acquainted have nearly super-human reading skills and almost-perfect
+comprehension, we have documented a case in which one of them was
+unable to catch an error on line 827 within an R file with 2119 lines. 
+
+To reduce the risk of misunderstanding and error, we propose the \emph{variable
+key procedure}. It is a systematic way to separate code writing from
+the process of renaming variables and re-designating their values.
+The characteristics of the data are summarized in a table, a simple-looking
+structure that might be edited in a text editor or a spread sheet
+program. This simple structure, which we call the variable key, can
+be used by principal investigators and supervisors to designate the
+desired results. Once the key is created, then the data set can be
+imported and recoded by the application of the key's information.
+This does not eliminate the need to proof-read the renaming and recoding
+of the variables, it simply shifts that chore into a simpler, more
+workable setting.
+
+This essay proceeds in 3 parts. First, the general concepts behind
+the variable key system are explored. Second, the four stages in the
+variable key procedure are outlined and illustrated with examples.
+Third, we offer some examples of ways to double-check the results.
+
+
+\section{Enter the Variable Key}
+
+The variable key process was first developed for a very large project
+for which we were hired by a commercial consulting company. As it
+happened, the project manager who hired us was an SPSS user who did
+not know about R, but he was otherwise a very capable person. After
+going through the usual R process of importing and recoding data from
+6 files, the aggregate of which included more than 40,000 observations
+on 150 variables, we arrived at a renamed set of columns. Unfortunately,
+the research assistant who had done most of the work resigned in order
+to pursue a career as a magician.\footnote{Or graduated, we are not sure which.} 
+
+With the unavailability of our key asset, it was difficult to know
+for sure what was in which column. There was nobody to quickly answer
+``sex is V23418, where we changed the 1 to male and 2 to female''.
+The only way to understand the translation was by hunting and pecking
+through a giant R file. 
+
+In order to better understand what had happened, we developed a table
+that looked like Table \ref{tab:A-Small-Variable-key}.
+
+\begin{table}
+\caption{A Small Variable Key\label{tab:A-Small-Variable-key}}
+
+
+\begin{tabular}{|c|c|c|c|}
+\hline 
+name & name\_old & values & values\_new\tabularnewline
+\hline 
+\hline 
+sex & V23419 & 1|2|3 & ``male''|''female''|''nether''\tabularnewline
+\hline 
+education & V32422 & 1|2|3|4|5 & ``elem''<''hs''<''somecoll''<''ba''<''post''\tabularnewline
+\hline 
+income & V54532 & . & numeric\tabularnewline
+\hline 
+\end{tabular}
+\end{table}
+
+
+It was tedious to assemble that table, but it helped quite a bit in
+our discussions. The vertical bars were used to indicate that the
+original data had discrete values. When a variable has a natural ordering,
+the new values were placed in order with the symbol (``<''). That
+table grew quite large, since it had one row per variable, but it
+was otherwise workable. It was popular with the client. 
+
+In the middle of preparing that summary table of recoded values, we
+realized that it was possible to write an R program to import the
+key table and use its information to recode and rename the variables.
+The variable key table was not just a ``codebook.'' It was a programmable
+codebook. We wrote some functions that could import variables (as
+named in column 2), apply the new values (from columns 3 and 4), then
+apply the new name from column 1. The functions to do that are, of
+course, somewhat difficult to prepare, but, from a supervisor's point
+of view, they are very appealing. There will be less proof-reading
+to do, at least in the R code itself. Once we can validate the functions,
+then we never have proof-read them again. These functions can be applied,
+row by row, to create a new data frame. Instead, we need to concentrate
+our attention on the substance of the problem, the specification of
+the new names and values in the table.
+
+In the projects where we have employed this system, we adjusted the
+key and the R functions to suit the particular demands of the project
+and the client. That was unfortunate, because we had very little accumulation
+of code from one project to another. However, we did accumulate experience;
+there were concepts and vocabulary which allowed us to understand
+the various challenges that might be faced. The effort to develop
+a standardized framework for the variable key began in 2016 with the
+creation of the \code{kutils} package for R.
+
+So far, then, we have outlined a transition process in which project
+supervisors create a table that instructs the research assistants
+in the importation of data. There is still a daunting problem, however,
+because the supervisors must create that variable key table itself.
+In a large data set, it might be arduous to simply type the old names
+of the variables and their observed values. In 2015 one of the graduate
+assistants in our lab was asked to type up a variable key and he couldn't
+quite believe that was a good use of his time. After some discussion\footnote{violent argument},
+we realized that it was not necessary to type the variable key at
+all. Instead of typing this table into a spreadsheet, we decided to
+make the work lighter by using R to write a first draft of the variable
+key. If R can import the candidate data set, then R can certainly
+output its column names and a roster of observed values. A function
+was created to scan a data frame and write a template for the key.
+This lightened the workload considerably. By tabulating all of the
+observed variables and their values, the most tedious part of the
+process was done mechanically. 
+
+
+\section{Four Simple Steps}
+
+Suppose a ``raw'' data frame has been imported. The variable key
+process has four steps. First, create a key template file summarizing
+the existing state of the variables. Second, edit the key template
+file in a spreadsheet or other program that can work with comma separate
+variables. Change the names, values, and designate other recodes (which
+we will describe next). Third, import the revised key into R. Fourth,
+run a function that generates a new, improved data frame by applying
+the imported key to the data frame.
+
+If all goes well, we should end up with a new data frame in which
+\begin{enumerate}
+\item The columns are renamed in accordance with the instructions of the
+principal investigator (or supervisor).
+\item The values of all variables have been recoded according to the instructions
+of the principal investigator (or supervisor).
+\end{enumerate}
+Diagnostic tables are reported to clearly demonstrate the effect of
+each coding change, mapping out the difference between the input and
+the output variables. 
+
+For testing purposes, we have created an example data frame with seven
+variables of various types. The data frame mydf has most of the challenges
+that we see in actual projects. It has integer variables that need
+to be reorganized and turned into character or factor variables. 
+
+<<eval=T,include=T>>=
+set.seed(234234)
+N <- 200
+mydf <- data.frame(x5 = rnorm(N),
+                   x4 = rpois(N, lambda = 3),
+                   x3 = ordered(sample(c("lo", "med", "hi"),
+                        size = N, replace=TRUE),
+                        levels = c("med", "lo", "hi")),
+                   x2 = letters[sample(c(1:4,6), 200, replace = TRUE)],
+                   x1 = factor(sample(c("cindy", "bobby", "marcia",
+                              "greg", "peter"), 200,
+                        replace = TRUE)),
+                    x7 = ordered(letters[sample(c(1:4,6), 200, replace = TRUE)]),
+                    x6 = sample(c(1:5), 200, replace = TRUE),
+                    stringsAsFactors = FALSE)
+mydf$x4[sample(1:N, 10)] <- 999
+mydf$x5[sample(1:N, 10)] <- -999
+@
+
+<<>>=
+rockchalk::summarize(mydf, alphaSort = FALSE)
+@
+
+
+\subsection{Step 1. keyTemplate}
+
+In \code{kutils}, we offer a function called \code{keyTemplate}
+that can scan a data frame and generate a new key template. The new
+template will have the old column names and observed values and it
+will leave place holders for new names and values. The function will
+handle the work of creating the key template object in the R workspace
+or writing it into a file in CSV, XLSX, or RDS format. 
+
+The \code{keyTemplate} function has an argument named ``long'',
+which can be set as \code{TRUE} or \code{FALSE}. If \code{FALSE},
+the key template will be in the format we call ``wide'', while if
+it is true, the result will be a ``long'' key. The difference between
+these two things is most apparent if we begin with the example \code{mydf}.
+
+The key template file that is demonstrated in Table \ref{tab:Wide-key}
+is the type we call a \emph{wide} key. It is a wide key in the sense
+that there is one row per variable, and the old/new value information
+is tightly packed into a pair of columns. The key includes more or
+less obvious columns for the old and new variable names, their classes,
+and values of the variables. 
+
+\begin{table}
+\caption{Key Template, Wide Type\label{tab:Wide-key}}
+
+
+\begin{turn}{90}
+\begin{tabular}{lllllllll}
+  \toprule
+name\_old & name\_new & class\_old & class\_new & value\_old & value\_new & missings & recodes \\
+  \midrule
+x5 & x5 & numeric & numeric &  &  &  &  \\
+x4 & x4 & numeric & numeric &  &  &  &  \\
+x3 & x3 & ordered & ordered & med$<$lo$<$hi & med$<$lo$<$hi &  &  \\
+x2 & x2 & character & character & a$|$b$|$c$|$d$|$f & a$|$b$|$c$|$d$|$f &  &  \\
+x1 & x1 & factor & factor & bobby$|$cindy$|$greg$|$marcia$|$peter & bobby$|$cindy$|$greg$|$marcia$|$peter &  &  \\
+x7 & x7 & ordered & ordered & a$<$b$<$c$<$d$<$f & a$<$b$<$c$<$d$<$f &  &  \\
+x6 & x6 & integer & integer & 1$|$2$|$3$|$4$|$5 & 1$|$2$|$3$|$4$|$5 &  &  \\
+   \bottomrule
+\end{tabular}
+\end{turn}
+\end{table}
+
+
+The wide style key was the first type that we developed. We have more
+experience with it. However, sometimes there is trouble with the wide
+key, mostly due to the fact that some spread sheet programs do not
+handle character strings in the way that we have come to expect. There
+are practical issues as well, because editing an elaborate string
+within a cell may be inconvenient and frustrating in some programs.\footnote{If users could be persuaded to edit the key template as a CSV file
+in an high quality text editor, such as Emacs, this would not be problem.} Using some spread sheet programs, some researchers have had difficulty
+with very wide columns. Since the value\_old and value\_new columns
+must match exactly, there is an element of human error in play. At
+the expense of making a key that has many more rows, we obtain clarity
+by asking instead for a long key template. The long key includes one
+row per value per variable, as illustrated in Table \ref{tab:Long-Key}.
+We assert that the long key template is nearly foolproof. It is simple
+to match the old and new values with one another because there is
+only one value per cell. In a project with 100s of variables, the
+key may be 1000s of lines long. That is an unfortunate fact of life,
+but we suggest it is much more easily revised and proof-read than
+the R code that one usually sees in recoding exercises.
+
+\begin{table}
+
+
+\caption{Key Template, Long Type\label{tab:Long-Key}}
+
+
+\begin{tabular}{llllllll}
+  \toprule
+name\_old & name\_new & class\_old & class\_new & value\_old & value\_new & missings & recodes \\
+  \midrule
+x5 & x5 & numeric & numeric &  &  &  &  \\
+x4 & x4 & numeric & numeric &  &  &  &  \\
+x3 & x3 & ordered & ordered & med & med &  &  \\
+x3 & x3 & ordered & ordered & lo & lo &  &  \\
+x3 & x3 & ordered & ordered & hi & hi &  &  \\
+x2 & x2 & character & character & a & a &  &  \\
+x2 & x2 & character & character & b & b &  &  \\
+x2 & x2 & character & character & c & c &  &  \\
+x2 & x2 & character & character & d & d &  &  \\
+x2 & x2 & character & character & f & f &  &  \\
+x1 & x1 & factor & factor & bobby & bobby &  &  \\
+x1 & x1 & factor & factor & cindy & cindy &  &  \\
+x1 & x1 & factor & factor & greg & greg &  &  \\
+x1 & x1 & factor & factor & marcia & marcia &  &  \\
+x1 & x1 & factor & factor & peter & peter &  &  \\
+x7 & x7 & ordered & ordered & a & a &  &  \\
+x7 & x7 & ordered & ordered & b & b &  &  \\
+x7 & x7 & ordered & ordered & c & c &  &  \\
+x7 & x7 & ordered & ordered & d & d &  &  \\
+x7 & x7 & ordered & ordered & f & f &  &  \\
+x6 & x6 & integer & integer & 1 & 1 &  &  \\
+x6 & x6 & integer & integer & 2 & 2 &  &  \\
+x6 & x6 & integer & integer & 3 & 3 &  &  \\
+x6 & x6 & integer & integer & 4 & 4 &  &  \\
+x6 & x6 & integer & integer & 5 & 5 &  &  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+There is a major difference in the treatment of continuous and discrete
+variables. As readers will note in the example key templates, the
+information for \code{values\_old} and \code{values\_new} is much
+more elaborate for discrete variables. When a variable has a floating
+point value in R, that is, as numeric and not an integer, then it
+does not make sense to tabulate individual values. A numeric variable
+may need to be recoded, say by the elimination of missing values or
+by the application of a transformation (logarithm, etc). But we should
+not want to, and cannot reliably, map individual floating point values
+to newly designated variables. 
+
+On the other hand, for many discrete variables (factors, characters,
+integers), we do want to freely reassign and regroup the observed
+values. However, it is not certain that the variable key should include
+all of the observed values for every discrete variable. In the ``raw''
+data sets, integers and characters are used in various ways. Sometimes
+the integers represent discrete levels (1 = ``male'', 2 = ``female''),
+while sometimes integers represent age or dollar values that we would
+not individually re-assign one-at-a-time. In the first case (integers
+are a substitute for labels), we want the key to include all of the
+observed values so that we can relabel, while in the other case we
+do not. The same difference is found in character variables. A column
+coded as ``male'' or ``female'' falls into a different frame of
+mind than a character variable which represents a survey respondent's
+name or ID number. We want the key to include all of the values of
+the former type of character, but it probably should not enumerate
+all of values of the other type. 
+
+There is no fool-proof way to separate the two types of discretely
+scored variables. The number of different observed values is not certain
+to differentiate these different types of variables, but we allow
+it to serve as a guide. The same strategy is used in the R foreign
+packages to import data from SPSS. The \code{keyTemplate} function
+has an argument, \code{max.levels}, which places an upper limit on
+the allowed number of categories. If the number of discrete values
+exceeds \code{max.levels}, then the values of that will no longer
+be treated as a discrete variable at all, since we do not intend to
+recode individual values with the variable key. As it does for floating-point
+variables, the key template (whether wide or long) will include only
+one row for discrete variables with more than \code{max.levels} observed
+values. The user can adjust max.levels in various ways, as explained
+in the documentation.
+
+TODO: Go back to source code and embellish max.levels to treat characters,
+integers as described here. Now I believe it is printing ``max.levels''
+values, but should not.
+
+Despite the possibility that a factor (or ordered) variable may have
+many values, we believe that all of the levels of those variables
+should be included in the key. 
+
+
+\subsection{Step 2. Edit the variable key}
+
+The variable key that is generated by \code{keyTemplate} should,
+without editing, be sufficient to re-import the data and reproduce
+exactly the same information. As a result, it is not necessary to
+make extensive changes. The supervisor and principal investigator
+can change just a few variable names or values. In a large project,
+there may be quite a bit of work involved. 
+
+Over time, our strategy for naming elements in the key has evolved,
+as has the notation for specifying changes. At the current time, we
+believe that the column names in the key should include the suffixes
+``\_new'' or ``\_old'' to make the meaning perfectly obvious.
+The verbose variable value style that we illustrate here works dependably,
+while the some abbreviated methods will work. 
+
+
+\subsubsection{Factor, ordered, and character variables}
+
+The recoding of discrete variables is a fairly obvious chore. For
+each old value, a new value may be specified. 
+
+In the case of character variable input, we allow for various output
+possibilities. The value of \code{class\_new} will probably be \code{character},
+\code{factor}, \code{ordered}, or \code{integer}. It is necessary
+to match up the old values and new values, of course, but there is
+nothing complicated about it. In the \code{mydf} variable key, we
+have variable \code{x2} which is coded \code{a} through \code{f}.
+Examples of key elements that might change that into a new character,
+factor, or integer variable are illustrated in the following.
+
+\begin{tabular}{|c|c|c|c|}
+\hline 
+class\_old & class\_new & value\_old & value\_new\tabularnewline
+\hline 
+\hline 
+character & character & a|b|c|d|f & Excellent|Proficient|Adequate|Marginal|Inadequate\tabularnewline
+\hline 
+character & factor & a|b|c|d|f & Excellent|Proficient|Adequate|Marginal|Inadequate\tabularnewline
+\hline 
+character & integer & a|b|c|d|f & 4|3|2|1|0\tabularnewline
+\hline 
+\end{tabular}
+
+In line one of this example, the class of the variable remains the
+same. It produces a new character variable with embellished values.
+If we want this to become an R factor variable, line two demonstrates
+how to change the key class\_new value. It is also possible to convert
+the character input into integer values, as we see in line 3.
+
+\textbf{TODO question: could we allow the key to specify multiple
+recodings for a variable, one to create character, one to create factor,
+etc? I'm not sure it is designed to do that now.}
+
+Similarly, it is obvious to see how an integer input can be converted
+into either an integer, character, or factor variable by employing
+any of these rows in the new key.
+
+\begin{tabular}{|c|c|c|c|}
+\hline 
+class\_old & class\_new & value\_old & value\_new\tabularnewline
+\hline 
+\hline 
+integer & integer & 1|2|3|4|5 & 100|200|300|400|500\tabularnewline
+\hline 
+integer & character & 1|2|3|4|5 & New York|Denver|Nashville|Los Angeles|Portland\tabularnewline
+\hline 
+integer & factor & 1|2|3|4|5 & F|D|C|B|A\tabularnewline
+\hline 
+\end{tabular}
+
+If a variable's class\_old is ordered, and we simply want to relabel
+the existing levels, the work is also easy.
+
+\begin{tabular}{|c|c|c|c|}
+\hline 
+class\_old & class\_new & value\_old & value\_new\tabularnewline
+\hline 
+\hline 
+ordered & ordered & f<d<c<b<a & F<D<C<B<A\tabularnewline
+\hline 
+ordered & ordered & f<d<c<b<a & Fail<Fail<Pass<Pass<Pass\tabularnewline
+\hline 
+ordered & integer & f<d<c<b<a & 0|1|2|3|4\tabularnewline
+\hline 
+\end{tabular}
+
+The second row in this example shows that factor levels can be ``combined''
+by assigning the same character string to several ``<'' separated
+values. 
+
+Working with ordered variables, whether as input or output, becomes
+more complicated if the existing data is not ordered in the way we
+want. In the toy data example, the variable \code{mydf\$x3} was coded
+as an ordered variable with levels (``med'', ``lo'', ``high'').
+That might have been one person's idea of a joke, so we need to rearrange
+these as (``lo'', ``med'', ``high''). If the original ordering
+of the values is not consistent with the desired ordering of the new
+ordered factor, then we need notation that allows researchers to achieve
+two purposes. First, the values must be re-leveled. Second, allow
+for the possibility that the new values must be relabeled as well.
+We'd rather not proliferate new columns in the variable key or create
+some confusing new notation.
+
+We have worked out two methods with which to tackle that problem.
+The first method, which some of our team members prefer because of
+its simple, direct approach, requires us to do something that seems
+dangerous. We need to edit the \code{value\_old} to correct the ordering
+of the levels \emph{as they are currently labeled}. In \code{value\_new},
+supply new labels in the in the correct order to parallel the newly
+edited \code{value\_old} column. For example,
+
+\begin{tabular}{|c|c|c|c|}
+\hline 
+class\_old & class\_new & value\_old & value\_new\tabularnewline
+\hline 
+\hline 
+ordered & ordered & low<med<hi & low<medium<high\tabularnewline
+\hline 
+ordered & ordered & low<med<hi & low<pass<pass\tabularnewline
+\hline 
+\end{tabular}
+
+The key importer will check that all ``duplicated levels'' are adjacent
+with one another, so that the values above low are grouped together.
+
+In the long key format, the equivalent information would be conveyed
+by altering the ordering of the rows. For example, it is necessary
+to re-order the rows to indicate the lo is lower than med, and then
+for the new values we put in the desired names.
+
+\begin{tabular}{llllllll}
+\toprule
+name\_old & name\_new & class\_old & class\_new & value\_old & value\_new & missings & recodes \\
+\midrule
+x3 & x3 & ordered & ordered & lo & low &  &  \\
+x3 & x3 & ordered & ordered & med & medium &  &  \\
+x3 & x3 & ordered & ordered & hi & high &  &  \\
+\bottomrule
+\end{tabular}
+
+In our first efforts, we tried to stick to the principle that the
+observed scores in the value\_old column should not be altered and
+we should concentrate our effort on setting the corresponding value\_new.
+However, that makes it difficult to reorder the levels of a factor,
+which can be especially important for ordered variables.
+
+Method number 2 for ordinal variables. Ben will have to talk me through
+this a few times.
+
+In addition, the R symbol for missing values, NA, can be used in place
+of any new value to indicate that cases with a particular score should
+be treated as missing. Sometimes there is confusion when data is passed
+in and out of CSV or XLSX format, because a character variable might
+have a legal value ``NA'' and it may also be necessary to assign
+the R missing value of NA. 
+
+TODO: fix this, describe the output key ``mydf.key.csv'' and get
+EXCEL discussion on how to add quoted elements inside strings. Need
+to write out what Excel does to a string like ``cindy|bobby|''NA''|'',
+figure out why the key currently exports one big string ``bobby|cindy|marcia''
+when perhaps instead it should export ``''bobby''|''cindy''|''marcia'').
+
+
+\subsubsection{About numeric variables}
+
+In the process that creates the variable key template, we attempt
+to separate the variables with meaningfully discrete values--ones
+that we recode by reassignment of one-by-one values--from numeric
+variables that we think of differently. The non-discrete variables
+are included as one row in a variable key (whether wide or long) and
+the main elements of interest for these variables are the columns
+labeled \code{missings} and \code{recodes}. 
+
+The key specification of missing values for various types of variables
+is spelled out in detail for the help page of the \code{assignMissing}
+function in \code{kutils}. For numeric columns, there are only three
+types of statements allowed in the recode column. Legal values must
+must begin with the characters ``<'', ``>'', or ``c''. The first
+two indicate that observed scores less than, or greater than, the
+value which follows are treated as missing. The symbols ``<='' and
+``>='' are accepted in the obvious way. 
+
+\begin{tabular}{|c|c|c|}
+\hline 
+recodes & interpretation: NA will be assigned to  & example\tabularnewline
+\hline 
+\hline 
+> t & values greater than t & > 99\tabularnewline
+\hline 
+>= t & values greater than or equal to t  & >=99\tabularnewline
+\hline 
+<t & values less than t  & <0\tabularnewline
+\hline 
+<=t & values less than or equal to t  & <=0\tabularnewline
+\hline 
+c(a,b) & values equal to or greater than a and less than or equal to b  & c(-999,0)\tabularnewline
+\hline 
+\end{tabular}
+
+
+\subsection*{Class concerns}
+
+Two elements in this key that we have not already mentioned are the
+columns named class\_old and class\_new. These were introduced to
+facilitate two chores. First, we might edit the values of the class\_old
+variable, and then use those classes to re-import the data and reassign
+the variables in a desired way. Another scenario might be that a client
+provides a new data frame which is allegedly equivalent to a previous
+set. The values in class\_old and value\_old might give us a first
+step to verifying their claim that the new data is actually equivalent.
+Second, the class\_new column allows us to indicate, for example,
+that a variable currently coded as 1 for males and 2 for female should
+become an R factor variable with an indicated set of levels.
+
+As described in the R help page for the function \code{as.numeric},
+there are some confusing aspects in the treatment of integers and
+floating point values in R. The R function \code{is.numeric} will
+return TRUE if the variable under consideration is an integer or a
+floating point variable, although as.numeric returns a floating-point
+(double) variable. It is possible for users to declare variables as
+integers, however, and so the two types of numeric variables are not
+necessarily indistinguishable. To disambiguate, the keyTemplate function
+marks class\_old for a known integer variable as ``integer'', while
+the more ambiguous class\_old value ``numeric'' is used for variables
+that are truly double-precision floating point numbers or integer
+variables that have not were not declared as integers when the data
+was imported.
+
+
+\section{Discussion}
+
+When a project has a small budget, we invite the principal investigator
+to economize on the expenses by filling out the variable key's \code{name\_new},
+\code{class\_new}, and \code{value\_new} columns. There are several
+benefits in inviting the clients (or PIs) to be directly involved
+in filling in the variable key. Most importantly, they are allowed
+to name the variables in any way that is meaningful to them. When
+statistical results are obtained, it is never necessary for them to
+ask, ``what did you mean by this variable \code{occupation}?''
+There are other benefits, however. By making the principal aware of
+the values that are actually observed, and by offering the opportunity
+to specify how they ought to be recoded, a substantial element of
+administrative slippage is ameliorated. The variable key will specify
+exactly how categories are to be re-mapped, there is much less danger
+of an accident buried in thousands of lines of recodes.
+
+It often happens that the raw data to be imported is provided by one
+of the national data centers. The variables are given exciting, meaningful
+column names like V34342a. It appears to be almost certain that research
+assistants will conclude that these names are not meaningful, so they
+create names that are more meaningful to them, such as \emph{gender},
+\emph{sex}, \emph{male}, \emph{female}, or whatnot. The research assistants
+disappear into a haze of code and come out talking about the effect
+of income, gender, and education on educational achievement, and the
+principal investigator has to say, ``which of those variables is
+income, again?'' and ``what's the coding on education?'' A very
+exciting conversation then follows as one of the research assistant
+realizes that V34342b is the one that should have been used for gender,
+while V34342a indicates if the respondent ever visited Eastern Europe.
+
+Although some bright people don't know R, it appears they are all
+fluent in spread sheet.
+
+\begin{minipage}[t]{1\columnwidth}%
+Variable Key Editing Guidelines
+\begin{enumerate}
+\item numeric variables
+\end{enumerate}
+2.
+
+3.%
+\end{minipage}
+
+\bibliographystyle{chicago}
+\bibliography{kutils}
+
+\end{document}
