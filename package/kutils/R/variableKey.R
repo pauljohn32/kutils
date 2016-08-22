@@ -405,11 +405,10 @@ zapspace <- function(x){
 ##' After researcher has updated the key by filling in new names and
 ##' values, we import that key file.
 ##'
-##' The return value is a list, with one element per variable, but
-##' some attributes that may be helpful are worth keeping in mind. The
-##' value of the attribute \code{"class_new"} may be helpful as an
-##' argument in a function like \code{read.csv("mydf.key.csv", colClasses =
-##' attr(keylist, "class_new")}. 
+##' The return value is a list, with one element per "name_old" to "name_new" variable combination.
+##' If the key has one old variable being recoded 6 ways, that begets 6 elements
+##' in the resulting list. Attributes including the classes of the old
+##' and new variables are included. 
 ##' 
 ##' @param key A key object or a file name, csv, xlsx or rds.
 ##' @param long Is this a long format key file? If \code{key} is an
@@ -432,13 +431,12 @@ zapspace <- function(x){
 ##' @return A list with one element per variable name, along with some
 ##'     attributes like class_old and class_new. The class is set as
 ##'     well, "keylist". 
-##' @author Paul Johnson mydf.keylist <- mydf.keylist <-
+##' @author Paul Johnson
+##' @examples
 ##' mydf.key.path <- system.file("extdata", "mydf.key_new.csv", package = "kutils")
 ##' mydf.keylist <-  keyImport(mydf.key.path)
-##' fixclasses <- attr(mydf.keylist, "class_old")
-##' fixclasses <- gsub("ordered", "factor", fixclasses)
 ##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
-##' mydf <- read.csv(mydf.path, colClasses = fixclasses, stringsAsFactors = FALSE)
+##' mydf <- read.csv(mydf.path, stringsAsFactors = FALSE)
 ##' mydf2 <- applyVariableKey(mydf, mydf.keylist)
 ##' mydf.keylong.path <- system.file("extdata", "mydfkey.long_new.csv", package = "kutils")
 ##' mydf.keylong.keylist <- keyImport(mydf.keylong.path, long = TRUE)
@@ -642,27 +640,20 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE){
                 xnew <- assignMissing(xnew, m)
             }
         }
-        ## If desired class is same, no problem! just flush through the values
-        ## Consider taking easy road and using this as a big hammer, but only if value_old
-        ## is not NA or "" 
-        ##if (identical(class_new.key, class_old.data)){
+       
         
         if(class_new.key %in% c("ordered", "factor")) {
-            ## if value_old is empty
-            if (all(is.na(v$value_old))){
-                if (any(!is.na(v$value_new))){
-                    mytext <- paste0("xlist[[\"", name_new, "\"]]<- ",
-                                     class_new.key, "(xnew, levels = v$value_new)")
-                    eval(parse(text = mytext))
-                } else { 
-                    ## value_old was NA and value_new is NA, so do nothing.
-                    next()
-                }
-            } else if (length(v$value_old) == length(v$value_old)){
-                ## browser()
-                mytext <- paste0("xlist[[\"", name_new, "\"]] <- ", class_new.key,
-                                 "(xnew, levels = v$value_old,
-                                 labels =  v$value_new)")
+            ## If $v$value_old is empty, what to do?
+            ## Too risky to assing value_new in that case, cutting out code which
+            ## tried to guess and do so.
+            if (length(v$value_old) == length(v$value_old)){
+                ## Work around the "deprecated duplicated levels" and "unused levels problem"
+                mytext <- paste0("xnew <- ", class_new.key, "(xnew, levels = v$value_old)")
+                eval(parse(text = mytext))
+                newlevels <- v$value_new
+                names(newlevels) <- v$value_old
+                levels(xnew) <- newlevels[levels(xnew)]
+                mytext <- paste0("xlist[[\"", name_new, "\"]] <- xnew")
                 eval(parse(text = mytext))
             } else {
                 stop("Can't understand why value_old and value_new are not equal in length")
@@ -690,11 +681,8 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE){
             }
         }
     }
-
+    
     dframe <- do.call(data.frame, xlist)
-    ## TODO: check if following is necessary anymore. 
-    ## dframe <- colnamesReplace(dframe,  sapply(keylist, function(x) x$name_old), sapply(keylist, function(x) x$name_new))
-
     keyDiagnostic(dforig, dframe, keylist)
     dframe
 }

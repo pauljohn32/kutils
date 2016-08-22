@@ -2,6 +2,10 @@
 
 	* ../R/variableKey.R (keyDiagnostic): new function to compare old
 	and new data against variable key
+	(keyApply): Dealing with duplicated factor levels problem,
+	avoiding them, reassinging values correctly. If $v$value_old is
+	empty, what to do?  Too risky to assing value_new in that case,
+	cutting out code which tried to guess and do so.
 
 2016-08-21  Paul Johnson  <pauljohn@delllap-16>
 
