@@ -483,7 +483,7 @@ keyImport <- function(key, long = FALSE, ...,
         } else if (length(grep("rds$", tolower(key))) > 0){
             key <- readRDS(key)
             if (inherits(key, "key")) {
-                long <- FALSEsapply(keylist, function(keyds) keyds$class_new)
+                long <- FALSE
             } else if (inherits(key, "keylong")){
                 long <- TRUE
             } else {
@@ -684,7 +684,7 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE){
                 mytext <- paste0("xlist[[\"", name_new, "\"]] <- ", "xnew")
                 eval(parse(text = mytext))
             } else {
-                messg <- paste(vn, "is neither factor not ordered.",
+                messg <- paste(v$name_old, "is neither factor not ordered.",
                                "Why are new and old value vectors not same in length?")
                 stop(messg)
             }
@@ -720,13 +720,13 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE){
 ##' @param nametrunc Truncate column and row names. Needed if there
 ##'     are long factor labels and we want to fit more information on
 ##'     table. Default = 6.
-##' @param width Number of characters per row in printed
+##' @param wide Number of characters per row in printed
 ##'     output. Suggest very wide screen, default = 200.
 ##' @return NULL
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 keyDiagnostic <-
     function(dfold, dfnew, keylist, max.values = 20,
-             nametrunc = 6, width = 200)
+             nametrunc = 6, wide = 200)
 {
 
     ## TODO if class in dfnew does not match keylist specification, fail
@@ -735,7 +735,7 @@ keyDiagnostic <-
     ## other summary of match and mismatch.
     print("Make your display wide")
     width.orig <- options("width")
-    options(width = width)
+    options(width = wide)
     for (v in keylist){
         if (length(unique(dfold[ , v$name_old])) <= max.values){
             name_new.trunc <- substr(v$name_new, 1, min(nchar(v$name_new), nametrunc))
@@ -746,6 +746,6 @@ keyDiagnostic <-
             print("suggest that for discrete, we take table output and most numerous values.  For numeric variables, how about a missing value table and a scatter plot?")
         }
     }
-    options(width = width.orig)
+    options(width = unlist(width.orig))
     NULL
 }
