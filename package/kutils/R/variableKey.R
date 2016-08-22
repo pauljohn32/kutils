@@ -397,7 +397,7 @@ zapspace <- function(x){
     y <- gsub("\\s*$", "", y)
     y
 }
-
+NULL
 
 
 ##' Import a variable key
@@ -435,9 +435,9 @@ zapspace <- function(x){
 ##' @examples
 ##' mydf.key.path <- system.file("extdata", "mydf.key_new.csv", package = "kutils")
 ##' mydf.keylist <-  keyImport(mydf.key.path)
-##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
-##' mydf <- read.csv(mydf.path, stringsAsFactors = FALSE)
-##' mydf2 <- applyVariableKey(mydf, mydf.keylist)
+##' mydf.key <- read.csv(mydf.key.path, stringsAsFactor = FALSE)
+##' mydf.keylist2 <- keyImport(mydf.key, long = FALSE)
+##' identical(mydf.keylist, mydf.keylist2)
 ##' mydf.keylong.path <- system.file("extdata", "mydfkey.long_new.csv", package = "kutils")
 ##' mydf.keylong.keylist <- keyImport(mydf.keylong.path, long = TRUE)
 keyImport <- function(key, long = FALSE, ...,
@@ -584,7 +584,7 @@ keyImport <- function(key, long = FALSE, ...,
     class(keylist) <- "keylist"
     keylist
 }
-
+NULL
 
 
 
@@ -686,7 +686,7 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE){
     keyDiagnostic(dforig, dframe, keylist)
     dframe
 }
-
+NULL
 
 ##' Diagnose accuracy of variable key application
 ##'
