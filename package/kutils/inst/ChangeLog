@@ -1,3 +1,14 @@
+2016-08-22  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (keyDiagnostic): new function to compare old
+	and new data against variable key
+
+2016-08-21  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (keyImport): Redesign to allow multiple name_new for a
+	single name_old. names on keylist object are "name_old.name_new"
+	for clarity.
+
 2016-08-19  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (getValues): max.levels change. If integer or
