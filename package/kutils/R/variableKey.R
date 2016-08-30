@@ -245,11 +245,11 @@ assignRecode <- function(x, recode = NULL){
 ##' 
 ##' ## Should be same as content of
 ##' ## write.csv(mydf, file = "../inst/extdata/mydf.csv", row.names = FALSE)
-##' 
-##' 
 ##' mydf.key <- keyTemplate(mydf, file = "mydf.key.csv")
 ##' mydf.keylong <- keyTemplate(mydf, long = TRUE, file = "mydfkey.long.csv")
-##'
+##' ## write.csv(mydf.key, file = "../inst/extdata/mydf.key.csv", row.names = FALSE)
+##' ## write.csv(mydf.keylong, file = "../inst/extdata/mydf.keylong.csv", row.names = FALSE)
+##' 
 ##' ## Try with the national longitudinal study data
 ##' data(natlongsurv)
 ##' natlong.key <- keyTemplate(natlongsurv, file = "natlongsurv.key.csv",
