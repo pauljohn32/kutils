@@ -133,7 +133,43 @@ assignMissing <- function(x, missings = NULL){
     ## return unchanged input, didn't see what to do
     x 
 }
- 
+
+
+
+
+##' A variable is transformed in an indicated way
+##'
+##' In the variable key framework, the user might request
+##' transormations such as the logarithm, exponential, or square
+##' root. This is done by including strings in the recodes column,
+##' such as "log(x + 1)" or "3 + 1.1 * x + 0.5 * x ^ 2". This
+##' function implements the user's request by parsing the character
+##' string and applying the indicated re-calculation.
+##'
+##' In the variable key framework, this is applied to the raw data,
+##' after missings are imposed.
+##' @param x A column to be recoded
+##' @param recode A character string using placeholder "x". See
+##'     examples
+##' @return A new column
+##' @author Paul Johnson <pauljohn@@ku.edu>
+##' @examples
+##' set.seed(234234)
+##' x <- rpois(100, lambda = 3)
+##' x <- x[order(x)]
+##' str1 <- "log(x + 1)"
+##' xlog <- assignRecode(x, recode = str1)
+##' plot(xlog ~ x, type = "l")
+##' mean(xlog, na.rm = TRUE)
+##' str2 <- "x^2"
+##' xsq <- assignRecode(x, recode = str2)
+##' plot(xsq ~ x, type = "l")
+##' str3 <- "sqrt(x)"
+##' xsrt <- assignRecode(x, recode = str3)
+assignRecode <- function(x, recode = NULL){
+    y <- eval(parse(text = recode))
+}
+
 
 
 ##' Create variable key
@@ -208,7 +244,8 @@ assignMissing <- function(x, missings = NULL){
 ##' mydf$x5[sample(1:N, 10)] <- -999
 ##' 
 ##' ## Should be same as content of
-##' ## write.csv(mydf, file = "../inst/extdata/mydf.csv")
+##' ## write.csv(mydf, file = "../inst/extdata/mydf.csv", row.names = FALSE)
+##' 
 ##' 
 ##' mydf.key <- keyTemplate(mydf, file = "mydf.key.csv")
 ##' mydf.keylong <- keyTemplate(mydf, long = TRUE, file = "mydfkey.long.csv")
@@ -589,7 +626,7 @@ NULL
 
 
 
-##' Apply variable key to data frame to recode data
+##' Apply variable key to data frame (generate recoded data frame)
 ##'
 ##' This is the main objective of the variable key system.
 ##' @param dframe An R data frame
@@ -629,25 +666,39 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE){
         class_new.key <- v$class_new
         class_old.key <- v$class_old
         class_old.data <- class_old.dframe[name_old]
+
+        ## TODO: what if class_old does not match class of imported
+        ## data.  Need to think through implications of doing something like
+        ## xnew <- as(xnew, class_old)
         
-        ## First apply missings to column. With new design,
-        ## these might differ among rows (same name_old has various missings).
+        ## Extract candidate variable to column.
         xnew <- dframe[ , name_old]
-        ## may be several missings for each variable
+        ## First apply missings. maybe several missings for each variable
         ## xnew <- assignMissing(dframe[ , name_old], v$missings)
         if (length(v$missings) > 0){
             for(m in v$missings){
                 xnew <- assignMissing(xnew, m)
             }
         }
-       
+
+        ## Lets be simple now. If they
+        ## have "recodes" in key, apply them.
+        ## TODO: Must decide if we enforce either/or logic in key
+        ## Should we SKIP value_new and not do next step if they do that.
+        if (length(v$recodes) > 0) {
+            for (cmd in v$recodes) xnew <- assignRecode(xnew, cmd)
+            mytext <- paste0("xlist[[\"", name_new, "\"]] <- ", "xnew")
+            eval(parse(text = mytext))
+        }
         
         if(class_new.key %in% c("ordered", "factor")) {
-            ## If $v$value_old is empty, what to do?
+            ## TODO: check mapvalues works with NA on output value
+            ## TODO: If $v$value_old is empty, what to do?
             ## Too risky to assing value_new in that case, cutting out code which
             ## tried to guess and do so.
-            if (length(v$value_old) == length(v$value_old)){
-                ## Work around the "deprecated duplicated levels" and "unused levels problem"
+            if (!is.na(v$value_old) && length(v$value_old) == length(v$value_old)){
+                ## TODO: keep only differences between value_old and value_new?
+                ## Following to Work around the "deprecated duplicated levels" and "unused levels problem"
                 mytext <- paste0("xnew <- ", class_new.key, "(xnew, levels = v$value_old)")
                 eval(parse(text = mytext))
                 newlevels <- v$value_new
@@ -659,10 +710,14 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE){
                 stop("Can't understand why value_old and value_new are not equal in length")
             }
         } else {
-            if (length(v$value_old) == length(v$value_new)){
-                ## got error on numerics or integers where no values were set,
+            ## TODO: about numerics. Should we allow recodes AS WELL AS value_old, value_new??
+
+           
+            
+            if (!is.na(v$value_old) && length(v$value_old) == length(v$value_new)){
+                ## TODO: need to stress test this on other variable types.
                 ## so only do re-assignment if any value_old are not NA.
-                ## TODO: check mapvalues works with NA on output value
+              
                 if (any(!is.na(v$value_old))){
                     xnew <- plyr::mapvalues(xnew, v$value_old, v$value_new, warn_missing = FALSE)
                 }

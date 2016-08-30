@@ -1,3 +1,12 @@
+2016-08-30  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (keyApply): use assignRecode in for loop, so
+	each element in the recodes is applied in a sequence.
+
+2016-08-29  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (assignRecodes): new function to apply the key
+
 2016-08-22  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (keyDiagnostic): new function to compare old

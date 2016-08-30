@@ -1079,21 +1079,18 @@ wide
 \begin_layout Standard
 \begin_inset Float table
 wide false
-sideways false
+sideways true
 status open
+
+\begin_layout Plain Layout
+
+\end_layout
 
 \begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Key Template, Wide Type
-\begin_inset CommandInset label
-LatexCommand label
-name "tab:Wide-key"
-
-\end_inset
-
-
+Rotated
 \end_layout
 
 \end_inset
@@ -1104,13 +1101,6 @@ name "tab:Wide-key"
 \begin_layout Plain Layout
 \begin_inset ERT
 status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-begin{turn}{90}
-\end_layout
 
 \begin_layout Plain Layout
 
@@ -1235,15 +1225,12 @@ bottomrule
 end{tabular}
 \end_layout
 
-\begin_layout Plain Layout
-
-
-\backslash
-end{turn}
-\end_layout
-
 \end_inset
 
+
+\end_layout
+
+\begin_layout Plain Layout
 
 \end_layout
 
@@ -2144,13 +2131,23 @@ Similarly, it is obvious to see how an integer input can be converted into
 
 \begin_layout Standard
 \begin_inset Tabular
-<lyxtabular version="3" rows="4" columns="4">
+<lyxtabular version="3" rows="4" columns="5">
 <features rotate="0" tabularvalignment="middle">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
 <row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+name_new
+\end_layout
+
+\end_inset
+</cell>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
@@ -2193,6 +2190,15 @@ value_new
 \begin_inset Text
 
 \begin_layout Plain Layout
+x6.1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
 integer
 \end_layout
 
@@ -2231,6 +2237,15 @@ integer
 \begin_inset Text
 
 \begin_layout Plain Layout
+x6.c
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
 integer
 \end_layout
 
@@ -2265,6 +2280,15 @@ New York|Denver|Nashville|Los Angeles|Portland
 </cell>
 </row>
 <row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+x6.f
+\end_layout
+
+\end_inset
+</cell>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
@@ -3319,6 +3343,30 @@ numeric
  is used for variables that are truly double-precision floating point numbers
  or integer variables that have not were not declared as integers when the
  data was imported.
+\end_layout
+
+\begin_layout Subsection
+Step 3.
+ Import the edited key
+\end_layout
+
+\begin_layout Standard
+keyImport() kutils
+\end_layout
+
+\begin_layout Standard
+keyImport reads the key and creates a list with one item per new variable
+ to be created.
+ 
+\end_layout
+
+\begin_layout Subsection
+Step 4.
+ Apply the imported key to the data
+\end_layout
+
+\begin_layout Standard
+keyApply.
 \end_layout
 
 \begin_layout Section

@@ -15,6 +15,7 @@ Description: Tools for data importation, recoding, and inspection
 	structured recoding (the "variable key").
 License: GPL-2
 Imports: stats, utils, methods, xtable, lavaan, plyr, openxlsx 
+Suggests: rockchalk
 RoxygenNote: 5.0.1
 LazyData: TRUE
 
