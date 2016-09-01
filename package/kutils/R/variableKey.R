@@ -102,9 +102,15 @@ assignMissing <- function(x, missings = NULL){
             misvec <- sort(misvec)
             x[x >= misvec[1] & x <= misvec[2]] <- NA
         } else {
-            print(x)
+            messg("Error in assignMissings")
+            print(messg)
+            messg <- "Here are the first 20 values of the variable being recoded"
+            print(messg)
+            print(head(x, 20))
+            messg <- "Here is the missing value string that was supplied"
+            print(messg)
             print(missings)
-            messg <- paste0("missings for variable ", deparse(substitute(x)), " not understandable")
+            messg <- paste0("The missing string was not understandable")
             stop(messg)
         }
         return(x)
@@ -477,6 +483,11 @@ NULL
 ##' identical(mydf.keylist, mydf.keylist2)
 ##' mydf.keylong.path <- system.file("extdata", "mydfkey.long_new.csv", package = "kutils")
 ##' mydf.keylong.keylist <- keyImport(mydf.keylong.path, long = TRUE)
+##'
+##' nls.keylong.path <- system.file("extdata", "natlongsurv.keylong_new.csv", package = "kutils")
+##' nls.keylong.keylist <- keyImport(nls.keylong.path, long = TRUE)
+##' data(natlongsurv)
+##' nls.dat <- keyApply(natlongsurv, nls.keylong.keylist)
 keyImport <- function(key, long = FALSE, ...,
                       keynames = c(name_old = "name_old",
                                    name_new = "name_new",
@@ -492,7 +503,7 @@ keyImport <- function(key, long = FALSE, ...,
                      ,
                       sepnew = sepold
                      ,
-                      missingare = c(".", "\\s",  "NA")
+                      missingare = c(".", "",  "\\s",  "NA")
                       )
 {
     ## if x is "", return NA
@@ -504,7 +515,7 @@ keyImport <- function(key, long = FALSE, ...,
     }
 
     ## if it is already a key list, return with no changes
-    if (inherits(key,"keylist")) return(keylist)
+    if (inherits(key,"keylist")) return(key)
     if (inherits(key, "key")) {
         long <- FALSE
     } else if (inherits(key, "keylong")){
@@ -711,10 +722,8 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE){
             }
         } else {
             ## TODO: about numerics. Should we allow recodes AS WELL AS value_old, value_new??
-
            
-            
-            if (!is.na(v$value_old) && length(v$value_old) == length(v$value_new)){
+            if (length(v$value_old) == length(v$value_new)){
                 ## TODO: need to stress test this on other variable types.
                 ## so only do re-assignment if any value_old are not NA.
               
@@ -782,7 +791,7 @@ keyDiagnostic <-
     for (v in keylist){
         if (length(unique(dfold[ , v$name_old])) <= max.values){
             name_new.trunc <- substr(v$name_new, 1, min(nchar(v$name_new), nametrunc))
-            name_old.trunc <- paste0(substr(v$name_old, 1, min(nchar(v$name_old), nametrunc)), ".old")
+            name_old.trunc <- paste0(substr(v$name_old, 1, min(nchar(v$name_old), nametrunc)), " (old var)")
             print(round(table(dfnew[ , v$name_new], dfold[ , v$name_old], exclude = NULL, dnn = c(name_new.trunc, name_old.trunc)), -1))
         } else {
             print("need to write some code to deal with case where number of values is high")

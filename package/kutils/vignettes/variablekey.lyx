@@ -3508,9 +3508,94 @@ Variable Key Editing Guidelines
 \end_layout
 
 \begin_layout Enumerate
+Omit a variable: delete its row(s) from the (long)key.
+\end_layout
+
+\begin_layout Enumerate
+Manage data importation.
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Need importation check for column classes and possible coercion.
+ But...
+\end_layout
+
+\begin_layout Enumerate
+What to do about mismatch between column classes in imported data frame
+ and the class_old in the key? This will happen if read.csv is used to import
+ data, since it does not have colClasses=
+\begin_inset Quotes erd
+\end_inset
+
+ordinal
+\begin_inset Quotes erd
+\end_inset
+
+ as a possible.
+ Also 
+\begin_inset Quotes eld
+\end_inset
+
+numeric
+\begin_inset Quotes erd
+\end_inset
+
+ is confusing.
+ If the key's old_value is, for example, 
+\begin_inset Quotes eld
+\end_inset
+
+ordinal
+\begin_inset Quotes erd
+\end_inset
+
+, and read.csv has been used to import the data (without specifying stringsAsFact
+ors = FALSE), then it might be suitable to coerce.
+ But if stingsAsFactors = FALSE, 
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+Assign missings:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+discrete variables: several options, we should settle on one suggestion
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+insert 
+\begin_inset Quotes eld
+\end_inset
+
+NA
+\begin_inset Quotes erd
+\end_inset
+
+ in value_new column
+\end_layout
+
+\begin_layout Enumerate
+delete the value_old entry (not the best way, maybe don't mention it)
+\end_layout
+
+\begin_layout Enumerate
+list a vector of missing values in the recode column.
+ This vector applies to data as it was imported, before applying the value_old
+ to value_new transition.
+ PROBLEM: if input data's class does not match class_old, there may be a
+ problem.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
 numeric variables
 \end_layout
 
+\end_deeper
 \begin_layout Plain Layout
 2.
 \end_layout
