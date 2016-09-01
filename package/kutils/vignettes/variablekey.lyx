@@ -3351,6 +3351,10 @@ Step 3.
 \end_layout
 
 \begin_layout Standard
+THIS SECTION IS UNDER CONSTRUCTION
+\end_layout
+
+\begin_layout Standard
 Once any desired changes to variables have been entered into the variable
  key, the file needs to be imported back into R.
  First, the csv (
@@ -3384,6 +3388,17 @@ readRDS
 \end_inset
 
 ) file containing the edited key needs to be read into R.
+ It is important to specify 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+stringsAsFactor = FALSE
+\end_layout
+
+\end_inset
+
+ as an argument when reading the key into R.
  Next the key is provided to the 
 \begin_inset Flex Code
 status open
@@ -3442,7 +3457,66 @@ keyImport
  provided.
  Inspecting the key list will show that each item contains the information
  provided in a single row of a short key.
+ The key list has a fixed format so that the process of using the key list
+ to manipulate the data is not influenced by what key format was used.
+ We do not suggest attempting to create a key list manually.
+ See the example below taken from the 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+keyImport
+\end_layout
+
+\end_inset
+
+ documentation.
  
+\end_layout
+
+\begin_layout Standard
+RUN THROUGH THE EXAMPLES SOME MORE.
+ MAKE SURE YOU ARE COVERING EVERYTHING.
+ BE ABLE TO MENTION THINGS THAT WILL BREAK THE CODE.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+mydf.key <- read.csv(mydf.key.path, stringsAsFactor = FALSE) 
+\end_layout
+
+\begin_layout Plain Layout
+
+mydf.keylist2 <- keyImport(mydf.key, long = FALSE)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Subsection
@@ -3451,10 +3525,12 @@ Step 4.
 \end_layout
 
 \begin_layout Standard
+UNDER CONSTRUCTION!
+\end_layout
+
+\begin_layout Standard
 The final step is to apply the key to the data frame that needs variables
  recoded.
- The data frame to receive the recoding should be the same data frame used
- to create the key.
  The recoded data frame is obtained by assigning a name to the output of
  the 
 \begin_inset Flex Code
@@ -3489,6 +3565,12 @@ keyApply
 
  function takes the name of the data frame to be recoded and the key list
  created in Step 3 to produce a new data frame with the desired recodings.
+ 
+\end_layout
+
+\begin_layout Standard
+ADD AN EXAMPLE THAT FLOWS ALONG WITH PREVIOUS SECTIONS.
+ MAYBE EDIT THIS TO HAVE AN EXAMPLE THAT RUNS THROUGH ALL FOUR STEPS.
  
 \end_layout
 
@@ -3553,9 +3635,9 @@ occupation
 \end_inset
 
  There are other benefits, however.
- By making the principal aware of the values that are actually observed,
- and by offering the opportunity to specify how they ought to be recoded,
- a substantial element of administrative slippage is ameliorated.
+ By making the principal investigator aware of the values that are actually
+ observed, and by offering the opportunity to specify how they ought to
+ be recoded, a substantial element of administrative slippage is ameliorated.
  The variable key will specify exactly how categories are to be re-mapped,
  there is much less danger of an accident buried in thousands of lines of
  recodes.
