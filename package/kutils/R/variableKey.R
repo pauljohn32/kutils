@@ -33,6 +33,7 @@
 ##'
 ##' @return A (hopefully) cleaned column of data
 ##' @export
+##' @importFrom utils head
 ##' @author Paul Johnson
 ##' @examples
 ##' ## 1.  Integers.
@@ -158,6 +159,7 @@ assignMissing <- function(x, missings = NULL){
 ##' @param recode A character string using placeholder "x". See
 ##'     examples
 ##' @return A new column
+##' @export
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @examples
 ##' set.seed(234234)

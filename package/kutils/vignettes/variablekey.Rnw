@@ -8,6 +8,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{geometry}
 \geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+\usepackage{rotfloat}
 \usepackage[authoryear]{natbib}
 
 \makeatletter
@@ -354,11 +355,12 @@ is tightly packed into a pair of columns. The key includes more or
 less obvious columns for the old and new variable names, their classes,
 and values of the variables. 
 
-\begin{table}
-\caption{Key Template, Wide Type\label{tab:Wide-key}}
+\begin{sidewaystable}
 
 
-\begin{turn}{90}
+\caption{Rotated}
+
+
 \begin{tabular}{lllllllll}
   \toprule
 name\_old & name\_new & class\_old & class\_new & value\_old & value\_new & missings & recodes \\
@@ -372,8 +374,8 @@ x7 & x7 & ordered & ordered & a$<$b$<$c$<$d$<$f & a$<$b$<$c$<$d$<$f &  &  \\
 x6 & x6 & integer & integer & 1$|$2$|$3$|$4$|$5 & 1$|$2$|$3$|$4$|$5 &  &  \\
    \bottomrule
 \end{tabular}
-\end{turn}
-\end{table}
+
+\end{sidewaystable}
 
 
 The wide style key was the first type that we developed. We have more
@@ -545,16 +547,16 @@ Similarly, it is obvious to see how an integer input can be converted
 into either an integer, character, or factor variable by employing
 any of these rows in the new key.
 
-\begin{tabular}{|c|c|c|c|}
+\begin{tabular}{|c|c|c|c|c|}
 \hline 
-class\_old & class\_new & value\_old & value\_new\tabularnewline
+name\_new & class\_old & class\_new & value\_old & value\_new\tabularnewline
 \hline 
 \hline 
-integer & integer & 1|2|3|4|5 & 100|200|300|400|500\tabularnewline
+x6.1 & integer & integer & 1|2|3|4|5 & 100|200|300|400|500\tabularnewline
 \hline 
-integer & character & 1|2|3|4|5 & New York|Denver|Nashville|Los Angeles|Portland\tabularnewline
+x6.c & integer & character & 1|2|3|4|5 & New York|Denver|Nashville|Los Angeles|Portland\tabularnewline
 \hline 
-integer & factor & 1|2|3|4|5 & F|D|C|B|A\tabularnewline
+x6.f & integer & factor & 1|2|3|4|5 & F|D|C|B|A\tabularnewline
 \hline 
 \end{tabular}
 
@@ -717,6 +719,19 @@ variables that have not were not declared as integers when the data
 was imported.
 
 
+\subsection{Step 3. Import the edited key}
+
+keyImport() kutils
+
+keyImport reads the key and creates a list with one item per new variable
+to be created. 
+
+
+\subsection{Step 4. Apply the imported key to the data}
+
+keyApply.
+
+
 \section{Discussion}
 
 When a project has a small budget, we invite the principal investigator
@@ -754,7 +769,35 @@ fluent in spread sheet.
 \begin{minipage}[t]{1\columnwidth}%
 Variable Key Editing Guidelines
 \begin{enumerate}
+\item Omit a variable: delete its row(s) from the (long)key.
+\item Manage data importation.
+
+\begin{enumerate}
+\item Need importation check for column classes and possible coercion. But...
+\item What to do about mismatch between column classes in imported data
+frame and the class\_old in the key? This will happen if read.csv
+is used to import data, since it does not have colClasses=''ordinal''
+as a possible. Also ``numeric'' is confusing. If the key's old\_value
+is, for example, ``ordinal'', and read.csv has been used to import
+the data (without specifying stringsAsFactors = FALSE), then it might
+be suitable to coerce. But if stingsAsFactors = FALSE, 
+\end{enumerate}
+\item Assign missings:
+
+\begin{enumerate}
+\item discrete variables: several options, we should settle on one suggestion
+
+\begin{enumerate}
+\item insert ``NA'' in value\_new column
+\item delete the value\_old entry (not the best way, maybe don't mention
+it)
+\item list a vector of missing values in the recode column. This vector
+applies to data as it was imported, before applying the value\_old
+to value\_new transition. PROBLEM: if input data's class does not
+match class\_old, there may be a problem.
+\end{enumerate}
 \item numeric variables
+\end{enumerate}
 \end{enumerate}
 2.
 
