@@ -1060,7 +1060,7 @@ mydf
 The key template file that is demonstrated in Table 
 \begin_inset CommandInset ref
 LatexCommand ref
-reference "tab:Wide-key"
+reference "BROKEN: Ref: tab:Wide-key"
 
 \end_inset
 
@@ -3351,12 +3351,97 @@ Step 3.
 \end_layout
 
 \begin_layout Standard
-keyImport() kutils
+Once any desired changes to variables have been entered into the variable
+ key, the file needs to be imported back into R.
+ First, the csv (
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+read.csv
 \end_layout
 
-\begin_layout Standard
-keyImport reads the key and creates a list with one item per new variable
- to be created.
+\end_inset
+
+), xlsx (
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+openxlsx::read.xlsx
+\end_layout
+
+\end_inset
+
+), or rds (
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+readRDS
+\end_layout
+
+\end_inset
+
+) file containing the edited key needs to be read into R.
+ Next the key is provided to the 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+keyImport
+\end_layout
+
+\end_inset
+
+ function in 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+kutils
+\end_layout
+
+\end_inset
+
+.
+ The 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+keyImport
+\end_layout
+
+\end_inset
+
+ function is set to read short keys by default, providing the argument 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+long = TRUE
+\end_layout
+
+\end_inset
+
+ will switch to a long key.
+ The 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+keyImport
+\end_layout
+
+\end_inset
+
+ function always returns a list with information about how each variable
+ is to be recoded.
+ The structure of the list will be the same with a long or short key being
+ provided.
+ Inspecting the key list will show that each item contains the information
+ provided in a single row of a short key.
  
 \end_layout
 
@@ -3366,7 +3451,45 @@ Step 4.
 \end_layout
 
 \begin_layout Standard
-keyApply.
+The final step is to apply the key to the data frame that needs variables
+ recoded.
+ The data frame to receive the recoding should be the same data frame used
+ to create the key.
+ The recoded data frame is obtained by assigning a name to the output of
+ the 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+kutils
+\end_layout
+
+\end_inset
+
+ function 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+keyApply
+\end_layout
+
+\end_inset
+
+.
+ The 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+keyApply
+\end_layout
+
+\end_inset
+
+ function takes the name of the data frame to be recoded and the key list
+ created in Step 3 to produce a new data frame with the desired recodings.
+ 
 \end_layout
 
 \begin_layout Section
