@@ -33,6 +33,7 @@
 ##'
 ##' @return A (hopefully) cleaned column of data
 ##' @export
+##' @importFrom utils head
 ##' @author Paul Johnson
 ##' @examples
 ##' ## 1.  Integers.
@@ -158,6 +159,7 @@ assignMissing <- function(x, missings = NULL){
 ##' @param recode A character string using placeholder "x". See
 ##'     examples
 ##' @return A new column
+##' @export
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @examples
 ##' set.seed(234234)
@@ -252,7 +254,7 @@ assignRecode <- function(x, recode = NULL){
 ##' ## Should be same as content of
 ##' ## write.csv(mydf, file = "../inst/extdata/mydf.csv", row.names = FALSE)
 ##' mydf.key <- keyTemplate(mydf, file = "mydf.key.csv")
-##' mydf.keylong <- keyTemplate(mydf, long = TRUE, file = "mydfkey.long.csv")
+##' mydf.keylong <- keyTemplate(mydf, long = TRUE, file = "mydf.keylong.csv")
 ##' ## write.csv(mydf.key, file = "../inst/extdata/mydf.key.csv", row.names = FALSE)
 ##' ## write.csv(mydf.keylong, file = "../inst/extdata/mydf.keylong.csv", row.names = FALSE)
 ##' 
@@ -481,7 +483,7 @@ NULL
 ##' mydf.key <- read.csv(mydf.key.path, stringsAsFactor = FALSE)
 ##' mydf.keylist2 <- keyImport(mydf.key, long = FALSE)
 ##' identical(mydf.keylist, mydf.keylist2)
-##' mydf.keylong.path <- system.file("extdata", "mydfkey.long_new.csv", package = "kutils")
+##' mydf.keylong.path <- system.file("extdata", "mydf.keylong_new.csv", package = "kutils")
 ##' mydf.keylong.keylist <- keyImport(mydf.keylong.path, long = TRUE)
 ##'
 ##' nls.keylong.path <- system.file("extdata", "natlongsurv.keylong_new.csv", package = "kutils")
@@ -650,12 +652,15 @@ NULL
 ##' @examples
 ##' mydf.key.path <- system.file("extdata", "mydf.key_new.csv", package = "kutils")
 ##' mydf.keylist <-  keyImport(mydf.key.path)
-##' ## The column class "ordered" is not allowed in read.csv, but "factor" is. 
-##' fixclasses <- attr(mydf.keylist, "class_old")
-##' fixclasses <- gsub("ordered", "factor", fixclasses)
 ##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
-##' mydf <- read.csv(mydf.path, colClasses = fixclasses, stringsAsFactors = FALSE)
+##' ## mydf <- read.csv(mydf.path, colClasses = fixclasses, stringsAsFactors = FALSE)
+##' mydf <- read.csv(mydf.path, stringsAsFactors=FALSE)
 ##' mydf2 <- keyApply(mydf, mydf.keylist)
+##'
+##' nls.keylong.path <- system.file("extdata", "natlongsurv.keylong_new.csv", package = "kutils")
+##' nls.keylong.keylist <- keyImport(nls.keylong.path, long = TRUE)
+##' data(natlongsurv)
+##' nls.dat <- keyApply(natlongsurv, nls.keylong.keylist)
 keyApply <- function(dframe, keylist, diagnostic = TRUE){
     
     if (diagnostic) dforig <- dframe
@@ -696,7 +701,7 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE){
         ## have "recodes" in key, apply them.
         ## TODO: Must decide if we enforce either/or logic in key
         ## Should we SKIP value_new and not do next step if they do that.
-        if (length(v$recodes) > 0) {
+        if (length(v$recodes) > 0 && !all(is.na(v$recodes))) {
             for (cmd in v$recodes) xnew <- assignRecode(xnew, cmd)
             mytext <- paste0("xlist[[\"", name_new, "\"]] <- ", "xnew")
             eval(parse(text = mytext))
@@ -747,7 +752,7 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE){
     }
     
     dframe <- do.call(data.frame, xlist)
-    keyDiagnostic(dforig, dframe, keylist)
+    if(diagnostic) keyDiagnostic(dforig, dframe, keylist)
     dframe
 }
 NULL
