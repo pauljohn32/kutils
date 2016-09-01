@@ -592,7 +592,6 @@ keyImport <- function(key, long = FALSE, ...,
             y
         }
 
-
         ## Make best effort to clean up the "name_new" column.
         ## There's an unsolved problem protecting from user error in name_old
         ## name_new combinations in long key. If user has forgotten to
@@ -605,7 +604,6 @@ keyImport <- function(key, long = FALSE, ...,
         names(name_new.clean) <- name_new.unique
         ## TODO: abstract for alternative names inkey, not "name_new"
         key[ , "name_new"] <- name_new.clean[key[, "name_new"]] 
-            
        
         ## Create a keylist member for a given data frame
         makeOneVar <- function(keyds){
@@ -805,4 +803,67 @@ keyDiagnostic <-
     }
     options(width = unlist(width.orig))
     NULL
+}
+
+
+
+##' convert a key object from wide to long format
+##'
+##' This is not flexible, assumes columns are named in our canonical
+##' style, but works
+##' @param key A variable key in the wide format
+##' @return A long format variable key
+##' @author Paul Johnson
+##' @examples
+##'
+##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
+##' mydf <- read.csv(mydf.path, stringsAsFactors=FALSE)
+##' mydf.key <- keyTemplate(mydf)
+##' 
+##' mydf.keywide2long <- wide2long(mydf.key)
+##'
+##' mydf.keylong <- keyTemplate(mydf, long = TRUE, sort = TRU)
+##' ## View(mydf.keylong)
+wide2long <- function(key){
+    ## keysplit
+    ks <- split(key, list(key$name_old, key$name_new), drop = TRUE)
+    
+    ksl <- lapply(ks, function(x){
+        zz <- list(name_old = x$name_old,
+                   name_new = x$name_new,
+                   class_old = x$class_old,
+                   class_new = x$class_new,
+                   value_old = unlist(strsplit(x$value_old, "[\\|\\<]")),
+                   value_new = unlist(strsplit(x$value_new, "[\\|\\<]")),
+                   missings = if(is.character(x$missings)) unlist(strsplit(x$missings, ";")) else NA,
+                   recodes = if(is.character(x$recodes)) unlist(strsplit(x$recodes, ";")) else NA )
+        zz <- lapply(zz, function(x) if (length(x) == 0) "" else x)
+    })
+    
+    keylong <- do.call(rbind, lapply(ksl, as.data.frame, stringsAsFactors = FALSE))
+    
+    class(keylong) <- c("keylong", class(keylong))
+    keylong
+}
+
+
+
+long2wide <- function(keylong){
+    #kls = keylong split
+    kls <- split(keylong, list(keylong$name_old, keylong$name_new), drop = TRUE)
+
+    keywide <- lapply(kls, function(x){
+        sep_old <- if(unique(x$class_old) == "ordered") "<" else "|"
+        sep_new <- if(unique(x$class_new) == "ordered") "<" else "|"
+        list(name_old = unique(x$name_old),
+             name_new = unique(x$name_new),
+             class_old = unique(x$class_old),
+             class_new = unique(x$class_new),
+             value_old = paste(x$value_old, collapse = sep_old),
+             value_new = paste(x$value_new, collapse = sep_new),
+             missings = paste(unique(x$missings), collapse = ";"),
+             recodes = paste(unique(x$recodes), collapse = ";"))
+    })
+
+    do.call("rbind", keywide)
 }
