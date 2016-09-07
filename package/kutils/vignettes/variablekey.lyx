@@ -198,7 +198,18 @@ key "RCore"
 
 \end_inset
 
- package kutils.
+ package 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+kutils
+\end_layout
+
+\end_inset
+
+.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -301,10 +312,10 @@ recodes
  The time of graduate students is, well, there to be spent.
  While it may be tedious to read a codebook and write recodes, one after
  the other, it is not all that difficult.
- The truly difficult part is mustering up the confidence the resulting recoded
- data.
- How can a supervisor check 1000s of recode statements for accuracy? The
- very extensibility of R itself, its openness to new functions and language
+ The truly difficult part is mustering up the confidence in the resulting
+ recoded data.
+ How can a supervisor check thousands of recode statements for accuracy?
+ The very extensibility of R itself, its openness to new functions and language
  elements, makes proof-reading more difficult.
  We might shift some of the proof reading duty to the principle investigators,
  but they are sometimes unfamiliar with R (and are not thrilled to wade
@@ -401,6 +412,7 @@ reference "tab:A-Small-Variable-key"
 
 \begin_layout Standard
 \begin_inset Float table
+placement H
 wide false
 sideways false
 status open
@@ -437,15 +449,6 @@ name "tab:A-Small-Variable-key"
 \begin_inset Text
 
 \begin_layout Plain Layout
-name
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
 name_old
 \end_layout
 
@@ -455,7 +458,16 @@ name_old
 \begin_inset Text
 
 \begin_layout Plain Layout
-values
+name_new
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+values_old
 \end_layout
 
 \end_inset
@@ -475,7 +487,7 @@ values_new
 \begin_inset Text
 
 \begin_layout Plain Layout
-sex
+V23419
 \end_layout
 
 \end_inset
@@ -484,7 +496,7 @@ sex
 \begin_inset Text
 
 \begin_layout Plain Layout
-V23419
+sex
 \end_layout
 
 \end_inset
@@ -521,7 +533,7 @@ female
 \begin_inset Quotes erd
 \end_inset
 
-nether
+neither
 \begin_inset Quotes erd
 \end_inset
 
@@ -536,7 +548,7 @@ nether
 \begin_inset Text
 
 \begin_layout Plain Layout
-education
+V32422
 \end_layout
 
 \end_inset
@@ -545,7 +557,7 @@ education
 \begin_inset Text
 
 \begin_layout Plain Layout
-V32422
+education
 \end_layout
 
 \end_inset
@@ -613,7 +625,7 @@ post
 \begin_inset Text
 
 \begin_layout Plain Layout
-income
+V54532
 \end_layout
 
 \end_inset
@@ -622,7 +634,7 @@ income
 \begin_inset Text
 
 \begin_layout Plain Layout
-V54532
+income
 \end_layout
 
 \end_inset
@@ -693,8 +705,8 @@ codebook.
 
  It was a programmable codebook.
  We wrote some functions that could import variables (as named in column
- 2), apply the new values (from columns 3 and 4), then apply the new name
- from column 1.
+ 1), apply the new values (from columns 3 and 4), then apply the new name
+ from column 2.
  The functions to do that are, of course, somewhat difficult to prepare,
  but, from a supervisor's point of view, they are very appealing.
  There will be less proof-reading to do, at least in the R code itself.
@@ -853,12 +865,12 @@ mydf <- data.frame(x5 = rnorm(N),
 
 \begin_layout Plain Layout
 
-                        size = N, replace=TRUE),
+                                       size = N, replace=TRUE),
 \end_layout
 
 \begin_layout Plain Layout
 
-                        levels = c("med", "lo", "hi")),
+                                levels = c("med", "lo", "hi")),
 \end_layout
 
 \begin_layout Plain Layout
@@ -868,33 +880,28 @@ mydf <- data.frame(x5 = rnorm(N),
 
 \begin_layout Plain Layout
 
-                   x1 = factor(sample(c("cindy", "bobby", "marcia",
+                   x1 = factor(sample(c("cindy", "jan", "marcia"), 200,
 \end_layout
 
 \begin_layout Plain Layout
 
-                              "greg", "peter"), 200,
+                        	          replace = TRUE)),
 \end_layout
 
 \begin_layout Plain Layout
 
-                        replace = TRUE)),
-\end_layout
-
-\begin_layout Plain Layout
-
-                    x7 = ordered(letters[sample(c(1:4,6), 200, replace =
+                   x7 = ordered(letters[sample(c(1:4,6), 200, replace =
  TRUE)]),
 \end_layout
 
 \begin_layout Plain Layout
 
-                    x6 = sample(c(1:5), 200, replace = TRUE),
+                   x6 = sample(c(1:5), 200, replace = TRUE),
 \end_layout
 
 \begin_layout Plain Layout
 
-                    stringsAsFactors = FALSE)
+                   stringsAsFactors = FALSE)
 \end_layout
 
 \begin_layout Plain Layout
@@ -1060,7 +1067,7 @@ mydf
 The key template file that is demonstrated in Table 
 \begin_inset CommandInset ref
 LatexCommand ref
-reference "BROKEN: Ref: tab:Wide-key"
+reference "tab:Wide-Key"
 
 \end_inset
 
@@ -1079,7 +1086,7 @@ wide
 \begin_layout Standard
 \begin_inset Float table
 wide false
-sideways true
+sideways false
 status open
 
 \begin_layout Plain Layout
@@ -1090,7 +1097,14 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Rotated
+Wide Key
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:Wide-Key"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -1130,7 +1144,7 @@ _new & value
 \backslash
 _old & value
 \backslash
-_new & missings & recodes 
+_new 
 \backslash
 
 \backslash
@@ -1146,7 +1160,7 @@ midrule
 
 \begin_layout Plain Layout
 
-x5 & x5 & numeric & numeric &  &  &  &  
+x5 & x5 & numeric & numeric &  &  
 \backslash
 
 \backslash
@@ -1155,7 +1169,7 @@ x5 & x5 & numeric & numeric &  &  &  &
 
 \begin_layout Plain Layout
 
-x4 & x4 & numeric & numeric &  &  &  &  
+x4 & x4 & numeric & numeric &  &  
 \backslash
 
 \backslash
@@ -1164,7 +1178,7 @@ x4 & x4 & numeric & numeric &  &  &  &
 
 \begin_layout Plain Layout
 
-x3 & x3 & ordered & ordered & med$<$lo$<$hi & med$<$lo$<$hi &  &  
+x3 & x3 & ordered & ordered & med$<$lo$<$hi & med$<$lo$<$hi 
 \backslash
 
 \backslash
@@ -1174,26 +1188,6 @@ x3 & x3 & ordered & ordered & med$<$lo$<$hi & med$<$lo$<$hi &  &
 \begin_layout Plain Layout
 
 x2 & x2 & character & character & a$|$b$|$c$|$d$|$f & a$|$b$|$c$|$d$|$f
- &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x1 & x1 & factor & factor & bobby$|$cindy$|$greg$|$marcia$|$peter & bobby$|$cind
-y$|$greg$|$marcia$|$peter &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x7 & x7 & ordered & ordered & a$<$b$<$c$<$d$<$f & a$<$b$<$c$<$d$<$f &  &
   
 \backslash
 
@@ -1203,8 +1197,26 @@ x7 & x7 & ordered & ordered & a$<$b$<$c$<$d$<$f & a$<$b$<$c$<$d$<$f &  &
 
 \begin_layout Plain Layout
 
-x6 & x6 & integer & integer & 1$|$2$|$3$|$4$|$5 & 1$|$2$|$3$|$4$|$5 &  &
-  
+x1 & x1 & factor & factor & cindy$|$jan$|$marcia & marcia$|$marcia$|$marcia
+ 
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+x7 & x7 & ordered & ordered & a$<$b$<$c$<$d$<$f & a$<$b$<$c$<$d$<$f  
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+x6 & x6 & integer & integer & 1$|$2$|$3$|$4$|$5 & 1$|$2$|$3$|$4$|$5 
 \backslash
 
 \backslash
@@ -1275,7 +1287,8 @@ reference "tab:Long-Key"
  We assert that the long key template is nearly foolproof.
  It is simple to match the old and new values with one another because there
  is only one value per cell.
- In a project with 100s of variables, the key may be 1000s of lines long.
+ In a project with hundreds of variables, the key may be thousands of lines
+ long.
  That is an unfortunate fact of life, but we suggest it is much more easily
  revised and proof-read than the R code that one usually sees in recoding
  exercises.
@@ -1448,7 +1461,7 @@ x2 & x2 & character & character & f & f &  &
 
 \begin_layout Plain Layout
 
-x1 & x1 & factor & factor & bobby & bobby &  &  
+x1 & x1 & factor & factor & cindy & marcia &  &  
 \backslash
 
 \backslash
@@ -1457,16 +1470,7 @@ x1 & x1 & factor & factor & bobby & bobby &  &
 
 \begin_layout Plain Layout
 
-x1 & x1 & factor & factor & cindy & cindy &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x1 & x1 & factor & factor & greg & greg &  &  
+x1 & x1 & factor & factor & jan & marcia &  &  
 \backslash
 
 \backslash
@@ -1476,15 +1480,6 @@ x1 & x1 & factor & factor & greg & greg &  &
 \begin_layout Plain Layout
 
 x1 & x1 & factor & factor & marcia & marcia &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x1 & x1 & factor & factor & peter & peter &  &  
 \backslash
 
 \backslash
@@ -2273,7 +2268,7 @@ character
 \begin_inset Text
 
 \begin_layout Plain Layout
-New York|Denver|Nashville|Los Angeles|Portland
+Austin|Denver|Nashville|Provo|Marcia
 \end_layout
 
 \end_inset
@@ -2601,9 +2596,7 @@ rs to achieve two purposes.
 \end_layout
 
 \begin_layout Standard
-We have worked out two methods with which to tackle that problem.
- The first method, which some of our team members prefer because of its
- simple, direct approach, requires us to do something that seems dangerous.
+Reordering variable levels requires us to do something that seems dangerous.
  We need to edit the 
 \begin_inset Flex Code
 status open
@@ -2619,6 +2612,17 @@ value_old
 as they are currently labeled
 \emph default
 .
+ This is the only time where we suggest that users edit the 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+value_old
+\end_layout
+
+\end_inset
+
+ column.
  In 
 \begin_inset Flex Code
 status open
@@ -2894,11 +2898,6 @@ In our first efforts, we tried to stick to the principle that the observed
 \end_layout
 
 \begin_layout Standard
-Method number 2 for ordinal variables.
- Ben will have to talk me through this a few times.
-\end_layout
-
-\begin_layout Standard
 In addition, the R symbol for missing values, NA, can be used in place of
  any new value to indicate that cases with a particular score should be
  treated as missing.
@@ -3038,8 +3037,8 @@ kutils
 \end_inset
 
 .
- For numeric columns, there are only three types of statements allowed in
- the recode column.
+ For numeric variables, there are only three types of statements allowed
+ in the recode column.
  Legal values must must begin with the characters 
 \begin_inset Quotes eld
 \end_inset
@@ -3347,11 +3346,7 @@ numeric
 
 \begin_layout Subsection
 Step 3.
- Import the edited key
-\end_layout
-
-\begin_layout Standard
-THIS SECTION IS UNDER CONSTRUCTION
+ keyImport
 \end_layout
 
 \begin_layout Standard
@@ -3475,9 +3470,9 @@ keyImport
 \end_layout
 
 \begin_layout Standard
-RUN THROUGH THE EXAMPLES SOME MORE.
- MAKE SURE YOU ARE COVERING EVERYTHING.
- BE ABLE TO MENTION THINGS THAT WILL BREAK THE CODE.
+TAKE A DAY AND THINK ABOUT HOW TO MAKE A BETTER EXAMPLE AND COVER ALL RELEVANT
+ DETAILS HERE.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -3525,10 +3520,6 @@ Step 4.
 \end_layout
 
 \begin_layout Standard
-UNDER CONSTRUCTION!
-\end_layout
-
-\begin_layout Standard
 The final step is to apply the key to the data frame that needs variables
  recoded.
  The recoded data frame is obtained by assigning a name to the output of
@@ -3569,8 +3560,7 @@ keyApply
 \end_layout
 
 \begin_layout Standard
-ADD AN EXAMPLE THAT FLOWS ALONG WITH PREVIOUS SECTIONS.
- MAYBE EDIT THIS TO HAVE AN EXAMPLE THAT RUNS THROUGH ALL FOUR STEPS.
+TAKE A DAY AND THINK ABOUT HOW TO BEST INCLUDE AN EXAMPLE HERE.
  
 \end_layout
 
@@ -3757,7 +3747,7 @@ ordinal
 
 , and read.csv has been used to import the data (without specifying stringsAsFact
 ors = FALSE), then it might be suitable to coerce.
- But if stingsAsFactors = FALSE, 
+ But if stringsAsFactors = FALSE, 
 \end_layout
 
 \end_deeper
