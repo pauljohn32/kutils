@@ -1,3 +1,24 @@
+2016-09-08  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (safeInteger): new function to coerce
+	numerics that are "close enough" to integers as integers.
+	(keyTemplate): new argument safeNumericToInteger, uses
+	safeInteger to set classes on columns in data frame being
+	recoded.
+	(keyDiagnostic): conditionalize the confidentiality protecting
+	rounder argument.
+	(wide2long): Correct example, it verifies now!
+	(long2wide): Correct example, it verifies now!
+
+2016-09-03  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/utils.R (padW0): front-pad values with zeroes.
+
+2016-09-01  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (wide2long): new utility key converter function.
+        (long2wide): new utility key converter function.
+
 2016-08-30  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (keyApply): use assignRecode in for loop, so

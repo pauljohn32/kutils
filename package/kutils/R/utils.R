@@ -228,7 +228,7 @@ stringbreak <- function(x, k = 20){
 ##' does not have a known consequence when applied to a character
 ##' variable. It is platform-dependent (unredictable). On Ubuntu Linux
 ##' 16.04, for example \code{sprintf("%05s", 2)} gives back
-##' \code{" 2}", rather than (what I expected) \code{"00002"}. The
+##' \code{" 2"}, rather than (what I expected) \code{"00002"}. The
 ##' problem is mentioned in the documentation for \code{sprintf}. The
 ##' examples show this does work now, but please test your results.
 ##' @param x vector to be converted to a character variable by
@@ -239,8 +239,9 @@ stringbreak <- function(x, k = 20){
 ##'     character vector.  This parameter is a guideline to determine
 ##'     how many 0's must be inserted.  This will be ignored if
 ##'     \code{n} is smaller than the number of characters in the
-##'     longest element of x.
+##'     longest element of \code{x}.
 ##' @return A character vector
+##' @export
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @examples
 ##' x1 <- c(0001, 0022, 3432, NA)

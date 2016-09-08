@@ -1,4 +1,76 @@
 
+##' If a numeric variable is very close to an integer, then
+##' make it an integer. 
+##'
+##' Users often accidentally create floating point numeric variables
+##' when they really mean integers, such as c(1, 2, 3), when they
+##' should have done c(1L, 2L, 3L). Before running \code{as.integer()}
+##' to coerce the variable, we'd rather be polite and ask the variable
+##' "do you mind being treated as if you are an integer?"  This
+##' function checks to see if the variable is "close enough" to being
+##' an integer, and then coerces as integer. Otherwise, it returns
+##' NULL. And issues a warning.
+##'
+##' First, calculate absolute value of differences between
+##' \code{x} and \code{as.integer(x)}. Second, compare the sum of those
+##' differences is smaller than \code{tol}, then x can reasonably
+##' be coerced to an integer.
+##'
+##' Be careful with the return. The correct return value for variables that
+##' should not be coerced as integer is uncertain at this point. We've tested
+##' various strategies, sometimes returning FALSE, NULL, or just the original
+##' variable. 
+##' @param x a numeric variable
+##' @param tol Tolerance value. Defaults to Machine$double.eps. See
+##'     details.
+##' @param digits Digits value passed to the zapsmall
+##'     function. Defaults to 7.
+##' @export
+##' @return Either an integer vector or the original variable
+##' @author Paul Johnson <pauljohn@@ku.edu> and Ben Kite
+##'     <bakite@@ku.edu>
+##' @examples
+##' x1 <- c(1, 2, 3, 4, 5, 6)
+##' is.integer(x1)
+##' is.double(x1)
+##' is.numeric(x1)
+##' (x1int <- safeInteger(x1))
+##' is.integer(x1int)
+##' is.double(x1int)
+##' is.numeric(x1int)
+##' x2 <- rnorm(100)
+##' x2int <- safeInteger(x2)
+##' head(x2int)
+##' x3 <- factor(x1, labels = c(LETTERS[1:6]))
+##' x3int <- safeInteger(x3)
+##' 
+safeInteger <- function(x, tol = .Machine$double.eps, digits = 7)
+{
+    if(!is.numeric(x)) {
+        messg <- paste("asInteger is intended only for numeric x. Doing nothing.")
+        warning(messg)
+        return(NULL)
+    }
+    
+    if(is.integer(x)){
+        return(x)
+    } else {
+        x <- zapsmall(x, digits)
+        xnew <- as.integer(x)
+        if (sum(abs(x - xnew)) < tol) {
+            return(xnew)
+        } else {
+            messg <- paste("asInteger x:", paste(head(x), collapse=", "), "... is not close enough to an integer")
+            warning(messg)
+            return(NULL)
+        }
+    }
+    messg <- paste0("safeInteger should not have reached this point")
+    stop(messg)
+}
+NULL  
+
+
 ##' Scrub a variable's missings away
 ##'
 ##' The missings values have to be carefully written, depending on the
@@ -227,6 +299,12 @@ assignRecode <- function(x, recode = NULL){
 ##'     levels that should be included in the key? Default = 15. This
 ##'     does not affect variables declared as factor or ordered
 ##'     variables, for which all levels are included in all cases.
+##' @param safeNumericToInteger Default TRUE: Should we treat values
+##'     which appear to be integers as integers? If a column is
+##'     numeric, it might be safe to treat it as an integer.  In many
+##'     csv data sets, the values coded c(1, 2, 3) are really
+##'     integers, not floats c(1.0, 2.0, 3.0). See
+##'     \code{safeInteger}.
 ##' @return A key in the form of a data frame. May also be saved on
 ##'     disk.
 ##' @export
@@ -273,9 +351,15 @@ assignRecode <- function(x, recode = NULL){
 ##' }
 ##' }
 ##'  
-keyTemplate <- function(dframe, long = FALSE, sort = FALSE, file = NULL,
-                        outdir = getwd(), max.levels = 15)
+keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
+                        file = NULL, outdir = getwd(),
+                        max.levels = 15, safeNumericToInteger = TRUE)
 {
+    if (safeNumericToInteger){
+        for(i in colnames(dframe)){
+            if(is.numeric(dframe[ , i]) && !is.null(tmp <- safeInteger(dframe[ , i]))) dframe[ , i] <- tmp
+        }
+    }
     df.class <- sapply(dframe, function(x)class(x)[1])
     cn <- colnames(dframe)
     ## Make a long key
@@ -462,20 +546,23 @@ NULL
 ##' @param ... additional arguments for read.csv or read.xlsx.
 ##' @param keynames If key column names differ from what we expect,
 ##'     declare the new names in a named vector.
-##' @param sepold The separators we currently use are "|" and "<", but
-##'     if for whatever reason those were altered, say so here. Use
-##'     regular expressions.
-##' @param sepnew Ditto sepold
+##' @param sepold Relevant only for wide format keys. What separators
+##'     are used between values?  The separators we currently use are
+##'     "|" and "<", but if for whatever reason those were altered,
+##'     say so here. This must be a named vector of classes and
+##'     separator symbols. Use regular expressions.
+##' @param sepnew See sepold
 ##' @param missingare Values in the value_new column which will be
-##'     treated as NA in the key. The defaults will prevent a new
-##'     value like "" or " ", so if one intends to insert white space,
-##'     change the missingare vector.
+##'     treated as NA in the key. The defaults are ".", "", "\\s"
+##'     (white space), "NA", and "N/A".  These will prevent a new
+##'     value like "" or " " from being created, so if one intends to
+##'     insert white space, the missingare vector must be specified.
 ##' @importFrom utils read.csv
 ##' @importFrom openxlsx read.xlsx write.xlsx
 ##' @export
 ##' @return A list with one element per variable name, along with some
 ##'     attributes like class_old and class_new. The class is set as
-##'     well, "keylist". 
+##'     well, "keylist".
 ##' @author Paul Johnson
 ##' @examples
 ##' mydf.key.path <- system.file("extdata", "mydf.key_new.csv", package = "kutils")
@@ -505,7 +592,7 @@ keyImport <- function(key, long = FALSE, ...,
                      ,
                       sepnew = sepold
                      ,
-                      missingare = c(".", "",  "\\s",  "NA")
+                      missingare = c(".", "",  "\\s",  "NA", "N/A")
                       )
 {
     ## if x is "", return NA
@@ -675,33 +762,41 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE){
     xlist <- list()
     
     for (v in keylist) {
-        name_old <- v$name_old
-        name_new <- v$name_new
         class_new.key <- v$class_new
         class_old.key <- v$class_old
-        class_old.data <- class_old.dframe[name_old]
+        class_old.data <- class_old.dframe[v$name_old]
 
         ## TODO: what if class_old does not match class of imported
         ## data.  Need to think through implications of doing something like
         ## xnew <- as(xnew, class_old)
+
+        ## If variable name from key is not in the data frame,
+        ## go to next variable.
+        if (!v$name_old %in% colnames(dframe)){
+            messg <- paste("Key has variable ", v$name_old,
+                           "which is not in this data frame.",
+                           "This may be harmless, we are just warning you.")
+            print(messg)
+            next()
+        }
         
         ## Extract candidate variable to column.
-        xnew <- dframe[ , name_old]
+        xnew <- dframe[ , v$name_old]
         ## First apply missings. maybe several missings for each variable
-        ## xnew <- assignMissing(dframe[ , name_old], v$missings)
+        ## xnew <- assignMissing(dframe[ , v$name_old], v$missings)
         if (length(v$missings) > 0){
             for(m in v$missings){
                 xnew <- assignMissing(xnew, m)
             }
         }
 
-        ## Lets be simple now. If they
+        ## Be simple. If they
         ## have "recodes" in key, apply them.
         ## TODO: Must decide if we enforce either/or logic in key
         ## Should we SKIP value_new and not do next step if they do that.
         if (length(v$recodes) > 0 && !all(is.na(v$recodes))) {
             for (cmd in v$recodes) xnew <- assignRecode(xnew, cmd)
-            mytext <- paste0("xlist[[\"", name_new, "\"]] <- ", "xnew")
+            mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew")
             eval(parse(text = mytext))
         }
         
@@ -718,7 +813,7 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE){
                 newlevels <- v$value_new
                 names(newlevels) <- v$value_old
                 levels(xnew) <- newlevels[levels(xnew)]
-                mytext <- paste0("xlist[[\"", name_new, "\"]] <- xnew")
+                mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew")
                 eval(parse(text = mytext))
             } else {
                 stop("Can't understand why value_old and value_new are not equal in length")
@@ -739,7 +834,7 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE){
                     xnew <- as(xnew, class_new.key)
                 }
                 
-                mytext <- paste0("xlist[[\"", name_new, "\"]] <- ", "xnew")
+                mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew")
                 eval(parse(text = mytext))
             } else {
                 messg <- paste(v$name_old, "is neither factor not ordered.",
@@ -777,11 +872,14 @@ NULL
 ##'     table. Default = 6.
 ##' @param wide Number of characters per row in printed
 ##'     output. Suggest very wide screen, default = 200.
+##' @param confidential Should numbers in table be rounded to nearest "10"
+##'     to comply with security standard enforced by some American research
+##'     departments.
 ##' @return NULL
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 keyDiagnostic <-
     function(dfold, dfnew, keylist, max.values = 20,
-             nametrunc = 6, wide = 200)
+             nametrunc = 8, wide = 200, confidential = FALSE)
 {
 
     ## TODO if class in dfnew does not match keylist specification, fail
@@ -791,14 +889,18 @@ keyDiagnostic <-
     print("Make your display wide")
     width.orig <- options("width")
     options(width = wide)
+    if (confidential) {
+        roundAt <- -1
+    } else {
+        roundAt <- 2
+    }
     for (v in keylist){
         if (length(unique(dfold[ , v$name_old])) <= max.values){
             name_new.trunc <- substr(v$name_new, 1, min(nchar(v$name_new), nametrunc))
             name_old.trunc <- paste0(substr(v$name_old, 1, min(nchar(v$name_old), nametrunc)), " (old var)")
-            print(round(table(dfnew[ , v$name_new], dfold[ , v$name_old], exclude = NULL, dnn = c(name_new.trunc, name_old.trunc)), -1))
+            print(round(table(dfnew[ , v$name_new], dfold[ , v$name_old], exclude = NULL, dnn = c(name_new.trunc, name_old.trunc)), roundAt))
         } else {
-            print("need to write some code to deal with case where number of values is high")
-            print("suggest that for discrete, we take table output and most numerous values.  For numeric variables, how about a missing value table and a scatter plot?")
+            print("many values were observed than we can put in a table. What to do?")
         }
     }
     options(width = unlist(width.orig))
@@ -813,17 +915,22 @@ keyDiagnostic <-
 ##' style, but works
 ##' @param key A variable key in the wide format
 ##' @return A long format variable key
+##' @export
 ##' @author Paul Johnson
 ##' @examples
-##'
 ##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
 ##' mydf <- read.csv(mydf.path, stringsAsFactors=FALSE)
-##' mydf.key <- keyTemplate(mydf)
+##' ## Target we are trying to match:
+##' mydf.keylong <- keyTemplate(mydf, long = TRUE, sort = TRUE)
+##' ## View(mydf.keylong)
 ##' 
+##' mydf.key <- keyTemplate(mydf)
 ##' mydf.keywide2long <- wide2long(mydf.key)
 ##'
-##' mydf.keylong <- keyTemplate(mydf, long = TRUE, sort = TRU)
-##' ## View(mydf.keylong)
+##' ## rownames not meaningful in long key, so remove in both versions
+##' row.names(mydf.keywide2long) <- NULL
+##' row.names(mydf.keylong) <- NULL
+##' all.equal(mydf.keylong, mydf.keywide2long)
 wide2long <- function(key){
     ## keysplit
     ks <- split(key, list(key$name_old, key$name_new), drop = TRUE)
@@ -847,7 +954,24 @@ wide2long <- function(key){
 }
 
 
-
+##' convert a key object from long to wide format
+##'
+##' No comments needed
+##' @param keylong A variable key in the long format
+##' @return A wide format variable key
+##' @export
+##' @author Paul Johnson <pauljohn@@ku.edu>
+##' @examples
+##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
+##' mydf <- read.csv(mydf.path, stringsAsFactors=FALSE)
+##' ## A wide key we are trying to match:
+##' mydf.key <- keyTemplate(mydf, long = FALSE, sort = TRUE)
+##' ## A long ke we will convert next
+##' mydf.keylong <- keyTemplate(mydf, long = TRUE, sort = TRUE)
+##' mydf.long2wide <- long2wide(mydf.keylong)
+##' ## Tune the rownames to match style of long key
+##' rownames(mydf.key) <- paste0(mydf.key$name_old, ".", mydf.key$name_new)
+##' all.equal(mydf.key, mydf.long2wide)
 long2wide <- function(keylong){
     #kls = keylong split
     kls <- split(keylong, list(keylong$name_old, keylong$name_new), drop = TRUE)
@@ -865,5 +989,8 @@ long2wide <- function(keylong){
              recodes = paste(unique(x$recodes), collapse = ";"))
     })
 
-    do.call("rbind", keywide)
+    
+    key <- do.call("rbind", lapply(keywide, data.frame, stringsAsFactors = FALSE))
+    class(key) <- c("key", class(key))
+    key
 }
