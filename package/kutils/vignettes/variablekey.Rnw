@@ -8,7 +8,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{geometry}
 \geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
-\usepackage{rotfloat}
+\usepackage{float}
 \usepackage[authoryear]{natbib}
 
 \makeatletter
@@ -114,6 +114,9 @@
 \makeatother
 
 \usepackage{babel}
+\usepackage{listings}
+\renewcommand{\lstlistingname}{\inputencoding{latin9}Listing}
+
 \begin{document}
 
 \title{The Variable Key Data Programming Framework}
@@ -129,7 +132,7 @@ deal with the importation of large, complicated data sets. This approach
 improves teamwork, keeps better records, and reduces slippage between
 the intentions of principal investigators the implementation by code
 writers. The framework is implemented in the R \citep{RCore} package
-kutils.
+\code{kutils}. 
 \end{abstract}
 % In document Latex options:
 \fvset{listparameters={\setlength{\topsep}{0em}}}
@@ -161,13 +164,13 @@ the information. From a managerial point of view, that is not the
 main problem. The time of graduate students is, well, there to be
 spent. While it may be tedious to read a codebook and write recodes,
 one after the other, it is not all that difficult. The truly difficult
-part is mustering up the confidence the resulting recoded data. How
-can a supervisor check 1000s of recode statements for accuracy? The
-very extensibility of R itself, its openness to new functions and
-language elements, makes proof-reading more difficult. We might shift
-some of the proof reading duty to the principle investigators, but
-they are sometimes unfamiliar with R (and are not thrilled to wade
-through code). The responsibility for verifying the recodes falls
+part is mustering up the confidence in the resulting recoded data.
+How can a supervisor check thousands of recode statements for accuracy?
+The very extensibility of R itself, its openness to new functions
+and language elements, makes proof-reading more difficult. We might
+shift some of the proof reading duty to the principle investigators,
+but they are sometimes unfamiliar with R (and are not thrilled to
+wade through code). The responsibility for verifying the recodes falls
 on the project supervisors. While most supervisors with whom we are
 personally acquainted have nearly super-human reading skills and almost-perfect
 comprehension, we have documented a case in which one of them was
@@ -213,20 +216,20 @@ through a giant R file.
 In order to better understand what had happened, we developed a table
 that looked like Table \ref{tab:A-Small-Variable-key}.
 
-\begin{table}
+\begin{table}[H]
 \caption{A Small Variable Key\label{tab:A-Small-Variable-key}}
 
 
 \begin{tabular}{|c|c|c|c|}
 \hline 
-name & name\_old & values & values\_new\tabularnewline
+name\_old & name\_new & values\_old & values\_new\tabularnewline
 \hline 
 \hline 
-sex & V23419 & 1|2|3 & ``male''|''female''|''nether''\tabularnewline
+V23419 & sex & 1|2|3 & ``male''|''female''|''neither''\tabularnewline
 \hline 
-education & V32422 & 1|2|3|4|5 & ``elem''<''hs''<''somecoll''<''ba''<''post''\tabularnewline
+V32422 & education & 1|2|3|4|5 & ``elem''<''hs''<''somecoll''<''ba''<''post''\tabularnewline
 \hline 
-income & V54532 & . & numeric\tabularnewline
+V54532 & income & . & numeric\tabularnewline
 \hline 
 \end{tabular}
 \end{table}
@@ -244,8 +247,8 @@ realized that it was possible to write an R program to import the
 key table and use its information to recode and rename the variables.
 The variable key table was not just a ``codebook.'' It was a programmable
 codebook. We wrote some functions that could import variables (as
-named in column 2), apply the new values (from columns 3 and 4), then
-apply the new name from column 1. The functions to do that are, of
+named in column 1), apply the new values (from columns 3 and 4), then
+apply the new name from column 2. The functions to do that are, of
 course, somewhat difficult to prepare, but, from a supervisor's point
 of view, they are very appealing. There will be less proof-reading
 to do, at least in the R code itself. Once we can validate the functions,
@@ -315,15 +318,14 @@ N <- 200
 mydf <- data.frame(x5 = rnorm(N),
                    x4 = rpois(N, lambda = 3),
                    x3 = ordered(sample(c("lo", "med", "hi"),
-                        size = N, replace=TRUE),
-                        levels = c("med", "lo", "hi")),
+                                       size = N, replace=TRUE),
+                                levels = c("med", "lo", "hi")),
                    x2 = letters[sample(c(1:4,6), 200, replace = TRUE)],
-                   x1 = factor(sample(c("cindy", "bobby", "marcia",
-                              "greg", "peter"), 200,
-                        replace = TRUE)),
-                    x7 = ordered(letters[sample(c(1:4,6), 200, replace = TRUE)]),
-                    x6 = sample(c(1:5), 200, replace = TRUE),
-                    stringsAsFactors = FALSE)
+                   x1 = factor(sample(c("cindy", "jan", "marcia"), 200,
+                        	          replace = TRUE)),
+                   x7 = ordered(letters[sample(c(1:4,6), 200, replace = TRUE)]),
+                   x6 = sample(c(1:5), 200, replace = TRUE),
+                   stringsAsFactors = FALSE)
 mydf$x4[sample(1:N, 10)] <- 999
 mydf$x5[sample(1:N, 10)] <- -999
 @
@@ -348,34 +350,34 @@ the key template will be in the format we call ``wide'', while if
 it is true, the result will be a ``long'' key. The difference between
 these two things is most apparent if we begin with the example \code{mydf}.
 
-The key template file that is demonstrated in Table \ref{tab:Wide-key}
+The key template file that is demonstrated in Table \ref{tab:Wide-Key}
 is the type we call a \emph{wide} key. It is a wide key in the sense
 that there is one row per variable, and the old/new value information
 is tightly packed into a pair of columns. The key includes more or
 less obvious columns for the old and new variable names, their classes,
 and values of the variables. 
 
-\begin{sidewaystable}
+\begin{table}
 
 
-\caption{Rotated}
+\caption{Wide Key\label{tab:Wide-Key}}
 
 
 \begin{tabular}{lllllllll}
   \toprule
-name\_old & name\_new & class\_old & class\_new & value\_old & value\_new & missings & recodes \\
+name\_old & name\_new & class\_old & class\_new & value\_old & value\_new \\
   \midrule
-x5 & x5 & numeric & numeric &  &  &  &  \\
-x4 & x4 & numeric & numeric &  &  &  &  \\
-x3 & x3 & ordered & ordered & med$<$lo$<$hi & med$<$lo$<$hi &  &  \\
-x2 & x2 & character & character & a$|$b$|$c$|$d$|$f & a$|$b$|$c$|$d$|$f &  &  \\
-x1 & x1 & factor & factor & bobby$|$cindy$|$greg$|$marcia$|$peter & bobby$|$cindy$|$greg$|$marcia$|$peter &  &  \\
-x7 & x7 & ordered & ordered & a$<$b$<$c$<$d$<$f & a$<$b$<$c$<$d$<$f &  &  \\
-x6 & x6 & integer & integer & 1$|$2$|$3$|$4$|$5 & 1$|$2$|$3$|$4$|$5 &  &  \\
+x5 & x5 & numeric & numeric &  &  \\
+x4 & x4 & numeric & numeric &  &  \\
+x3 & x3 & ordered & ordered & med$<$lo$<$hi & med$<$lo$<$hi \\
+x2 & x2 & character & character & a$|$b$|$c$|$d$|$f & a$|$b$|$c$|$d$|$f  \\
+x1 & x1 & factor & factor & cindy$|$jan$|$marcia & marcia$|$marcia$|$marcia \\
+x7 & x7 & ordered & ordered & a$<$b$<$c$<$d$<$f & a$<$b$<$c$<$d$<$f  \\
+x6 & x6 & integer & integer & 1$|$2$|$3$|$4$|$5 & 1$|$2$|$3$|$4$|$5 \\
    \bottomrule
 \end{tabular}
 
-\end{sidewaystable}
+\end{table}
 
 
 The wide style key was the first type that we developed. We have more
@@ -392,10 +394,10 @@ by asking instead for a long key template. The long key includes one
 row per value per variable, as illustrated in Table \ref{tab:Long-Key}.
 We assert that the long key template is nearly foolproof. It is simple
 to match the old and new values with one another because there is
-only one value per cell. In a project with 100s of variables, the
-key may be 1000s of lines long. That is an unfortunate fact of life,
-but we suggest it is much more easily revised and proof-read than
-the R code that one usually sees in recoding exercises.
+only one value per cell. In a project with hundreds of variables,
+the key may be thousands of lines long. That is an unfortunate fact
+of life, but we suggest it is much more easily revised and proof-read
+than the R code that one usually sees in recoding exercises.
 
 \begin{table}
 
@@ -417,11 +419,9 @@ x2 & x2 & character & character & b & b &  &  \\
 x2 & x2 & character & character & c & c &  &  \\
 x2 & x2 & character & character & d & d &  &  \\
 x2 & x2 & character & character & f & f &  &  \\
-x1 & x1 & factor & factor & bobby & bobby &  &  \\
-x1 & x1 & factor & factor & cindy & cindy &  &  \\
-x1 & x1 & factor & factor & greg & greg &  &  \\
+x1 & x1 & factor & factor & cindy & marcia &  &  \\
+x1 & x1 & factor & factor & jan & marcia &  &  \\
 x1 & x1 & factor & factor & marcia & marcia &  &  \\
-x1 & x1 & factor & factor & peter & peter &  &  \\
 x7 & x7 & ordered & ordered & a & a &  &  \\
 x7 & x7 & ordered & ordered & b & b &  &  \\
 x7 & x7 & ordered & ordered & c & c &  &  \\
@@ -554,7 +554,7 @@ name\_new & class\_old & class\_new & value\_old & value\_new\tabularnewline
 \hline 
 x6.1 & integer & integer & 1|2|3|4|5 & 100|200|300|400|500\tabularnewline
 \hline 
-x6.c & integer & character & 1|2|3|4|5 & New York|Denver|Nashville|Los Angeles|Portland\tabularnewline
+x6.c & integer & character & 1|2|3|4|5 & Austin|Denver|Nashville|Provo|Marcia\tabularnewline
 \hline 
 x6.f & integer & factor & 1|2|3|4|5 & F|D|C|B|A\tabularnewline
 \hline 
@@ -593,13 +593,12 @@ for the possibility that the new values must be relabeled as well.
 We'd rather not proliferate new columns in the variable key or create
 some confusing new notation.
 
-We have worked out two methods with which to tackle that problem.
-The first method, which some of our team members prefer because of
-its simple, direct approach, requires us to do something that seems
+Reordering variable levels requires us to do something that seems
 dangerous. We need to edit the \code{value\_old} to correct the ordering
-of the levels \emph{as they are currently labeled}. In \code{value\_new},
-supply new labels in the in the correct order to parallel the newly
-edited \code{value\_old} column. For example,
+of the levels \emph{as they are currently labeled}. This is the only
+time where we suggest that users edit the \code{value\_old} column.
+In \code{value\_new}, supply new labels in the in the correct order
+to parallel the newly edited \code{value\_old} column. For example,
 
 \begin{tabular}{|c|c|c|c|}
 \hline 
@@ -636,9 +635,6 @@ we should concentrate our effort on setting the corresponding value\_new.
 However, that makes it difficult to reorder the levels of a factor,
 which can be especially important for ordered variables.
 
-Method number 2 for ordinal variables. Ben will have to talk me through
-this a few times.
-
 In addition, the R symbol for missing values, NA, can be used in place
 of any new value to indicate that cases with a particular score should
 be treated as missing. Sometimes there is confusion when data is passed
@@ -665,12 +661,12 @@ labeled \code{missings} and \code{recodes}.
 
 The key specification of missing values for various types of variables
 is spelled out in detail for the help page of the \code{assignMissing}
-function in \code{kutils}. For numeric columns, there are only three
-types of statements allowed in the recode column. Legal values must
-must begin with the characters ``<'', ``>'', or ``c''. The first
-two indicate that observed scores less than, or greater than, the
-value which follows are treated as missing. The symbols ``<='' and
-``>='' are accepted in the obvious way. 
+function in \code{kutils}. For numeric variables, there are only
+three types of statements allowed in the recode column. Legal values
+must must begin with the characters ``<'', ``>'', or ``c''.
+The first two indicate that observed scores less than, or greater
+than, the value which follows are treated as missing. The symbols
+``<='' and ``>='' are accepted in the obvious way. 
 
 \begin{tabular}{|c|c|c|}
 \hline 
@@ -719,17 +715,48 @@ variables that have not were not declared as integers when the data
 was imported.
 
 
-\subsection{Step 3. Import the edited key}
+\subsection{Step 3. keyImport}
 
-keyImport() kutils
+Once any desired changes to variables have been entered into the variable
+key, the file needs to be imported back into R. First, the csv (\code{read.csv}),
+xlsx (\code{openxlsx::read.xlsx}), or rds (\code{readRDS}) file
+containing the edited key needs to be read into R. It is important
+to specify \code{stringsAsFactor = FALSE} as an argument when reading
+the key into R. Next the key is provided to the \code{keyImport}
+function in \code{kutils}. The \code{keyImport} function is set
+to read short keys by default, providing the argument \code{long = TRUE}
+will switch to a long key. The \code{keyImport} function always returns
+a list with information about how each variable is to be recoded.
+The structure of the list will be the same with a long or short key
+being provided. Inspecting the key list will show that each item contains
+the information provided in a single row of a short key. The key list
+has a fixed format so that the process of using the key list to manipulate
+the data is not influenced by what key format was used. We do not
+suggest attempting to create a key list manually. See the example
+below taken from the \code{keyImport} documentation. 
 
-keyImport reads the key and creates a list with one item per new variable
-to be created. 
+TAKE A DAY AND THINK ABOUT HOW TO MAKE A BETTER EXAMPLE AND COVER
+ALL RELEVANT DETAILS HERE. 
+
+\begin{minipage}[t]{1\columnwidth}%
+\inputencoding{latin9}\begin{lstlisting}
+mydf.key <- read.csv(mydf.key.path, stringsAsFactor = FALSE) 
+mydf.keylist2 <- keyImport(mydf.key, long = FALSE)
+\end{lstlisting}
+\inputencoding{utf8}%
+\end{minipage}
 
 
 \subsection{Step 4. Apply the imported key to the data}
 
-keyApply.
+The final step is to apply the key to the data frame that needs variables
+recoded. The recoded data frame is obtained by assigning a name to
+the output of the \code{kutils} function \code{keyApply}. The \code{keyApply}
+function takes the name of the data frame to be recoded and the key
+list created in Step 3 to produce a new data frame with the desired
+recodings. 
+
+TAKE A DAY AND THINK ABOUT HOW TO BEST INCLUDE AN EXAMPLE HERE. 
 
 
 \section{Discussion}
@@ -742,12 +769,12 @@ in filling in the variable key. Most importantly, they are allowed
 to name the variables in any way that is meaningful to them. When
 statistical results are obtained, it is never necessary for them to
 ask, ``what did you mean by this variable \code{occupation}?''
-There are other benefits, however. By making the principal aware of
-the values that are actually observed, and by offering the opportunity
-to specify how they ought to be recoded, a substantial element of
-administrative slippage is ameliorated. The variable key will specify
-exactly how categories are to be re-mapped, there is much less danger
-of an accident buried in thousands of lines of recodes.
+There are other benefits, however. By making the principal investigator
+aware of the values that are actually observed, and by offering the
+opportunity to specify how they ought to be recoded, a substantial
+element of administrative slippage is ameliorated. The variable key
+will specify exactly how categories are to be re-mapped, there is
+much less danger of an accident buried in thousands of lines of recodes.
 
 It often happens that the raw data to be imported is provided by one
 of the national data centers. The variables are given exciting, meaningful
@@ -780,7 +807,7 @@ is used to import data, since it does not have colClasses=''ordinal''
 as a possible. Also ``numeric'' is confusing. If the key's old\_value
 is, for example, ``ordinal'', and read.csv has been used to import
 the data (without specifying stringsAsFactors = FALSE), then it might
-be suitable to coerce. But if stingsAsFactors = FALSE, 
+be suitable to coerce. But if stringsAsFactors = FALSE, 
 \end{enumerate}
 \item Assign missings:
 

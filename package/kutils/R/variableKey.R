@@ -57,7 +57,7 @@ safeInteger <- function(x, tol = .Machine$double.eps, digits = 7)
     } else {
         x <- zapsmall(x, digits)
         xnew <- as.integer(x)
-        if (sum(abs(x - xnew)) < tol) {
+        if (sum(abs(x - xnew), na.rm = TRUE) < tol) {
             return(xnew)
         } else {
             messg <- paste("asInteger x:", paste(head(x), collapse=", "), "... is not close enough to an integer")
