@@ -227,7 +227,7 @@ stringbreak <- function(x, k = 20){
 ##' One of the surprises in this development was that sprintf() in R
 ##' does not have a known consequence when applied to a character
 ##' variable. It is platform-dependent (unredictable). On Ubuntu Linux
-##' 16.04, for example \code{sprintf("%05s", 2)} gives back
+##' 16.04, for example \code{sprintf("\%05s", 2)} gives back
 ##' \code{" 2"}, rather than (what I expected) \code{"00002"}. The
 ##' problem is mentioned in the documentation for \code{sprintf}. The
 ##' examples show this does work now, but please test your results.
