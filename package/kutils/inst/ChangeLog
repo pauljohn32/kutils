@@ -1,3 +1,9 @@
+2016-09-09  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (cleanDataFrame): new function that applies
+	safeInteger and checks that the data frame is made of columns, no
+	matrices embedded.
+
 2016-09-08  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (safeInteger): new function to coerce
