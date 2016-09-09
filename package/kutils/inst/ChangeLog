@@ -3,6 +3,10 @@
 	* ../R/variableKey.R (cleanDataFrame): new function that applies
 	safeInteger and checks that the data frame is made of columns, no
 	matrices embedded.
+	(keyApply): Ignore capitalization of "name_old" in scanning for
+	columns in data frame.
+	(smartSave): new function that does file save
+	(keyStacker): pile up key templates
 
 2016-09-08  Paul Johnson  <pauljohn@delllap-16>
 

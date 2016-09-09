@@ -291,6 +291,40 @@ cleanDataFrame <- function(dframe, safeNumericToInteger = TRUE){
     dframe
 }
 
+
+##' Compare observed levels with old and new values
+##'
+##' This is purely diagnostic.  Will print messages notifying user
+##' that observed data has values that are not in the value_old, or
+##' that value_old has values that are not in the data.
+##'  
+##' @param x a variable, either character or factor
+##' @param value_old a vector of old values for which we are checking
+##' @param xname character string to use for x's name when printing output
+##' @keywords internal
+##' @return NULL
+##' @author Paul Johnson <pauljohn@@ku.edu>
+checkValues <- function(x, value_old, xname){
+    if (!is.factor(x) && !is.character(x)) return(NULL)
+    xobs <- unique(x)
+    if (length(keynotintobs <- value_old[!value_old %in% xobs]) > 0){
+        messg <- paste("Data Check (variable", xname, ":)\n",
+                     "These values in value_old were not observed in the input data: ",
+                     paste(keynotintobs, collapse = ", "), "\n")
+        cat(messg)
+    }
+    if (length(tobsnotinkey <- xobs[!xobs %in% value_old]) > 0) {
+        messg <- paste("Data Check (variable", xname, ":)\n",
+                       "These values in the input data were not in value_old: ",
+                       paste(tobsnotinkey, collapse = ", "), "\n")
+        cat(messg)
+    }
+    NULL
+}
+
+
+
+
 ##' Create variable key
 ##'
 ##' A variable key is a human readable document that can be
@@ -395,7 +429,7 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
                         max.levels = 15, safeNumericToInteger = TRUE)
 {
     
-    dframe <- rockchalk:::cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
+    dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
 
     df.class <- sapply(dframe, function(x)class(x)[1])
     cn <- colnames(dframe)
@@ -478,23 +512,42 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
         class(key) <- c("key", class(key))
     }
    
-    if (!missing(file) & !is.null(file)){
-        fp <- paste0(outdir, "/", file)
-        if (length(grep("csv$", tolower(file))) > 0){
-            write.csv(key, file = fp, row.names = FALSE)
-        } else if ((length(grep("xlsx$", tolower(file))))){
-            openxlsx::write.xlsx(key, file = fp)
-        } else if (length(grep("rds$", tolower(file)))){
-            saveRDS(key, file = fp)
-        } else {
-            warning("Proposed key name did not end in csv, xlsx, or rds, so no file created")
-        }
+    if (!missing(file) && !is.null(file)){
+        smartSave(key, file, outdir)
     }
     key
 }
 
+##' save file after deducing type from suffix
+##'
+##' just a convenience for this work, not general purpose
+##' @param obj an object
+##' @param file file name
+##' @param outdir directory path
+##' @return NULL
+##' @keywords internal
+##' @author Paul Johnson
+smartSave <- function(obj, file, outdir){
+    fp <- file
+    if (!is.null(outdir) && missing(outdir))
+        fp <- paste0(outdir, "/", file)
+    if (length(grep("csv$", tolower(file))) > 0){
+        write.csv(obj, file = fp, row.names = FALSE)
+    } else if ((length(grep("xlsx$", tolower(file))))){
+        openxlsx::write.xlsx(obj, file = fp)
+    } else if (length(grep("rds$", tolower(file)))){
+        saveRDS(obj, file = fp)
+    } else {
+        warning("Proposed key name did not end in csv, xlsx, or rds, so no file created")
+    }
+}
 
-##' Convert nothing to R NA (nothing = white space or other indications of missing value)
+##' Convert nothing to R missing(NA).
+##'
+##' By "nothing", we mean white space or other indications of
+##' nothingness.  Character strings that are used for missing
+##' values. Those things, which are given default values in the
+##' argument nothings, will be changed to NA.
 ##'
 ##' Using regular expression matching, any value that has nothing
 ##' except for the indicated "nothing" values is converted to NA.  The
@@ -649,7 +702,7 @@ keyImport <- function(key, long = FALSE, ...,
     } else if (is.character(key)){
         ## key is file name, so scan for suffix
         if (length(grep("xlsx$", tolower(key))) > 0){
-            studat <- openxlsx::read.xlsx(key, colNames = TRUE, check.names = FALSE)
+            key  <- openxlsx::read.xlsx(key, colNames = TRUE, check.names = FALSE)
         } else if (length(grep("csv$", tolower(key))) > 0){
             key <- read.csv(key, stringsAsFactors = FALSE, ...)
         } else if (length(grep("rds$", tolower(key))) > 0){
@@ -766,14 +819,17 @@ NULL
 ##' This is the main objective of the variable key system.
 ##' @param dframe An R data frame
 ##' @param keylist A keylist object
-##' @param diagnostic Default TRUE: Compare the old and new
-##'        data frames carefully with the keyDiagnostic function.
+##' @param diagnostic Default TRUE: Compare the old and new data
+##'     frames carefully with the keyDiagnostic function.
 ##' @param safeNumericToInteger Default TRUE: Should we treat values
 ##'     which appear to be integers as integers? If a column is
 ##'     numeric, it might be safe to treat it as an integer.  In many
 ##'     csv data sets, the values coded c(1, 2, 3) are really
-##'     integers, not floats c(1.0, 2.0, 3.0). See
-##'     \code{safeInteger}.
+##'     integers, not floats c(1.0, 2.0, 3.0). See \code{safeInteger}.
+##' @param ignoreCase Default TRUE. If column name is capitalized
+##'     differently than name_old in the key, but the two are
+##'     otherwise identical, then the difference in capitalization
+##'     will be ignored.
 ##' @return A recoded version of dframe
 ##' @export
 ##' @importFrom plyr mapvalues
@@ -789,9 +845,17 @@ NULL
 ##' nls.keylong.keylist <- keyImport(nls.keylong.path, long = TRUE)
 ##' data(natlongsurv)
 ##' nls.dat <- keyApply(natlongsurv, nls.keylong.keylist)
-keyApply <- function(dframe, keylist, diagnostic = TRUE, safeNumericToInteger = TRUE){
+keyApply <- function(dframe, keylist, diagnostic = TRUE,
+                     safeNumericToInteger = TRUE, ignoreCase = TRUE){
 
-    dframe <- rockchalk:::cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
+    dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
+    ## Keep vector of original names. If ignoreCase=FALSE, this changes nothing.
+    name_old.orig <- colnames(dframe)
+    if (ignoreCase){
+        ## lowercase the names, keep record in named vector
+        colnames(dframe) <- tolower(colnames(dframe))
+    }
+    names(name_old.orig) <- colnames(dframe)
     
     if (diagnostic) dforig <- dframe
 
@@ -810,7 +874,8 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE, safeNumericToInteger = 
         class_new.key <- v$class_new
         class_old.key <- v$class_old
         class_old.data <- class_old.dframe[v$name_old]
-
+        if(ignoreCase) v$name_old <- tolower(v$name_old)
+        
         ## TODO: what if class_old does not match class of imported
         ## data.  Need to think through implications of doing something like
         ## xnew <- as(xnew, class_old)
@@ -818,7 +883,7 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE, safeNumericToInteger = 
         ## If variable name from key is not in the data frame,
         ## go to next variable.
         if (!v$name_old %in% colnames(dframe)){
-            messg <- paste("Key has variable ", v$name_old,
+            messg <- paste("Key has variable ", name_old.orig[v$name_old],
                            "which is not in this data frame.",
                            "This may be harmless, we are just warning you.")
             print(messg)
@@ -827,8 +892,7 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE, safeNumericToInteger = 
         
         ## Extract candidate variable to column.
         xnew <- dframe[ , v$name_old]
-        ## First apply missings. maybe several missings for each variable
-        ## xnew <- assignMissing(dframe[ , v$name_old], v$missings)
+
         if (length(v$missings) > 0){
             for(m in v$missings){
                 xnew <- assignMissing(xnew, m)
@@ -856,6 +920,7 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE, safeNumericToInteger = 
                 mytext <- paste0("xnew <- ", class_new.key, "(xnew, levels = v$value_old)")
                 eval(parse(text = mytext))
                 newlevels <- v$value_new
+                checkValues(xnew, v$value_old, name_old.orig[v$name_old])
                 names(newlevels) <- v$value_old
                 levels(xnew) <- newlevels[levels(xnew)]
                 mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew")
@@ -869,8 +934,8 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE, safeNumericToInteger = 
             if (length(v$value_old) == length(v$value_new)){
                 ## TODO: need to stress test this on other variable types.
                 ## so only do re-assignment if any value_old are not NA.
-              
-                if (any(!is.na(v$value_old))){
+                checkValues(xnew, v$value_old, name_old.orig[v$name_old])
+                if (any(!is.na(v$value_old))) {
                     xnew <- plyr::mapvalues(xnew, v$value_old, v$value_new, warn_missing = FALSE)
                 }
                 ## coerce data to class type in key if that differs
@@ -882,7 +947,7 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE, safeNumericToInteger = 
                 mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew")
                 eval(parse(text = mytext))
             } else {
-                messg <- paste(v$name_old, "is neither factor not ordered.",
+                messg <- paste(name_old.orig[v$name_old], "is neither factor not ordered.",
                                "Why are new and old value vectors not same in length?")
                 stop(messg)
             }
@@ -1040,3 +1105,33 @@ long2wide <- function(keylong){
     key
 }
 
+
+##' Stack together several separate key templates, make a "jumbo key".
+##'
+##' Try to homogenize classes and name_old
+##'
+##' Try to tolerate inconsistent capitalization in name_old
+##' @param aList list of key template objects
+##' @param file file name intended for output
+##' @param outdir directory name intended for output
+##' @return A stacked variable key in the long format
+##' @author Paul Johnson
+keyStacker <- function(aList, file, outdir){
+    ## TODO: Must convert keys to long form for stacking
+    
+    key_jumbo <- rbind.fill(aList)
+    key_jumbo <- key_jumbo[order(key_jumbo$name_old), ]
+    key_jumbo <- unique(key_jumbo)
+
+    ## check for capitalization differences, remove equivalent rows.
+
+    keytest <- key_jumbo
+    keytest$name_old <- tolower(keytest$name_old)
+    keytest$name_new <- tolower(keytest$name_new)
+    key_jumbo[!duplicated(keytest), ]
+
+    if (!missing(file) && !is.null(file)){
+        smartSave(key_jumbo, file, outdir)
+    }
+    key_jumbo
+ }
