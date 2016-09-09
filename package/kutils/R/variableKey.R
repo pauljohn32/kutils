@@ -25,6 +25,7 @@
 ##'     details.
 ##' @param digits Digits value passed to the zapsmall
 ##'     function. Defaults to 7.
+##' @param verbose Default FALSE: print warnings about x
 ##' @export
 ##' @return Either an integer vector or the original variable
 ##' @author Paul Johnson <pauljohn@@ku.edu> and Ben Kite
@@ -44,11 +45,13 @@
 ##' x3 <- factor(x1, labels = c(LETTERS[1:6]))
 ##' x3int <- safeInteger(x3)
 ##' 
-safeInteger <- function(x, tol = .Machine$double.eps, digits = 7)
+safeInteger <- function(x, tol = .Machine$double.eps, digits = 7, verbose = FALSE)
 {
     if(!is.numeric(x)) {
-        messg <- paste("asInteger is intended only for numeric x. Doing nothing.")
-        warning(messg)
+        if (verbose) {
+            messg <- paste("asInteger is intended only for numeric x. Doing nothing.")
+            warning(messg)
+        }
         return(NULL)
     }
     
@@ -60,8 +63,10 @@ safeInteger <- function(x, tol = .Machine$double.eps, digits = 7)
         if (sum(abs(x - xnew), na.rm = TRUE) < tol) {
             return(xnew)
         } else {
-            messg <- paste("asInteger x:", paste(head(x), collapse=", "), "... is not close enough to an integer")
-            warning(messg)
+            if (verbose) {
+                messg <- paste("asInteger x:", paste(head(x), collapse=", "), "... is not close enough to an integer")
+                warning(messg)
+            }
             return(NULL)
         }
     }
@@ -251,6 +256,40 @@ assignRecode <- function(x, recode = NULL){
 }
 
 
+##' Check \& Clean data.frame for usage with variable key functions 
+##'
+##' Checks that the data.frame is made up of simple individual
+##' columns. Checks numeric columns to find out if they are
+##' acceptable to treat as integers.
+##' @param dframe A data frame
+##' @param safeNumericToInteger Default TRUE: Should we treat values
+##'     which appear to be integers as integers? If a column is
+##'     numeric, it might be safe to treat it as an integer.  In many
+##'     csv data sets, the values coded c(1, 2, 3) are really
+##'     integers, not floats c(1.0, 2.0, 3.0). See
+##'     \code{safeInteger}.
+##' @return A checked & cleaned data frame
+##' @keywords internal
+##' @author Paul Johnson <pauljohn@@ku.edu>
+cleanDataFrame <- function(dframe, safeNumericToInteger = TRUE){
+    ## Does this data frame have any embedded matrices or lists? If it
+    ## is not "single column" elements, stop.
+    ## See: http://stackoverflow.com/questions/38902880/data-frame-in-which-elements-are-not-single-columns
+    no.dims <- function(x) {!is.null(dim(x))}
+    if (sum(sapply(dframe, no.dims)) > 0) {
+        messg <- paste("cleanDataFrame checked if dframe elements are not single columns.",
+                       "This frame has some elements that are not single columns.")
+        stop(messg)
+    }
+
+    ## If integer-like columns exist, turn them into integers
+    if (safeNumericToInteger){
+        for(i in colnames(dframe)){
+            if(is.numeric(dframe[ , i]) && !is.null(tmp <- safeInteger(dframe[ , i]))) dframe[ , i] <- tmp
+        }
+    }
+    dframe
+}
 
 ##' Create variable key
 ##'
@@ -355,11 +394,9 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
                         file = NULL, outdir = getwd(),
                         max.levels = 15, safeNumericToInteger = TRUE)
 {
-    if (safeNumericToInteger){
-        for(i in colnames(dframe)){
-            if(is.numeric(dframe[ , i]) && !is.null(tmp <- safeInteger(dframe[ , i]))) dframe[ , i] <- tmp
-        }
-    }
+    
+    dframe <- rockchalk:::cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
+
     df.class <- sapply(dframe, function(x)class(x)[1])
     cn <- colnames(dframe)
     ## Make a long key
@@ -731,6 +768,12 @@ NULL
 ##' @param keylist A keylist object
 ##' @param diagnostic Default TRUE: Compare the old and new
 ##'        data frames carefully with the keyDiagnostic function.
+##' @param safeNumericToInteger Default TRUE: Should we treat values
+##'     which appear to be integers as integers? If a column is
+##'     numeric, it might be safe to treat it as an integer.  In many
+##'     csv data sets, the values coded c(1, 2, 3) are really
+##'     integers, not floats c(1.0, 2.0, 3.0). See
+##'     \code{safeInteger}.
 ##' @return A recoded version of dframe
 ##' @export
 ##' @importFrom plyr mapvalues
@@ -738,7 +781,7 @@ NULL
 ##' mydf.key.path <- system.file("extdata", "mydf.key_new.csv", package = "kutils")
 ##' mydf.keylist <-  keyImport(mydf.key.path)
 ##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
-##' ## mydf <- read.csv(mydf.path, colClasses = fixclasses, stringsAsFactors = FALSE)
+##' 
 ##' mydf <- read.csv(mydf.path, stringsAsFactors=FALSE)
 ##' mydf2 <- keyApply(mydf, mydf.keylist)
 ##'
@@ -746,7 +789,9 @@ NULL
 ##' nls.keylong.keylist <- keyImport(nls.keylong.path, long = TRUE)
 ##' data(natlongsurv)
 ##' nls.dat <- keyApply(natlongsurv, nls.keylong.keylist)
-keyApply <- function(dframe, keylist, diagnostic = TRUE){
+keyApply <- function(dframe, keylist, diagnostic = TRUE, safeNumericToInteger = TRUE){
+
+    dframe <- rockchalk:::cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
     
     if (diagnostic) dforig <- dframe
 
@@ -909,7 +954,7 @@ keyDiagnostic <-
 
 
 
-##' convert a key object from wide to long format
+##' Convert a key object from wide to long format
 ##'
 ##' This is not flexible, assumes columns are named in our canonical
 ##' style, but works
@@ -994,3 +1039,4 @@ long2wide <- function(keylong){
     class(key) <- c("key", class(key))
     key
 }
+
