@@ -11,9 +11,11 @@ install.packages("kutils", dep = TRUE)
 ```
 
 If you are on Macintosh or Windows, it may be necessary to
-insert "type = "source"", as in :
+insert 'type = "source"', as in :
 
-install.packages("kutils", dep = TRUE, tyep = "source")
+```bash
+install.packages("kutils", dep = TRUE, type = "source")
+```
 
 this will tell the package manager that there is no
 "compiled code" in the package and so a pre-built binary is
