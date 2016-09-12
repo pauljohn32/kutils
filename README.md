@@ -1,3 +1,26 @@
+The kutils package is under development. To install
+the latest snapshot, do this in R:
+
+```bash
+CRAN <- "http://rweb.crmda.ku.edu/cran"
+KRAN <- "http://rweb.crmda.ku.edu/kran"
+BIOC <- "http://www.bioconductor.org/packages/3.3/bioc"
+
+options(repos = c(KRAN, CRAN, BIOC))
+install.packages("kutils", dep = TRUE)
+```
+
+If you are on Macintosh or Windows, it may be necessary to
+insert "type = "source"", as in :
+
+install.packages("kutils", dep = TRUE, tyep = "source")
+
+this will tell the package manager that there is no
+"compiled code" in the package and so a pre-built binary is
+not required.
+
+## To Clone The Repository and Participate
+
 git clone git@gitlab.crmda.ku.edu:software/kutils.git
 
 cd kutils
