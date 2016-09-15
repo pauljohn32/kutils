@@ -203,3 +203,78 @@ stringbreak <- function(x, k = 20){
     if (xseq[i] < xlength) res <- paste0(res, substr(x, xseq[i + 1], xlength))
     res
 }
+
+
+
+##' Insert 0's in the front of existing digits or characters so that
+##' all elements of a vector have the same number of characters.
+##'
+##' The main purpose was to correct ID numbers in studies that are
+##' entered as integers with leading 0's as in 000001 or 034554.  R's
+##' default coercion of integers will throw away the preceding 0's,
+##' and reduce that to 1 or 34554. The user might want to re-insert
+##' the 0's, thereby creating a character vector with values "000001" 
+##' and "045665".
+##'
+##' If x is an integer or a character vector, the result is the
+##' more-or-less expected outcome (see examples). If x is numeric,
+##' but not an integer, then x will be rounded to the lowest integer.
+##' 
+##' The previous versions of this function failed when there were
+##' missing values (NA) in the vector x.  This version returns NA for
+##' those values.
+##'
+##' One of the surprises in this development was that sprintf() in R
+##' does not have a known consequence when applied to a character
+##' variable. It is platform-dependent (unredictable). On Ubuntu Linux
+##' 16.04, for example \code{sprintf("\%05s", 2)} gives back
+##' \code{" 2"}, rather than (what I expected) \code{"00002"}. The
+##' problem is mentioned in the documentation for \code{sprintf}. The
+##' examples show this does work now, but please test your results.
+##' @param x vector to be converted to a character variable by
+##'     inserting 0's at the front. Should be integer or character,
+##'     floating point numbers will be rounded down. All other
+##'     variable types will return errors.
+##' @param n Optional parameter.  The desired final length of
+##'     character vector.  This parameter is a guideline to determine
+##'     how many 0's must be inserted.  This will be ignored if
+##'     \code{n} is smaller than the number of characters in the
+##'     longest element of \code{x}.
+##' @return A character vector
+##' @export
+##' @author Paul Johnson <pauljohn@@ku.edu>
+##' @examples
+##' x1 <- c(0001, 0022, 3432, NA)
+##' padW0(x1)
+##' padW0(x1, n = 10)
+##' x2 <- c("1", "22", "3432", NA)
+##' padW0(x2)
+##' ## There's been a problem with strings, but this works now.
+##' ## It even preserves non-leading spaces. Hope that's what you want.
+##' x3 <- c("1", "22 4", "34323  42", NA)
+##' padW0(x3)
+##' x4 <- c(1.1, 334.52, NA)
+##' padW0(x4)
+padW0 <- function (x, n = 0) {
+    if (!is.numeric(x) && !is.character(x))
+        stop("padW0 only accepts integer or character values for x")
+
+    xismiss <- is.na(x)
+    ## springf trouble with characters, not platform independent
+    if(is.numeric(x)) {
+        x <- if (is.double(x)) as.integer(x)
+        maxlength <- max(nchar(x), n, na.rm = TRUE)
+        vtype <- "d"
+        res <- sprintf(paste0("%0", maxlength, vtype), x)
+    } else {
+        maxlength <- max(nchar(x), n, na.rm = TRUE)
+        xlength <- vapply(x, nchar, integer(1))
+        padcount <- maxlength - xlength
+        pads <- vapply(padcount, function(i){paste0(rep("0", max(0, i, na.rm=TRUE)), collapse = "")}, character(1))
+        res <- paste0(pads, x)
+    }
+
+    res[xismiss] <- NA
+    res
+}
+ 
