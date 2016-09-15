@@ -2998,7 +2998,14 @@ In the long key format, the equivalent information would be conveyed by
  altering the ordering of the rows.
  For example, it is necessary to re-order the rows to indicate the lo is
  lower than med, and then for the new values we put in the desired names
- (see Table ).
+ (see Table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:Reorder-Values-Example2"
+
+\end_inset
+
+).
 \end_layout
 
 \begin_layout Standard
@@ -3277,7 +3284,17 @@ kutils
 
 .
  For numeric variables, there are only three types of statements allowed
- in the recode column.
+ in the 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+missings
+\end_layout
+
+\end_inset
+
+ column.
  Legal values must must begin with the characters 
 \begin_inset Quotes eld
 \end_inset
@@ -3322,24 +3339,46 @@ c
 \end_inset
 
  are accepted in the obvious way.
+ See Table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:Recode-Examples"
+
+\end_inset
+
+ for examples of possible 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+missings
+\end_layout
+
+\end_inset
+
+ input.
  
 \end_layout
 
 \begin_layout Standard
 \begin_inset Float table
+placement H
 wide false
 sideways false
 status open
 
 \begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Recode Example
+Missings Examples
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:Recode-Examples"
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -3359,7 +3398,7 @@ Recode Example
 \begin_inset Text
 
 \begin_layout Plain Layout
-recodes
+missings
 \end_layout
 
 \end_inset
@@ -3529,6 +3568,229 @@ c(-999,0)
 </cell>
 </row>
 </lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The key specification for 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+recodes
+\end_layout
+
+\end_inset
+
+ is discussed in the help page of the 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+assignRecode
+\end_layout
+
+\end_inset
+
+ function in 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+kutils
+\end_layout
+
+\end_inset
+
+.
+ The 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+recodes
+\end_layout
+
+\end_inset
+
+ column takes R code and applies it to the desired variable.
+ For example, if one wanted to transform a variable by taking its square
+ root, this could be done by providing 
+\begin_inset Quotes eld
+\end_inset
+
+sqrt(x)
+\begin_inset Quotes erd
+\end_inset
+
+ in the 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+recodes
+\end_layout
+
+\end_inset
+
+ column.
+ Here 
+\begin_inset Quotes eld
+\end_inset
+
+x
+\begin_inset Quotes erd
+\end_inset
+
+ is simply a placeholder where the name of the variable indicated in the
+ 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+name_new
+\end_layout
+
+\end_inset
+
+ column will be inserted when the variable key is applied.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Recoding Integer and Numeric Variables
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+{
+\backslash
+footnotesize
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{tabular}{lllllllll}
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+toprule
+\end_layout
+
+\begin_layout Plain Layout
+
+name
+\backslash
+_old & name
+\backslash
+_new & class
+\backslash
+_old & class
+\backslash
+_new & value
+\backslash
+_old & value
+\backslash
+_new & missings & recodes 
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+  
+\backslash
+midrule
+\end_layout
+
+\begin_layout Plain Layout
+
+x5 & x5 & numeric & numeric &  &  & <0 & log(x) 
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+x4 & x4 & numeric & numeric &  &  & c(-999) & abs(x) 
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+x6 & x6 & integer & integer & 1$|$2$|$3$|$4$|$5 & 1$|$2$|$3$|$4$|$5 & c(-9)
+ & 
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+   
+\backslash
+bottomrule
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{tabular}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
 
 \end_inset
 
@@ -3725,7 +3987,8 @@ keyImport
  The key list has a fixed format so that the process of using the key list
  to manipulate the data is not influenced by what key format was used.
  We do not suggest attempting to create a key list manually.
- See the example below taken from the 
+ See the code below for a basic example of how a key file is read into R
+ and then provided to 
 \begin_inset Flex Code
 status open
 
@@ -3735,13 +3998,7 @@ keyImport
 
 \end_inset
 
- documentation.
- 
-\end_layout
-
-\begin_layout Standard
-TAKE A DAY AND THINK ABOUT HOW TO MAKE A BETTER EXAMPLE AND COVER ALL RELEVANT
- DETAILS HERE.
+.
  
 \end_layout
 
@@ -3766,12 +4023,12 @@ status open
 
 \begin_layout Plain Layout
 
-mydf.key <- read.csv(mydf.key.path, stringsAsFactor = FALSE) 
+mydf.key <- read.csv("mydf.key.csv", stringsAsFactor = FALSE) 
 \end_layout
 
 \begin_layout Plain Layout
 
-mydf.keylist2 <- keyImport(mydf.key, long = FALSE)
+mydf.keylist <- keyImport(mydf.key, long = FALSE)
 \end_layout
 
 \end_inset
@@ -3826,12 +4083,43 @@ keyApply
 
  function takes the name of the data frame to be recoded and the key list
  created in Step 3 to produce a new data frame with the desired recodings.
+ See the code below for a basic example of how an imported key is applied
+ to a data frame.
  
 \end_layout
 
 \begin_layout Standard
-TAKE A DAY AND THINK ABOUT HOW TO BEST INCLUDE AN EXAMPLE HERE.
- 
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+keyed.df <- keyApply(mydf, mydf.keylist)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Section
@@ -4061,14 +4349,6 @@ numeric variables
 \end_layout
 
 \end_deeper
-\begin_layout Plain Layout
-2.
-\end_layout
-
-\begin_layout Plain Layout
-3.
-\end_layout
-
 \end_inset
 
 
