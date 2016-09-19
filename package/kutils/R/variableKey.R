@@ -1115,6 +1115,7 @@ long2wide <- function(keylong){
 ##' @param file file name intended for output
 ##' @param outdir directory name intended for output
 ##' @return A stacked variable key in the long format
+##' @importFrom plyr rbind.fill
 ##' @author Paul Johnson
 keyStacker <- function(aList, file, outdir){
     ## TODO: Must convert keys to long form for stacking
@@ -1144,6 +1145,7 @@ keyStacker <- function(aList, file, outdir){
 ##' @param bottom If long key, should all new rows be added to the
 ##'     bottom of the updated key? Default is TRUE.
 ##' @return Updated variable key matching format of oldkey
+##' @importFrom plyr rbind.fill
 ##' @author Ben Kite
 ##' @examples
 ##' dat1 <- data.frame("Score" = c(1, 2, 3, 42, 4, 2),
@@ -1175,10 +1177,12 @@ keyUpdater <- function(oldkey, dframe, bottom = TRUE){
     output <- output[,!names(output) %in% "key"]
     if(bottom == TRUE){
         if(longkey == FALSE) output <- long2wide(output)
+        row.names(output) <- seq(1, nrow(output), 1)
         return(output)
     }else{
         output <- output[order(output$name_old),]
         if(longkey == FALSE) output <- long2wide(output)
+        row.names(output) <- seq(1, nrow(output), 1)
         return(output)
     }
 }
