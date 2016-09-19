@@ -1144,7 +1144,8 @@ keyStacker <- function(aList, file, outdir){
 ##' @param dframe Data frame with new observations
 ##' @param bottom If long key, should all new rows be added to the
 ##'     bottom of the updated key? Default is TRUE.
-##' @return Updated variable key matching format of oldkey
+##' @param wide Is oldkey a wide key? Default is FALSE.
+##' @return Updated variable key matching format of oldkey.
 ##' @importFrom plyr rbind.fill
 ##' @author Ben Kite
 ##' @examples
@@ -1159,9 +1160,8 @@ keyStacker <- function(aList, file, outdir){
 ##' dat2 <- dat2[-1,]
 ##' keyUpdater(key1, dat2, bottom = TRUE)
 ##' keyUpdater(key1, dat2, bottom = FALSE)
-keyUpdater <- function(oldkey, dframe, bottom = TRUE){
-    longkey <- ifelse("keylong" %in% class(oldkey), TRUE, FALSE)
-    if (longkey == FALSE) oldkey <- wide2long(oldkey)
+keyUpdater <- function(oldkey, dframe, bottom = TRUE, wide = FALSE){
+    if(wide == TRUE) oldkey <- wide2long(oldkey)
     newkey <- keyTemplate(dframe, long = T)
     if (identical(newkey, oldkey) == TRUE) return(newkey)
     newkey$key <- 1
@@ -1171,17 +1171,17 @@ keyUpdater <- function(oldkey, dframe, bottom = TRUE){
     tmpkey <- unique(tmpkey)
     tmpkey <- tmpkey[order(tmpkey$key),]
     row.names(tmpkey) <- seq(1, nrow(tmpkey), 1)
-    tmp <- tmpkey[,c("name_old", "class_new", "value_old")]
+    tmp <- tmpkey[,c("name_old", "class_old", "value_old")]
     keep <- !duplicated(tmp)
     output <- tmpkey[keep,]
     output <- output[,!names(output) %in% "key"]
     if(bottom == TRUE){
-        if(longkey == FALSE) output <- long2wide(output)
+        if(wide == TRUE) output <- long2wide(output)
         row.names(output) <- seq(1, nrow(output), 1)
         return(output)
     }else{
         output <- output[order(output$name_old),]
-        if(longkey == FALSE) output <- long2wide(output)
+        if(wide == TRUE) output <- long2wide(output)
         row.names(output) <- seq(1, nrow(output), 1)
         return(output)
     }
