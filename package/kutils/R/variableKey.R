@@ -1158,12 +1158,16 @@ keyStacker <- function(aList, file, outdir){
 ##' dat2 <- data.frame("Score" = 7, "Gender" = "other")
 ##' dat2 <- rbind(dat1, dat2)
 ##' dat2 <- dat2[-1,]
-##' keyUpdater(key1, dat2, bottom = TRUE)
-##' keyUpdater(key1, dat2, bottom = FALSE)
-keyUpdater <- function(oldkey, dframe, bottom = TRUE, wide = FALSE){
-    if(wide == TRUE) oldkey <- wide2long(oldkey)
+##' keyUpdate(key1, dat2, bottom = TRUE)
+##' keyUpdate(key1, dat2, bottom = FALSE)
+keyUpdate <- function(oldkey, dframe, bottom = TRUE, wide = FALSE){
+    if(wide == TRUE){
+        oldkey <- wide2long(oldkey)
+    }
     newkey <- keyTemplate(dframe, long = T)
-    if (identical(newkey, oldkey) == TRUE) return(newkey)
+    if (identical(newkey, oldkey)){
+        return(newkey)
+    }
     newkey$key <- 1
     oldkey$key <- 0
     tmpkey <- rbind.fill(oldkey, newkey)
@@ -1176,15 +1180,20 @@ keyUpdater <- function(oldkey, dframe, bottom = TRUE, wide = FALSE){
     output <- tmpkey[keep,]
     output <- output[,!names(output) %in% "key"]
     if(bottom == TRUE){
-        if(wide == TRUE) output <- long2wide(output)
+        if(wide == TRUE){
+            output <- long2wide(output)
+        }
         row.names(output) <- seq(1, nrow(output), 1)
         return(output)
     }else{
         output <- output[order(output$name_old),]
-        if(wide == TRUE) output <- long2wide(output)
+        if(wide == TRUE){
+            output <- long2wide(output)
+        }
         row.names(output) <- seq(1, nrow(output), 1)
         return(output)
     }
+    output
 }
 
 
