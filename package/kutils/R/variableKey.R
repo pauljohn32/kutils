@@ -1,6 +1,6 @@
 
 ##' If a numeric variable is very close to an integer, then
-##' make it an integer. 
+##' make it an integer.
 ##'
 ##' Users often accidentally create floating point numeric variables
 ##' when they really mean integers, such as c(1, 2, 3), when they
@@ -19,7 +19,7 @@
 ##' Be careful with the return. The correct return value for variables that
 ##' should not be coerced as integer is uncertain at this point. We've tested
 ##' various strategies, sometimes returning FALSE, NULL, or just the original
-##' variable. 
+##' variable.
 ##' @param x a numeric variable
 ##' @param tol Tolerance value. Defaults to Machine$double.eps. See
 ##'     details.
@@ -44,7 +44,7 @@
 ##' head(x2int)
 ##' x3 <- factor(x1, labels = c(LETTERS[1:6]))
 ##' x3int <- safeInteger(x3)
-##' 
+##'
 safeInteger <- function(x, tol = .Machine$double.eps, digits = 7, verbose = FALSE)
 {
     if(!is.numeric(x)) {
@@ -54,7 +54,7 @@ safeInteger <- function(x, tol = .Machine$double.eps, digits = 7, verbose = FALS
         }
         return(NULL)
     }
-    
+
     if(is.integer(x)){
         return(x)
     } else {
@@ -73,7 +73,7 @@ safeInteger <- function(x, tol = .Machine$double.eps, digits = 7, verbose = FALS
     messg <- paste0("safeInteger should not have reached this point")
     stop(messg)
 }
-NULL  
+NULL
 
 
 ##' Scrub a variable's missings away
@@ -96,14 +96,14 @@ NULL
 ##'    represents a range such as "c(99, 101)", to mean that values
 ##'    greater than OR equal to 99 and less than OR equal to 101 will
 ##'    be set as missing.
-##' 
+##'
 ##' \item For factors, include a vector of levels to be
 ##'         marked as missing and removed from the list of levels.
 ##'
 ##' \item For character variables, a character vector of
 ##'         values to be marked as missing.
 ##' }
-##' 
+##'
 ##' One of the concerns is that comparison of real-valued numerics is
 ##' not dependable.  Exact comparisons with == are
 ##' unreliable, so don't ask for them.
@@ -119,20 +119,20 @@ NULL
 ##' ## Specify range, 4 to 12 inclusive
 ##' missings <- "c(4, 12)"
 ##' assignMissing(x, missings)
-##' 
+##'
 ##' missings <- " < 7"
 ##' assignMissing(x, missings)
-##' 
+##'
 ##' missings <- " > 11"
 ##' assignMissing(x, missings)
-##' 
+##'
 ##' ## 2. strings
 ##' x <- c("low", "low", "med", "high")
 ##' missings <- "c(\"low\", \"high\")"
 ##' assignMissing(x, missings)
 ##' missings <- c("med", "doesnot exist")
 ##' assignMissing(x, missings)
-##' 
+##'
 ##' ## 3. factors (same as strings inside assignMissing)
 ##' x <- factor(c("low", "low", "med", "high"), levels = c("low", "med", "high"))
 ##' missings <- c("low", "high")
@@ -143,7 +143,7 @@ NULL
 ##' x <- ordered(c("low", "low", "med", "high"), levels = c("low", "med", "high"))
 ##' missings <- c("low", "high")
 ##' assignMissing(x, missings)
-##' 
+##'
 ##' ## 4. Real-valued variable
 ##' set.seed(234234)
 ##' x <- rnorm(10)
@@ -211,11 +211,11 @@ assignMissing <- function(x, missings = NULL){
         }
         return(x)
     }
-    
+
     messg <- "Sorry, no missings assigned because variable type was unhandled"
     warning(messg)
     ## return unchanged input, didn't see what to do
-    x 
+    x
 }
 
 
@@ -256,7 +256,7 @@ assignRecode <- function(x, recode = NULL){
 }
 
 
-##' Check \& Clean data.frame for usage with variable key functions 
+##' Check \& Clean data.frame for usage with variable key functions
 ##'
 ##' Checks that the data.frame is made up of simple individual
 ##' columns. Checks numeric columns to find out if they are
@@ -297,7 +297,7 @@ cleanDataFrame <- function(dframe, safeNumericToInteger = TRUE){
 ##' This is purely diagnostic.  Will print messages notifying user
 ##' that observed data has values that are not in the value_old, or
 ##' that value_old has values that are not in the data.
-##'  
+##'
 ##' @param x a variable, either character or factor
 ##' @param value_old a vector of old values for which we are checking
 ##' @param xname character string to use for x's name when printing output
@@ -349,7 +349,7 @@ checkValues <- function(x, value_old, xname){
 ##' After a key is created, it should be re-imported into R with the
 ##' \code{kutils::keyImport} function.  Then the key structure can
 ##' guide the importation and recoding of the data set.
-##' 
+##'
 ##' @param dframe A data frame
 ##' @param long Default FALSE.
 ##' @param sort Default FALSE. Should the rows representing the
@@ -401,14 +401,14 @@ checkValues <- function(x, value_old, xname){
 ##'                    stringsAsFactors = FALSE)
 ##' mydf$x4[sample(1:N, 10)] <- 999
 ##' mydf$x5[sample(1:N, 10)] <- -999
-##' 
+##'
 ##' ## Should be same as content of
 ##' ## write.csv(mydf, file = "../inst/extdata/mydf.csv", row.names = FALSE)
 ##' mydf.key <- keyTemplate(mydf, file = "mydf.key.csv")
 ##' mydf.keylong <- keyTemplate(mydf, long = TRUE, file = "mydf.keylong.csv")
 ##' ## write.csv(mydf.key, file = "../inst/extdata/mydf.key.csv", row.names = FALSE)
 ##' ## write.csv(mydf.keylong, file = "../inst/extdata/mydf.keylong.csv", row.names = FALSE)
-##' 
+##'
 ##' ## Try with the national longitudinal study data
 ##' data(natlongsurv)
 ##' natlong.key <- keyTemplate(natlongsurv, file = "natlongsurv.key.csv",
@@ -416,26 +416,26 @@ checkValues <- function(x, value_old, xname){
 ##'
 ##' natlong.keylong <- keyTemplate(natlongsurv, long = TRUE,
 ##'                    file = "natlongsurv.keylong.csv", sort = TRUE)
-##' 
+##'
 ##' \donttest{
 ##' if (require(openxlsx)){
 ##'    openxlsx::write.xlsx(natlong.key, file = "natlongsurv.key.xlsx")
 ##'    openxlsx::write.xlsx(natlong.keylong, file = "natlongsurv.keylong.xlsx")
 ##' }
 ##' }
-##'  
+##'
 keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
                         file = NULL, outdir = getwd(),
                         max.levels = 15, safeNumericToInteger = TRUE)
 {
-    
+
     dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
 
     df.class <- sapply(dframe, function(x)class(x)[1])
     cn <- colnames(dframe)
     ## Make a long key
     if(isTRUE(long)){
-                   
+
         getUnique <- function(xname){
             if (df.class[[xname]] == "numeric") return ("")
             if (df.class[[xname]] %in% c("integer", "character")){
@@ -445,7 +445,7 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
                 } else {
                     return ("")
                 }
-                     
+
             }
             if (df.class[[xname]] %in% c("factor", "ordered")){
                 return(levels(dframe[ , xname]))
@@ -456,7 +456,7 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
             expand.grid(name = x,
                         class = df.class[[x]],
                         value = getUnique(x), stringsAsFactors = FALSE)}))
-                
+
         key <- data.frame(name_old = key$name,
                           name_new = key$name,
                           class_old = key$class,
@@ -466,21 +466,21 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
                           missings = "",
                           recodes = "",
                           stringsAsFactors = FALSE)
-        
+
         if (sort) key <- key[order(key$name_old), ]
         key$missings <- ""
         key$recodes <- ""
-              
+
         class(key) <- c("keylong", class(key))
     } else {
-        
+
         ## else !long, so make a wide key
         key <- data.frame(name_old = colnames(dframe), name_new = colnames(dframe),
                           class_old = df.class, class_new = df.class,
-                          value_old = as.character(""), value_new = "", 
+                          value_old = as.character(""), value_new = "",
                           missings = "",  recodes = "", stringsAsFactors = FALSE)
-        
-        
+
+
         for (i in cn){
             getValues <- function(x){
                 y <- dframe[ , x]
@@ -505,13 +505,13 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
             }
             key[i, "value_old"] <- getValues(i)
         }
-        
+
         key[ , "value_new"] <- key[ , "value_old"]
-        
+
         if (sort) key <- key[order(key$name_old), ]
         class(key) <- c("key", class(key))
     }
-   
+
     if (!missing(file) && !is.null(file)){
         smartSave(key, file, outdir)
     }
@@ -627,8 +627,8 @@ NULL
 ##' The return value is a list, with one element per "name_old" to "name_new" variable combination.
 ##' If the key has one old variable being recoded 6 ways, that begets 6 elements
 ##' in the resulting list. Attributes including the classes of the old
-##' and new variables are included. 
-##' 
+##' and new variables are included.
+##'
 ##' @param key A key object or a file name, csv, xlsx or rds.
 ##' @param long Is this a long format key file? If \code{key} is an
 ##'     object of class key or keylong, the value of long will be
@@ -717,7 +717,7 @@ keyImport <- function(key, long = FALSE, ...,
         }
     }
 
-    
+
     ## get rid of leading and trailing spaces that users sometimes insert in
     ## key when using a spreadsheet
     for (j in colnames(key)[sapply(key, is.character)]) {
@@ -731,7 +731,7 @@ keyImport <- function(key, long = FALSE, ...,
     ## }
 
     ## TODO: if name_new is missing or empty, remove that from key
-    
+
     ## TODO: abstract for "name_old", "name_new"
     name_old.new <- paste0(key[ , "name_old"], ".", key[ , "name_new"])
 
@@ -746,7 +746,7 @@ keyImport <- function(key, long = FALSE, ...,
         keylist <- lapply(keysplit, function(keyds) {
             keyds$value_old.orig <- keyds$value_old
             keyds$value_new.orig <- keyds$value_new
-          
+
             val_old <- unlist(strsplit2(keyds$value_old.orig, sepold[keyds$class_old]))
             val_new <- unlist(strsplit2(keyds$value_new.orig, sepnew[keyds$class_new]))
             val_new[val_new %in% missingare] <- NA
@@ -780,8 +780,8 @@ keyImport <- function(key, long = FALSE, ...,
         name_new.clean <- make.names(name_new.unique, unique = TRUE)
         names(name_new.clean) <- name_new.unique
         ## TODO: abstract for alternative names inkey, not "name_new"
-        key[ , "name_new"] <- name_new.clean[key[, "name_new"]] 
-       
+        key[ , "name_new"] <- name_new.clean[key[, "name_new"]]
+
         ## Create a keylist member for a given data frame
         makeOneVar <- function(keyds){
             name_old <- unique2(keyds$name_old)
@@ -799,7 +799,7 @@ keyImport <- function(key, long = FALSE, ...,
                  value_old = keyds$value_old, value_new = value_new,
                  missings = missings, recodes = recodes)
         }
-        
+
         keysplit <- split(key, name_old.new, drop = FALSE)
         keylist <- lapply(keysplit, makeOneVar)
     }
@@ -837,7 +837,7 @@ NULL
 ##' mydf.key.path <- system.file("extdata", "mydf.key_new.csv", package = "kutils")
 ##' mydf.keylist <-  keyImport(mydf.key.path)
 ##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
-##' 
+##'
 ##' mydf <- read.csv(mydf.path, stringsAsFactors=FALSE)
 ##' mydf2 <- keyApply(mydf, mydf.keylist)
 ##'
@@ -856,7 +856,7 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE,
         colnames(dframe) <- tolower(colnames(dframe))
     }
     names(name_old.orig) <- colnames(dframe)
-    
+
     if (diagnostic) dforig <- dframe
 
     ## Hmm. Need to snapshot class of input variables before changing anything
@@ -869,13 +869,13 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE,
 
     ## a list for collecting new variables.
     xlist <- list()
-    
+
     for (v in keylist) {
         class_new.key <- v$class_new
         class_old.key <- v$class_old
         class_old.data <- class_old.dframe[v$name_old]
         if(ignoreCase) v$name_old <- tolower(v$name_old)
-        
+
         ## TODO: what if class_old does not match class of imported
         ## data.  Need to think through implications of doing something like
         ## xnew <- as(xnew, class_old)
@@ -889,7 +889,7 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE,
             print(messg)
             next()
         }
-        
+
         ## Extract candidate variable to column.
         xnew <- dframe[ , v$name_old]
 
@@ -908,7 +908,7 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE,
             mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew")
             eval(parse(text = mytext))
         }
-        
+
         if(class_new.key %in% c("ordered", "factor")) {
             ## TODO: check mapvalues works with NA on output value
             ## TODO: If $v$value_old is empty, what to do?
@@ -930,7 +930,7 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE,
             }
         } else {
             ## TODO: about numerics. Should we allow recodes AS WELL AS value_old, value_new??
-           
+
             if (length(v$value_old) == length(v$value_new)){
                 ## TODO: need to stress test this on other variable types.
                 ## so only do re-assignment if any value_old are not NA.
@@ -943,7 +943,7 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE,
                 if (class(xnew) != class_new.key){
                     xnew <- as(xnew, class_new.key)
                 }
-                
+
                 mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew")
                 eval(parse(text = mytext))
             } else {
@@ -953,7 +953,7 @@ keyApply <- function(dframe, keylist, diagnostic = TRUE,
             }
         }
     }
-    
+
     dframe <- do.call(data.frame, xlist)
     if(diagnostic) keyDiagnostic(dforig, dframe, keylist)
     dframe
@@ -1033,7 +1033,7 @@ keyDiagnostic <-
 ##' ## Target we are trying to match:
 ##' mydf.keylong <- keyTemplate(mydf, long = TRUE, sort = TRUE)
 ##' ## View(mydf.keylong)
-##' 
+##'
 ##' mydf.key <- keyTemplate(mydf)
 ##' mydf.keywide2long <- wide2long(mydf.key)
 ##'
@@ -1044,7 +1044,7 @@ keyDiagnostic <-
 wide2long <- function(key){
     ## keysplit
     ks <- split(key, list(key$name_old, key$name_new), drop = TRUE)
-    
+
     ksl <- lapply(ks, function(x){
         zz <- list(name_old = x$name_old,
                    name_new = x$name_new,
@@ -1056,9 +1056,9 @@ wide2long <- function(key){
                    recodes = if(is.character(x$recodes)) unlist(strsplit(x$recodes, ";")) else NA )
         zz <- lapply(zz, function(x) if (length(x) == 0) "" else x)
     })
-    
+
     keylong <- do.call(rbind, lapply(ksl, as.data.frame, stringsAsFactors = FALSE))
-    
+
     class(keylong) <- c("keylong", class(keylong))
     keylong
 }
@@ -1099,7 +1099,7 @@ long2wide <- function(keylong){
              recodes = paste(unique(x$recodes), collapse = ";"))
     })
 
-    
+
     key <- do.call("rbind", lapply(keywide, data.frame, stringsAsFactors = FALSE))
     class(key) <- c("key", class(key))
     key
@@ -1118,7 +1118,7 @@ long2wide <- function(keylong){
 ##' @author Paul Johnson
 keyStacker <- function(aList, file, outdir){
     ## TODO: Must convert keys to long form for stacking
-    
+
     key_jumbo <- rbind.fill(aList)
     key_jumbo <- key_jumbo[order(key_jumbo$name_old), ]
     key_jumbo <- unique(key_jumbo)
@@ -1135,3 +1135,52 @@ keyStacker <- function(aList, file, outdir){
     }
     key_jumbo
  }
+
+
+##' Update an existing key with new data.
+##'
+##' @param oldkey Existing key that has been edited by user.
+##' @param dframe Data frame with new observations
+##' @param bottom If long key, should all new rows be added to the
+##'     bottom of the updated key? Default is TRUE.
+##' @return Updated variable key matching format of oldkey
+##' @author Ben Kite
+##' @examples
+##' dat1 <- data.frame("Score" = c(1, 2, 3, 42, 4, 2),
+##'                    "Gender" = c("M", "M", "M", "F", "F", "F"))
+##' key1 <- keyTemplate(dat1, long = T)
+##' key1[5, "value_new"] <- 10
+##' key1[6, "value_new"] <- "female"
+##' key1[7, "value_new"] <- "male"
+##' dat2 <- data.frame("Score" = 7, "Gender" = "other")
+##' dat2 <- rbind(dat1, dat2)
+##' dat2 <- dat2[-1,]
+##' keyUpdater(key1, dat2, bottom = TRUE)
+##' keyUpdater(key1, dat2, bottom = FALSE)
+keyUpdater <- function(oldkey, dframe, bottom = TRUE){
+    longkey <- ifelse("keylong" %in% class(oldkey), TRUE, FALSE)
+    if (longkey == FALSE) oldkey <- wide2long(oldkey)
+    newkey <- keyTemplate(dframe, long = T)
+    if (identical(newkey, oldkey) == TRUE) return(newkey)
+    newkey$key <- 1
+    oldkey$key <- 0
+    tmpkey <- rbind.fill(oldkey, newkey)
+    tmpkey <- tmpkey[order(tmpkey$name_old),]
+    tmpkey <- unique(tmpkey)
+    tmpkey <- tmpkey[order(tmpkey$key),]
+    row.names(tmpkey) <- seq(1, nrow(tmpkey), 1)
+    tmp <- tmpkey[,c("name_old", "class_new", "value_old")]
+    keep <- !duplicated(tmp)
+    output <- tmpkey[keep,]
+    output <- output[,!names(output) %in% "key"]
+    if(bottom == TRUE){
+        if(longkey == FALSE) output <- long2wide(output)
+        return(output)
+    }else{
+        output <- output[order(output$name_old),]
+        if(longkey == FALSE) output <- long2wide(output)
+        return(output)
+    }
+}
+
+
