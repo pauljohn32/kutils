@@ -1,12 +1,20 @@
 2016-09-20  Paul Johnson  <pauljohn@delllap-16>
 
-	* ../R/variableKey.R (makeOneVar): The use of split was causing
+	* ../R/variableKey.R (keyApply): The use of split was causing
 	the name_old.new values to be alphabetized.  We don't want that.
 	(keyUpdate): 1) T -> TRUE. 2) replace "wide" with "long" for
 	consistency with other functions 3) Don't do wide == TRUE,
 	recommended to do isTRUE(wide). Inserted comments to suggest
 	change in design.
-
+	(long2wide): create name_old.new and set as factor with
+	ordering from original key, trying to prevent re-alphabetization.
+	(wide2long): insert sep argument, use while splitting key input.
+	(keyImport): Rip apart keyImport, redesign as key importer and
+	cleaner. This should handle all cleanup of user input and make
+	sure column names are correct. Does NOT return keylist object,
+	make separate function for that.
+	(makeKeylist): Does work previously by keyImport. Only called
+	from inside keyApply, so as to simpify user experience.
 
 2016-09-09  Paul Johnson  <pauljohn@delllap-16>
 

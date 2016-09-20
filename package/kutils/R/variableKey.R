@@ -1146,7 +1146,7 @@ keyDiagnostic <-
 ##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
 ##' mydf <- read.csv(mydf.path, stringsAsFactors=FALSE)
 ##' ## Target we are trying to match:
-##' mydf.keylong <- keyTemplate(mydf, long = TRUE, sort = TRUE)
+##' mydf.keylong <- keyTemplate(mydf, long = TRUE, sort = FALSE)
 ##' ## View(mydf.keylong)
 ##'
 ##' mydf.key <- keyTemplate(mydf)
@@ -1170,8 +1170,8 @@ wide2long <- function(key, sep = c(character = "\\|", logical = "\\|",
                    name_new = x$name_new,
                    class_old = x$class_old,
                    class_new = x$class_new,
-                   value_old = unlist(strsplit(x$value_old, sep[class_old])),
-                   value_new = unlist(strsplit(x$value_new, sep[class_new])),
+                   value_old = unlist(strsplit(x$value_old, sep[x$class_old])),
+                   value_new = unlist(strsplit(x$value_new, sep[x$class_new])),
                    missings = if(is.character(x$missings)) unlist(strsplit(x$missings, ";")) else NA,
                    recodes = if(is.character(x$recodes)) unlist(strsplit(x$recodes, ";")) else NA )
         zz <- lapply(zz, function(x) if (length(x) == 0) "" else x)
@@ -1203,7 +1203,7 @@ wide2long <- function(key, sep = c(character = "\\|", logical = "\\|",
 ##' rownames(mydf.key) <- paste0(mydf.key$name_old, ".", mydf.key$name_new)
 ##' all.equal(mydf.key, mydf.long2wide)
 long2wide <- function(keylong){
-    name_old.new <- paste0(key[ , "name_old"], ".", key[ , "name_new"])
+    name_old.new <- paste0(keylong[ , "name_old"], ".", keylong[ , "name_new"])
     name_old.new <- factor(name_old.new, levels = unique(name_old.new))
     ##kls = keylong split
     kls <- split(keylong, name_old.new, drop = TRUE)

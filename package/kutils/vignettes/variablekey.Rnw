@@ -358,24 +358,26 @@ less obvious columns for the old and new variable names, their classes,
 and values of the variables. 
 
 \begin{table}
+\caption{Key Template, Wide Type\label{tab:Wide-Key}}
 
 
-\caption{Wide Key\label{tab:Wide-Key}}
-
+{\footnotesize
 
 \begin{tabular}{lllllllll}
   \toprule
-name\_old & name\_new & class\_old & class\_new & value\_old & value\_new \\
+name\_old & name\_new & class\_old & class\_new & value\_old & value\_new & missings & recodes \\
   \midrule
-x5 & x5 & numeric & numeric &  &  \\
-x4 & x4 & numeric & numeric &  &  \\
-x3 & x3 & ordered & ordered & med$<$lo$<$hi & med$<$lo$<$hi \\
-x2 & x2 & character & character & a$|$b$|$c$|$d$|$f & a$|$b$|$c$|$d$|$f  \\
-x1 & x1 & factor & factor & cindy$|$jan$|$marcia & marcia$|$marcia$|$marcia \\
-x7 & x7 & ordered & ordered & a$<$b$<$c$<$d$<$f & a$<$b$<$c$<$d$<$f  \\
-x6 & x6 & integer & integer & 1$|$2$|$3$|$4$|$5 & 1$|$2$|$3$|$4$|$5 \\
+x5 & x5 & numeric & numeric &  &  &  &  \\
+x4 & x4 & numeric & numeric &  &  &  &  \\
+x3 & x3 & ordered & ordered & med$<$lo$<$hi & med$<$lo$<$hi &  & \\
+x2 & x2 & character & character & a$|$b$|$c$|$d$|$f & a$|$b$|$c$|$d$|$f  &  & \\
+x1 & x1 & factor & factor & cindy$|$jan$|$marcia & cindy$|$jan$|$marcia &  & \\
+x7 & x7 & ordered & ordered & a$<$b$<$c$<$d$<$f & a$<$b$<$c$<$d$<$f  &  & \\
+x6 & x6 & integer & integer & 1$|$2$|$3$|$4$|$5 & 1$|$2$|$3$|$4$|$5 &  & \\
    \bottomrule
 \end{tabular}
+
+}
 
 \end{table}
 
@@ -518,26 +520,31 @@ to match up the old values and new values, of course, but there is
 nothing complicated about it. In the \code{mydf} variable key, we
 have variable \code{x2} which is coded \code{a} through \code{f}.
 Examples of key elements that might change that into a new character,
-factor, or integer variable are illustrated in the following.
+factor, or integer variable are illustrated in Table \ref{tab:Change-Type-Example1}.
 
-\begin{tabular}{|c|c|c|c|}
+\begin{table}[H]
+\caption{Change Class, Example 1\label{tab:Change-Type-Example1}}
+
+
+\begin{tabular}{cccc}
 \hline 
 class\_old & class\_new & value\_old & value\_new\tabularnewline
 \hline 
-\hline 
 character & character & a|b|c|d|f & Excellent|Proficient|Adequate|Marginal|Inadequate\tabularnewline
-\hline 
 character & factor & a|b|c|d|f & Excellent|Proficient|Adequate|Marginal|Inadequate\tabularnewline
-\hline 
 character & integer & a|b|c|d|f & 4|3|2|1|0\tabularnewline
 \hline 
 \end{tabular}
 
-In line one of this example, the class of the variable remains the
-same. It produces a new character variable with embellished values.
-If we want this to become an R factor variable, line two demonstrates
-how to change the key class\_new value. It is also possible to convert
-the character input into integer values, as we see in line 3.
+\end{table}
+
+
+In line one of Table \ref{tab:Change-Type-Example1}, the class of
+the variable remains the same. It produces a new character variable
+with embellished values. If we want this to become an R factor variable,
+line two demonstrates how to change the key class\_new value. It is
+also possible to convert the character input into integer values,
+as we see in line 3.
 
 \textbf{TODO question: could we allow the key to specify multiple
 recodings for a variable, one to create character, one to create factor,
@@ -545,40 +552,50 @@ etc? I'm not sure it is designed to do that now.}
 
 Similarly, it is obvious to see how an integer input can be converted
 into either an integer, character, or factor variable by employing
-any of these rows in the new key.
+any of the rows seen in Table \ref{tab:Change-Type-Example2}.
 
-\begin{tabular}{|c|c|c|c|c|}
+\begin{table}[H]
+\caption{Change Class Example 2\label{tab:Change-Type-Example2}}
+
+
+\begin{tabular}{ccccc}
 \hline 
 name\_new & class\_old & class\_new & value\_old & value\_new\tabularnewline
 \hline 
-\hline 
 x6.1 & integer & integer & 1|2|3|4|5 & 100|200|300|400|500\tabularnewline
-\hline 
-x6.c & integer & character & 1|2|3|4|5 & Austin|Denver|Nashville|Provo|Marcia\tabularnewline
-\hline 
+x6.c & integer & character & 1|2|3|4|5 & Austin|Denver|Nashville|Provo|Miami\tabularnewline
 x6.f & integer & factor & 1|2|3|4|5 & F|D|C|B|A\tabularnewline
 \hline 
 \end{tabular}
 
-If a variable's class\_old is ordered, and we simply want to relabel
-the existing levels, the work is also easy.
+\end{table}
 
-\begin{tabular}{|c|c|c|c|}
+
+If a variable's class\_old is ordered, and we simply want to relabel
+the existing levels, the work is also easy (see Table \ref{tab:Change-Type-Example3}).
+
+\begin{table}[H]
+
+
+\caption{Change Class, Example 3\label{tab:Change-Type-Example3}}
+
+
+\begin{tabular}{cccc}
 \hline 
 class\_old & class\_new & value\_old & value\_new\tabularnewline
 \hline 
-\hline 
 ordered & ordered & f<d<c<b<a & F<D<C<B<A\tabularnewline
-\hline 
 ordered & ordered & f<d<c<b<a & Fail<Fail<Pass<Pass<Pass\tabularnewline
-\hline 
 ordered & integer & f<d<c<b<a & 0|1|2|3|4\tabularnewline
 \hline 
 \end{tabular}
 
-The second row in this example shows that factor levels can be ``combined''
-by assigning the same character string to several ``<'' separated
-values. 
+\end{table}
+
+
+The second row in Table \ref{tab:Change-Type-Example3} shows that
+factor levels can be ``combined'' by assigning the same character
+string to several ``<'' separated values. 
 
 Working with ordered variables, whether as input or output, becomes
 more complicated if the existing data is not ordered in the way we
@@ -598,18 +615,24 @@ dangerous. We need to edit the \code{value\_old} to correct the ordering
 of the levels \emph{as they are currently labeled}. This is the only
 time where we suggest that users edit the \code{value\_old} column.
 In \code{value\_new}, supply new labels in the in the correct order
-to parallel the newly edited \code{value\_old} column. For example,
+to parallel the newly edited \code{value\_old} column (see Table
+\ref{tab:Reorder-Values}).
 
-\begin{tabular}{|c|c|c|c|}
+\begin{table}[H]
+\caption{Reorder Values, Example 1\label{tab:Reorder-Values}}
+
+
+\begin{tabular}{cccc}
 \hline 
 class\_old & class\_new & value\_old & value\_new\tabularnewline
 \hline 
-\hline 
 ordered & ordered & low<med<hi & low<medium<high\tabularnewline
-\hline 
 ordered & ordered & low<med<hi & low<pass<pass\tabularnewline
 \hline 
 \end{tabular}
+
+\end{table}
+
 
 The key importer will check that all ``duplicated levels'' are adjacent
 with one another, so that the values above low are grouped together.
@@ -617,17 +640,25 @@ with one another, so that the values above low are grouped together.
 In the long key format, the equivalent information would be conveyed
 by altering the ordering of the rows. For example, it is necessary
 to re-order the rows to indicate the lo is lower than med, and then
-for the new values we put in the desired names.
+for the new values we put in the desired names (see Table \ref{tab:Reorder-Values-Example2}).
+
+\begin{table}[H]
+
+
+\caption{Reorder Values, Example 2\label{tab:Reorder-Values-Example2}}
+
 
 \begin{tabular}{llllllll}
 \toprule
 name\_old & name\_new & class\_old & class\_new & value\_old & value\_new & missings & recodes \\
 \midrule
-x3 & x3 & ordered & ordered & lo & low &  &  \\
-x3 & x3 & ordered & ordered & med & medium &  &  \\
-x3 & x3 & ordered & ordered & hi & high &  &  \\
+x3 & x3new & ordered & ordered & lo & low &  &  \\
+x3 & x3new & ordered & ordered & med & medium &  &  \\
+x3 & x3new & ordered & ordered & hi & high &  &  \\
 \bottomrule
 \end{tabular}
+\end{table}
+
 
 In our first efforts, we tried to stick to the principle that the
 observed scores in the value\_old column should not be altered and
@@ -662,28 +693,61 @@ labeled \code{missings} and \code{recodes}.
 The key specification of missing values for various types of variables
 is spelled out in detail for the help page of the \code{assignMissing}
 function in \code{kutils}. For numeric variables, there are only
-three types of statements allowed in the recode column. Legal values
-must must begin with the characters ``<'', ``>'', or ``c''.
-The first two indicate that observed scores less than, or greater
-than, the value which follows are treated as missing. The symbols
-``<='' and ``>='' are accepted in the obvious way. 
+three types of statements allowed in the \code{missings} column.
+Legal values must must begin with the characters ``<'', ``>'',
+or ``c''. The first two indicate that observed scores less than,
+or greater than, the value which follows are treated as missing. The
+symbols ``<='' and ``>='' are accepted in the obvious way. See
+Table \ref{tab:Recode-Examples} for examples of possible \code{missings}
+input. 
+
+\begin{table}[H]
+\caption{Missings Examples\label{tab:Recode-Examples}}
+
 
 \begin{tabular}{|c|c|c|}
 \hline 
-recodes & interpretation: NA will be assigned to  & example\tabularnewline
-\hline 
+missings & interpretation: NA will be assigned to  & example\tabularnewline
 \hline 
 > t & values greater than t & > 99\tabularnewline
-\hline 
 >= t & values greater than or equal to t  & >=99\tabularnewline
-\hline 
 <t & values less than t  & <0\tabularnewline
-\hline 
 <=t & values less than or equal to t  & <=0\tabularnewline
-\hline 
 c(a,b) & values equal to or greater than a and less than or equal to b  & c(-999,0)\tabularnewline
 \hline 
 \end{tabular}
+\end{table}
+
+
+The key specification for \code{recodes} is discussed in the help
+page of the \code{assignRecode} function in \code{kutils}. The \code{recodes}
+column takes R code and applies it to the desired variable. For example,
+if one wanted to transform a variable by taking its square root, this
+could be done by providing ``sqrt(x)'' in the \code{recodes} column.
+Here ``x'' is simply a placeholder where the name of the variable
+indicated in the \code{name\_new} column will be inserted when the
+variable key is applied. 
+
+\begin{table}[H]
+\caption{Recoding Integer and Numeric Variables}
+
+
+{\footnotesize
+
+\begin{tabular}{lllllllll}
+  \toprule
+name\_old & name\_new & class\_old & class\_new & value\_old & value\_new & missings & recodes \\
+  \midrule
+x5 & x5 & numeric & numeric &  &  & <0 & log(x) \\
+x4 & x4 & numeric & numeric &  &  & c(-999) & abs(x) \\
+x6 & x6 & integer & integer & 1$|$2$|$3$|$4$|$5 & 1$|$2$|$3$|$4$|$5 & c(-9) & \\
+   \bottomrule
+\end{tabular}
+
+}
+
+\end{table}
+
 
 
 \subsection*{Class concerns}
@@ -732,16 +796,14 @@ being provided. Inspecting the key list will show that each item contains
 the information provided in a single row of a short key. The key list
 has a fixed format so that the process of using the key list to manipulate
 the data is not influenced by what key format was used. We do not
-suggest attempting to create a key list manually. See the example
-below taken from the \code{keyImport} documentation. 
-
-TAKE A DAY AND THINK ABOUT HOW TO MAKE A BETTER EXAMPLE AND COVER
-ALL RELEVANT DETAILS HERE. 
+suggest attempting to create a key list manually. See the code below
+for a basic example of how a key file is read into R and then provided
+to \code{keyImport}. 
 
 \begin{minipage}[t]{1\columnwidth}%
 \inputencoding{latin9}\begin{lstlisting}
-mydf.key <- read.csv(mydf.key.path, stringsAsFactor = FALSE) 
-mydf.keylist2 <- keyImport(mydf.key, long = FALSE)
+mydf.key <- read.csv("mydf.key.csv", stringsAsFactor = FALSE) 
+mydf.keylist <- keyImport(mydf.key, long = FALSE)
 \end{lstlisting}
 \inputencoding{utf8}%
 \end{minipage}
@@ -754,9 +816,15 @@ recoded. The recoded data frame is obtained by assigning a name to
 the output of the \code{kutils} function \code{keyApply}. The \code{keyApply}
 function takes the name of the data frame to be recoded and the key
 list created in Step 3 to produce a new data frame with the desired
-recodings. 
+recodings. See the code below for a basic example of how an imported
+key is applied to a data frame. 
 
-TAKE A DAY AND THINK ABOUT HOW TO BEST INCLUDE AN EXAMPLE HERE. 
+\begin{minipage}[t]{1\columnwidth}%
+\inputencoding{latin9}\begin{lstlisting}
+keyed.df <- keyApply(mydf, mydf.keylist)
+\end{lstlisting}
+\inputencoding{utf8}%
+\end{minipage}
 
 
 \section{Discussion}
@@ -797,17 +865,48 @@ fluent in spread sheet.
 Variable Key Editing Guidelines
 \begin{enumerate}
 \item Omit a variable: delete its row(s) from the (long)key.
-\item Manage data importation.
+\item The ``class\_new'' value must be one of the following
 
 \begin{enumerate}
-\item Need importation check for column classes and possible coercion. But...
-\item What to do about mismatch between column classes in imported data
-frame and the class\_old in the key? This will happen if read.csv
-is used to import data, since it does not have colClasses=''ordinal''
-as a possible. Also ``numeric'' is confusing. If the key's old\_value
-is, for example, ``ordinal'', and read.csv has been used to import
-the data (without specifying stringsAsFactors = FALSE), then it might
-be suitable to coerce. But if stringsAsFactors = FALSE, 
+\item discrete variable types:
+
+\begin{description}
+\item [{integer}]~
+\item [{factor}]~
+\item [{ordered}]~
+\item [{logical}]~
+\item [{character}]~
+\item [{Date}]~
+\end{description}
+\item floating-point numeric variable types:
+
+\begin{description}
+\item [{numeric}]~
+\end{description}
+\end{enumerate}
+\item Creating new variables. Each input variable may be recoded in several
+different ways, assigning a name\_new value unique for each. 
+\item Assigning new values. 
+
+\begin{enumerate}
+\item discrete variable types.
+
+\begin{enumerate}
+\item New ``value\_old'' elements can be inserted in anticipation of new
+data sets with previously unobserved values.
+\item To assign new values to any of the discrete variable types, set values
+in ``value\_new''. It is important that the values can be coerced
+by R to match the value of ``class\_new''. That is to say, if ``class\_new''
+is a ``integer'', then ``value\_new'' should be an integer.
+\end{enumerate}
+\item numeric variable types. 
+
+\begin{enumerate}
+\item Because floating point numbers do not allow comparison with ``=='',
+it is not allowed to use ``value\_old'' and ``value\_new'' pairs
+for these variables. It is necessary to write statements in the recode
+column of the variable key.
+\end{enumerate}
 \end{enumerate}
 \item Assign missings:
 
@@ -823,12 +922,9 @@ applies to data as it was imported, before applying the value\_old
 to value\_new transition. PROBLEM: if input data's class does not
 match class\_old, there may be a problem.
 \end{enumerate}
-\item numeric variables
+\item numeric variables\end{enumerate}
 \end{enumerate}
-\end{enumerate}
-2.
-
-3.%
+%
 \end{minipage}
 
 \bibliographystyle{chicago}
