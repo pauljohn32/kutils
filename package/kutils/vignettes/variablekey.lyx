@@ -3086,7 +3086,7 @@ midrule
 
 \begin_layout Plain Layout
 
-x3 & x3 & ordered & ordered & lo & low &  &  
+x3 & x3new & ordered & ordered & lo & low &  &  
 \backslash
 
 \backslash
@@ -3095,7 +3095,7 @@ x3 & x3 & ordered & ordered & lo & low &  &
 
 \begin_layout Plain Layout
 
-x3 & x3 & ordered & ordered & med & medium &  &  
+x3 & x3new & ordered & ordered & med & medium &  &  
 \backslash
 
 \backslash
@@ -3104,7 +3104,7 @@ x3 & x3 & ordered & ordered & med & medium &  &
 
 \begin_layout Plain Layout
 
-x3 & x3 & ordered & ordered & hi & high &  &  
+x3 & x3new & ordered & ordered & hi & high &  &  
 \backslash
 
 \backslash
@@ -4265,49 +4265,176 @@ Omit a variable: delete its row(s) from the (long)key.
 \end_layout
 
 \begin_layout Enumerate
-Manage data importation.
+The 
+\begin_inset Quotes eld
+\end_inset
+
+class_new
+\begin_inset Quotes erd
+\end_inset
+
+ value must be one of the following
 \end_layout
 
 \begin_deeper
 \begin_layout Enumerate
-Need importation check for column classes and possible coercion.
- But...
+discrete variable types:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+integer
+\end_layout
+
+\begin_layout Description
+factor
+\end_layout
+
+\begin_layout Description
+ordered
+\end_layout
+
+\begin_layout Description
+logical
+\end_layout
+
+\begin_layout Description
+character
+\end_layout
+
+\begin_layout Description
+Date
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+floating-point numeric variable types:
+\end_layout
+
+\begin_deeper
+\begin_layout Description
+numeric
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Enumerate
+Creating new variables.
+ Each input variable may be recoded in several different ways, assigning
+ a name_new value unique for each.
+ 
 \end_layout
 
 \begin_layout Enumerate
-What to do about mismatch between column classes in imported data frame
- and the class_old in the key? This will happen if read.csv is used to import
- data, since it does not have colClasses=
-\begin_inset Quotes erd
-\end_inset
-
-ordinal
-\begin_inset Quotes erd
-\end_inset
-
- as a possible.
- Also 
-\begin_inset Quotes eld
-\end_inset
-
-numeric
-\begin_inset Quotes erd
-\end_inset
-
- is confusing.
- If the key's old_value is, for example, 
-\begin_inset Quotes eld
-\end_inset
-
-ordinal
-\begin_inset Quotes erd
-\end_inset
-
-, and read.csv has been used to import the data (without specifying stringsAsFact
-ors = FALSE), then it might be suitable to coerce.
- But if stringsAsFactors = FALSE, 
+Assigning new values.
+ 
 \end_layout
 
+\begin_deeper
+\begin_layout Enumerate
+discrete variable types.
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+New 
+\begin_inset Quotes eld
+\end_inset
+
+value_old
+\begin_inset Quotes erd
+\end_inset
+
+ elements can be inserted in anticipation of new data sets with previously
+ unobserved values.
+\end_layout
+
+\begin_layout Enumerate
+To assign new values to any of the discrete variable types, set values in
+ 
+\begin_inset Quotes eld
+\end_inset
+
+value_new
+\begin_inset Quotes erd
+\end_inset
+
+.
+ It is important that the values can be coerced by R to match the value
+ of 
+\begin_inset Quotes eld
+\end_inset
+
+class_new
+\begin_inset Quotes erd
+\end_inset
+
+.
+ That is to say, if 
+\begin_inset Quotes eld
+\end_inset
+
+class_new
+\begin_inset Quotes erd
+\end_inset
+
+ is a 
+\begin_inset Quotes eld
+\end_inset
+
+integer
+\begin_inset Quotes erd
+\end_inset
+
+, then 
+\begin_inset Quotes eld
+\end_inset
+
+value_new
+\begin_inset Quotes erd
+\end_inset
+
+ should be an integer.
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+numeric variable types.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Because floating point numbers do not allow comparison with 
+\begin_inset Quotes eld
+\end_inset
+
+==
+\begin_inset Quotes erd
+\end_inset
+
+, it is not allowed to use 
+\begin_inset Quotes eld
+\end_inset
+
+value_old
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+value_new
+\begin_inset Quotes erd
+\end_inset
+
+ pairs for these variables.
+ It is necessary to write statements in the recode column of the variable
+ key.
+\end_layout
+
+\end_deeper
 \end_deeper
 \begin_layout Enumerate
 Assign missings:

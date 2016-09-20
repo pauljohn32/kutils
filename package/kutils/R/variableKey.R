@@ -272,6 +272,10 @@ assignRecode <- function(x, recode = NULL){
 ##' @keywords internal
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 cleanDataFrame <- function(dframe, safeNumericToInteger = TRUE){
+    if(!is.data.frame(dframe)){
+        messg <- paste("keyUpdate: The dframe object must be a data frame")
+        stop(messg)
+    }
     ## Does this data frame have any embedded matrices or lists? If it
     ## is not "single column" elements, stop.
     ## See: http://stackoverflow.com/questions/38902880/data-frame-in-which-elements-are-not-single-columns
@@ -799,7 +803,9 @@ keyImport <- function(key, long = FALSE, ...,
                  value_old = keyds$value_old, value_new = value_new,
                  missings = missings, recodes = recodes)
         }
-
+        ## Make this a factor and control the ordering of the levels. Otherwise,
+        ## split applies factor() and re-alphabetizes it.
+        name_old.new <- factor(name_old.new, levels = unique(name_old.new))
         keysplit <- split(key, name_old.new, drop = FALSE)
         keylist <- lapply(keysplit, makeOneVar)
     }
@@ -1138,20 +1144,38 @@ keyStacker <- function(aList, file, outdir){
  }
 
 
-##' Update an existing key with new data.
+##' Update a key in light of a new data frame.
 ##'
-##' @param oldkey Existing key that has been edited by user.
-##' @param dframe Data frame with new observations
+##' If the data frame provided has variables which are not currently
+##' listed in the variable key's "name_old" variable, then new
+##' variables are added to the key.
+##'
+##' This function will not alter key values for "class_old",
+##' "value_old" or "value_new" for variables that have no new
+##' information.  If the variables in the data frame which are
+##' currently included in the key have values that are not currently
+##' observed, then additional values are added to the key.
+##'
+##' @param key A variable key
+##' @param dframe A data.frame object.
+##' @param long Is key in long format? Default is TRUE.
 ##' @param bottom If long key, should all new rows be added to the
 ##'     bottom of the updated key? Default is TRUE.
-##' @param wide Is oldkey a wide key? Default is FALSE.
-##' @return Updated variable key matching format of oldkey.
+##' @param safeNumericToInteger Default TRUE: Should we treat values
+##'     which appear to be integers as integers? If a column is
+##'     numeric, it might be safe to treat it as an integer.  In many
+##'     csv data sets, the values coded c(1, 2, 3) are really
+##'     integers, not floats c(1.0, 2.0, 3.0). See
+##'     \code{safeInteger}.
+##' ## Need to consider implementing this:
+##' ## @param ignoreCase 
+##' @return Updated variable key.
 ##' @importFrom plyr rbind.fill
-##' @author Ben Kite
+##' @author Ben Kite <bakite@@ku.edu>
 ##' @examples
 ##' dat1 <- data.frame("Score" = c(1, 2, 3, 42, 4, 2),
 ##'                    "Gender" = c("M", "M", "M", "F", "F", "F"))
-##' key1 <- keyTemplate(dat1, long = T)
+##' key1 <- keyTemplate(dat1, long = TRUE)
 ##' key1[5, "value_new"] <- 10
 ##' key1[6, "value_new"] <- "female"
 ##' key1[7, "value_new"] <- "male"
@@ -1160,17 +1184,35 @@ keyStacker <- function(aList, file, outdir){
 ##' dat2 <- dat2[-1,]
 ##' keyUpdate(key1, dat2, bottom = TRUE)
 ##' keyUpdate(key1, dat2, bottom = FALSE)
-keyUpdate <- function(oldkey, dframe, bottom = TRUE, wide = FALSE){
-    if(wide == TRUE){
-        oldkey <- wide2long(oldkey)
+keyUpdate <- function(key, dframe, long = TRUE, bottom = TRUE,
+                      safeNumericToInteger = TRUE)
+{
+    dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
+    if(!long){
+        key <- wide2long(key)
     }
-    newkey <- keyTemplate(dframe, long = T)
-    if (identical(newkey, oldkey)){
+    newkey <- keyTemplate(dframe, long = TRUE)
+    if (identical(newkey, key)){
         return(newkey)
     }
+    ## PJ Stop here, re-think.
+    ## Safer to delete rows from newkey before binding.
+    ## Dangerous to use rbind.fill here because if key input
+    ## has illegal columns, we'd rather fail it than continue.
+    ## If name_old and value_old are already in key, drop them from newkey.
+
+
+    ## CHECK: what does "long2wide" do when rows in a long key are
+    ## "shuffled" or if the new values all exist at end of long key.
+    
+    ## TODO: Some danger here that key column names are not abstracted,
+    ## but I stopped abstracting them in other functions as well
+    ## because it is too much work.
+   
+    
     newkey$key <- 1
-    oldkey$key <- 0
-    tmpkey <- rbind.fill(oldkey, newkey)
+    key$key <- 0
+    tmpkey <- rbind.fill(key, newkey)
     tmpkey <- tmpkey[order(tmpkey$name_old),]
     tmpkey <- unique(tmpkey)
     tmpkey <- tmpkey[order(tmpkey$key),]
@@ -1178,16 +1220,16 @@ keyUpdate <- function(oldkey, dframe, bottom = TRUE, wide = FALSE){
     tmp <- tmpkey[,c("name_old", "class_old", "value_old")]
     keep <- !duplicated(tmp)
     output <- tmpkey[keep,]
-    output <- output[,!names(output) %in% "key"]
-    if(bottom == TRUE){
-        if(wide == TRUE){
+    output <- output[ , !names(output) %in% "key"]
+    if(bottom){
+        if(!long){
             output <- long2wide(output)
         }
         row.names(output) <- seq(1, nrow(output), 1)
         return(output)
     }else{
         output <- output[order(output$name_old),]
-        if(wide == TRUE){
+        if(!long){
             output <- long2wide(output)
         }
         row.names(output) <- seq(1, nrow(output), 1)

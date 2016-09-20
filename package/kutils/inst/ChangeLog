@@ -1,3 +1,13 @@
+2016-09-20  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (makeOneVar): The use of split was causing
+	the name_old.new values to be alphabetized.  We don't want that.
+	(keyUpdate): 1) T -> TRUE. 2) replace "wide" with "long" for
+	consistency with other functions 3) Don't do wide == TRUE,
+	recommended to do isTRUE(wide). Inserted comments to suggest
+	change in design.
+
+
 2016-09-09  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (cleanDataFrame): new function that applies
