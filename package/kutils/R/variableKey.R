@@ -1136,9 +1136,10 @@ keyDiagnostic <-
 ##' This is not flexible, assumes columns are named in our canonical
 ##' style, but works
 ##' @param key A variable key in the wide format
-##' @sep Default separator is the pipe, "\\|" for most variables, while
-##' ordered accepts pipe or less than, "\\|<". If the key did not follow
-##' those customs, other sep values may be specified for each variable class.
+##' @param sep Default separator is the pipe, "\\|" for most
+##'     variables, while ordered accepts pipe or less than, "\\|<". If
+##'     the key did not follow those customs, other sep values may be
+##'     specified for each variable class.
 ##' @return A long format variable key
 ##' @export
 ##' @author Paul Johnson
