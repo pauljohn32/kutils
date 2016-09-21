@@ -313,7 +313,7 @@ checkValues <- function(x, value_old, xname){
     xobs <- unique(x)
     if (length(keynotintobs <- value_old[!value_old %in% xobs]) > 0){
         messg <- paste("Data Check (variable", xname, ":)\n",
-                     "These values in value_old were not observed in the input data: ",
+                     "Key values were not observed in the input data: ",
                      paste(keynotintobs, collapse = ", "), "\n")
         cat(messg)
     }
@@ -412,7 +412,9 @@ checkValues <- function(x, value_old, xname){
 ##' mydf.keylong <- keyTemplate(mydf, long = TRUE, file = "mydf.keylong.csv")
 ##' ## write.csv(mydf.key, file = "../inst/extdata/mydf.key.csv", row.names = FALSE)
 ##' ## write.csv(mydf.keylong, file = "../inst/extdata/mydf.keylong.csv", row.names = FALSE)
-##'
+##' ## smartSave(mydf.key, file = "mydf.key.xlsx", outdir = ".")
+##' ## smartSave(mydf.keylong, file = "mydf.keylong.xlsx", outdir = ".") 
+##' 
 ##' ## Try with the national longitudinal study data
 ##' data(natlongsurv)
 ##' natlong.key <- keyTemplate(natlongsurv, file = "natlongsurv.key.csv",
@@ -552,33 +554,29 @@ smartSave <- function(obj, file, outdir){
 ##' @param file name of file to be imported, including path to
 ##'     file. file name must end in "csv", "xlsx" or "rds"
 ##' @param ... additional arguments for read.csv or read.xlsx.
-##' @return an R object
+##' @return A data frame or matrix. 
+##' @importFrom utils read.csv
+##' @importFrom openxlsx read.xlsx write.xlsx
 ##' @keywords internal
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 smartRead <- function(file, ...){
     ## TODO: implement code to sort out the dots arguments, find
     ## which are aimed at read.xlsx or read.csv, and divide them. See
     ## peek() function example.
-    if (!is.character(key) || !file.exists(file)){
+    if (!is.character(file) || !file.exists(file)){
         messg <- paste("smartRead: argument 'file' should be a character string",
                        "that gives the full path and file name to be used")
         stop(messg)
     } else {
         
         ## key is file name, so scan for suffix
-        if (length(grep("xlsx$", tolower(key))) > 0){
-            key  <- openxlsx::read.xlsx(key, colNames = TRUE, check.names = FALSE, ...)
-        } else if (length(grep("csv$", tolower(key))) > 0){
-            key <- read.csv(key, stringsAsFactors = FALSE, ...)
-        } else if (length(grep("rds$", tolower(key))) > 0){
-            key <- readRDS(key)
-            if (inherits(key, "key")) {
-                long <- FALSE
-            } else if (inherits(key, "keylong")){
-                long <- TRUE
-            } else {
-                stop("RDS object was neither key nor keylong")
-            }
+        if (length(grep("xlsx$", tolower(file))) > 0){
+            key  <- openxlsx::read.xlsx(file, colNames = TRUE, check.names = FALSE, ...)
+        } else if (length(grep("csv$", tolower(file))) > 0){
+            key <- read.csv(file, stringsAsFactors = FALSE, colClasses = "character", ...)
+        } else if (length(grep("rds$", tolower(file))) > 0){
+            key <- readRDS(file)
+    
         }
     }
     key
@@ -686,7 +684,6 @@ NULL
 ##'     capitalization. Columns named "var01" and "Var01" and "VAR01"
 ##'     probably should receive the same treatment, even if the key
 ##'     has name_old equal to "Var01".
-##' @param ... additional arguments for read.csv or read.xlsx.
 ##' @param sep Defaults are specified, don't change this unless you
 ##'     know what you are doing. In wide keys, what separators are
 ##'     used between values?  This should be a named vector which
@@ -695,12 +692,13 @@ NULL
 ##'     numeric is the pipe, "|", while for factor and ordered
 ##'     variables, the separator may be either pipe or less than.  Use
 ##'     regular expressions in supplying separator values.
-##' @param missingare Values in the value_new column which will be
+##' @param na.strings Values in the value_new column which will be
 ##'     treated as NA in the key. The defaults are ".", "", "\\s"
 ##'     (white space), "NA", and "N/A".  These will prevent a new
 ##'     value like "" or " " from being created, so if one intends to
-##'     insert white space, the missingare vector must be specified.
-##' @param keynames. Don't use this unless you are very careful. In
+##'     insert white space, the na.strings vector must be specified.
+##' @param ... additional arguments for read.csv or read.xlsx.
+##' @param keynames Don't use this unless you are very careful. In
 ##'     our current scheme, the column names in a key should be
 ##'     c("name_old", "name_new", "class_old", "class_new",
 ##'     "value_old", "value_new", "missings", "recodes"). If your key
@@ -713,14 +711,21 @@ NULL
 ##' @export
 ##' @return key object
 ##' @author Paul Johnson <pauljohn@@ku.edu>
+##' @examples
+##' mydf.key.path <- system.file("extdata", "mydf.key_new.csv", package = "kutils")
+##' mydf.key <-  keyImport(mydf.key.path)
+##'
+##' mydf.keylong.path <- system.file("extdata", "mydf.keylong_new.csv", package = "kutils") 
+##' mydf.keylong <- keyImport(mydf.keylong.path)
 keyImport <- function(file, ignoreCase = TRUE,
                       sep = c(character = "\\|", logical = "\\|",
                               integer = "\\|", factor = "[\\|<]",
                               ordered = "[\\|<]", numeric = "\\|")
                      ,
-                      missingare = c(".", "",  "\\s",  "NA", "N/A")
+                      na.strings = c(".", "",  "\\s",  "NA", "N/A")
                      ,
-                      keynames = NULL)
+                      ...
+                      , keynames = NULL)
 {
     key <- smartRead(file)
 
@@ -740,33 +745,38 @@ keyImport <- function(file, ignoreCase = TRUE,
 
     ## Deduce if this is a long key
     name_old.new <- paste0(key[ , "name_old"], ".", key[ , "name_new"])
-    if (max(table(name_old.new) > 1)){
+    if (max(table(name_old.new)) > 1){
         long <- TRUE
     } else {
         long <- FALSE
     }
-    
-    if (!long) keynew <- wide2long(key, sep) 
+
+    key.orig <- key
+    if (!long) key <- wide2long(key, sep) 
     ## protect against user-inserted spaces (leading or trailing)
     key$name_old <- zapspace(key$name_old)
     key$name_new <- zapspace(key$name_new)
     
     ## if this is long key, following is safe. How about wide key?
-    key$value_old <- n2NA(zapspace(key$name_old))
-    key$value_new <- n2NA(zapspace(key$name_old))
-    key$value_new[value_new %in% missingare] <- NA
+    key$value_old <- n2NA(zapspace(key$value_old))
+    key$value_new <- n2NA(zapspace(key$value_new))
+    key$value_new[key$value_new %in% na.strings] <- NA
+    ## key$recodes[key$recodes %in% na.strings] <- NA
+    ## key$missings[key$missings %in% na.strings] <- NA
     ## Delete repeated rows:
     dups <- duplicated(key)
-    key <- key[-dups, ]
+    if (any(dups, na.rm = TRUE))key <- key[!(dups), ]
     
     attr(key, "ignoreCase") <- ignoreCase
     if (long){
-        class(key) <- c("keylong", class(key))
+        class(key) <- c("keylong", "data.frame")
+        return(key)
     } else {
-        key <- long2wide(key)
-        class(key) <- c("key", class(key))
+        keywide <- long2wide(key)
+        class(keywide) <- c("key", "data.frame")
+        return(keywide)
     }
-    key
+    stop("keyImport should not reach this point")
 }
 
     
@@ -781,38 +791,17 @@ keyImport <- function(file, ignoreCase = TRUE,
 ##' variables are included.
 ##'
 ##' @param key A key object or a file name, csv, xlsx or rds.
-##' @param sepold Relevant only for wide format keys. What separators
-##'     are used between values?  The separators we currently use are
-##'     "|" and "<", but if for whatever reason those were altered,
-##'     say so here. This must be a named vector of classes and
-##'     separator symbols. Use regular expressions.
-##' @param sepnew See sepold
-##' @param missingare Values in the value_new column which will be
-##'     treated as NA in the key. The defaults are ".", "", "\\s"
-##'     (white space), "NA", and "N/A".  These will prevent a new
-##'     value like "" or " " from being created, so if one intends to
-##'     insert white space, the missingare vector must be specified.
-##' @importFrom utils read.csv
-##' @importFrom openxlsx read.xlsx write.xlsx
-##' @export
+##' @param sep Separator regular expressions
+##' @keywords internal
 ##' @return A list with one element per variable name, along with some
 ##'     attributes like class_old and class_new. The class is set as
 ##'     well, "keylist".
 ##' @author Paul Johnson
-##' @examples
-##' mydf.key.path <- system.file("extdata", "mydf.key_new.csv", package = "kutils")
-##' mydf.keylist <-  keyImport(mydf.key.path)
-##' mydf.key <- read.csv(mydf.key.path, stringsAsFactor = FALSE)
-##' mydf.keylist2 <- keyImport(mydf.key, long = FALSE)
-##' identical(mydf.keylist, mydf.keylist2)
-##' mydf.keylong.path <- system.file("extdata", "mydf.keylong_new.csv", package = "kutils")
-##' mydf.keylong.keylist <- keyImport(mydf.keylong.path, long = TRUE)
-##'
-##' nls.keylong.path <- system.file("extdata", "natlongsurv.keylong_new.csv", package = "kutils")
-##' nls.keylong.keylist <- keyImport(nls.keylong.path, long = TRUE)
-##' data(natlongsurv)
-##' nls.dat <- keyApply(natlongsurv, nls.keylong.keylist)
-makeKeylist <- function(key)
+makeKeylist <- function(key,
+                        sep = c(character = "\\|", logical = "\\|",
+                              integer = "\\|", factor = "[\\|<]",
+                              ordered = "[\\|<]", numeric = "\\|")
+                        )
 {
     ## if x is "", return NA
     ## if "split" is NA or blank space or TAB, return unchanged x
@@ -842,20 +831,19 @@ makeKeylist <- function(key)
         name_old.new <- factor(name_old.new, levels = unique(name_old.new))
         keysplit <- split(key, name_old.new, drop = FALSE)
 
-        keylist <- lapply(keysplit, function(keyds) {
+        makeOneVar <- function(keyds){
             keyds$value_old.orig <- keyds$value_old
             keyds$value_new.orig <- keyds$value_new
-
-            val_old <- unlist(strsplit2(keyds$value_old.orig, sepold[keyds$class_old]))
-            val_new <- unlist(strsplit2(keyds$value_new.orig, sepnew[keyds$class_new]))
-            val_new[val_new %in% missingare] <- NA
+            val_old <- unlist(strsplit2(keyds$value_old.orig, sep[keyds$class_old]))
+            val_new <- unlist(strsplit2(keyds$value_new.orig, sep[keyds$class_new]))
             recodes <- unlist(strsplit2(keyds$recodes, ";", fixed = TRUE))
             missings <- unlist(strsplit2(keyds$missings, ";", fixed = TRUE))
             list(name_old = keyds$name_old, name_new = keyds$name_new,
                  class_old = keyds$class_old, class_new = keyds$class_new,
                  value_old = val_old, value_new = val_new,
                  recodes = recodes, missings = missings)
-        })
+        }
+        keylist <- lapply(keysplit, makeOneVar)
     } else {
         ## It was a long key
         ## like unique, but it throws away white space, NA
@@ -892,7 +880,7 @@ makeKeylist <- function(key)
             missings <- unlist(na.omit(n2NA(zapspace(keyds$missings))))
             missings <- if(length(missings) > 0) unlist(strsplit(missings, split= ";", fixed = TRUE))
             value_new <- keyds$value_new
-            value_new[value_new %in% missingare] <- NA
+            ## value_new[value_new %in% na.strings] <- NA
             list(name_old = name_old, name_new = name_new,
                  class_old = class_old, class_new = class_new,
                  value_old = keyds$value_old, value_new = value_new,
@@ -943,14 +931,16 @@ NULL
 ##' mydf2 <- keyApply(mydf, mydf.key)
 ##'
 ##' nls.keylong.path <- system.file("extdata", "natlongsurv.keylong_new.csv", package = "kutils")
-##' nls.keylong.keylong <- keyImport(nls.keylong.path, long = TRUE)
+##' nls.keylong <- keyImport(nls.keylong.path, long = TRUE)
 ##' data(natlongsurv)
 ##' nls.dat <- keyApply(natlongsurv, nls.keylong)
+##' 
 keyApply <- function(dframe, key, diagnostic = TRUE,
                      safeNumericToInteger = TRUE, ignoreCase = TRUE){
 
     dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
-
+    if (diagnostic) dforig <- dframe
+    
     ## implement ignoreCase by keeping vector name_old.orig that we
     ## can use later to put old names back onto data frame.
     ## If key has multiple entries that are identcal after tolower(), will use
@@ -963,8 +953,6 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
     }
     names(name_old.orig) <- colnames(dframe)
 
-    if (diagnostic) dforig <- dframe
-
     ## Hmm. Need to snapshot class of input variables before changing anything
     class_old.dframe <- sapply(dframe, function(x) class(x)[1])
     names(class_old.dframe) <- colnames(dframe)
@@ -973,10 +961,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
     ## coerce existing column to type requested in data frame
     ## Wait! Should this happen last or later?
 
-
     keylist <- makeKeylist(key)
-
-    
     ## a list for collecting new variables.
     xlist <- list()
 
@@ -1065,8 +1050,6 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
     }
 
     dframe <- do.call(data.frame, xlist)
-    dframe <- colnamesReplace(dframe, newnames = name_old.orig)
-    ## Put back capitalization
     if(diagnostic) keyDiagnostic(dforig, dframe, keylist)
     dframe
 }
@@ -1209,7 +1192,7 @@ long2wide <- function(keylong){
     ##kls = keylong split
     kls <- split(keylong, name_old.new, drop = TRUE)
 
-    keywide <- lapply(kls, function(x){
+    makeOneWide <- function(x){
         sep_old <- if(unique(x$class_old) == "ordered") "<" else "|"
         sep_new <- if(unique(x$class_new) == "ordered") "<" else "|"
         list(name_old = unique(x$name_old),
@@ -1218,10 +1201,11 @@ long2wide <- function(keylong){
              class_new = unique(x$class_new),
              value_old = paste(x$value_old, collapse = sep_old),
              value_new = paste(x$value_new, collapse = sep_new),
-             missings = paste(unique(x$missings), collapse = ";"),
-             recodes = paste(unique(x$recodes), collapse = ";"))
-    })
+             missings = if(all(is.na(x$missings))) "" else paste(unique(x$missings), collapse = ";"),
+             recodes = if(all(is.na(x$recodes))) "" else paste(unique(x$recodes), collapse = ";"))
+    }
 
+    keywide <- lapply(kls, makeOneWide)
 
     key <- do.call("rbind", lapply(keywide, data.frame, stringsAsFactors = FALSE))
     class(key) <- c("key", class(key))
@@ -1285,7 +1269,8 @@ keyStacker <- function(aList, file, outdir){
 ##'     integers, not floats c(1.0, 2.0, 3.0). See
 ##'     \code{safeInteger}.
 ##' ## Need to consider implementing this:
-##' ## @param ignoreCase 
+##' ## @param ignoreCase
+##' @export
 ##' @return Updated variable key.
 ##' @importFrom plyr rbind.fill
 ##' @author Ben Kite <bakite@@ku.edu>

@@ -57,7 +57,7 @@ colnamesReplace <- function(dat, newnames, oldnames = NULL, ...,  lowercase = FA
         }
         return(dat)
     } else {
-        cat(paste("replaceNames Diagnostic:  No column names were altered"))
+        cat(paste("colnamesReplace Diagnostic:  No column names were altered\n"))
         return(dat)
     }
 }
