@@ -1144,28 +1144,45 @@ wide2long <- function(key, sep = c(character = "\\|", logical = "\\|",
                               integer = "\\|", factor = "[\\|<]",
                               ordered = "[\\|<]", numeric = "\\|"))
 {
+    makeOneVar <- function(x){
+        value_old <- unlist(strsplit(x$value_old, sep[x$class_old]))
+        value_new <- unlist(strsplit(x$value_new, sep[x$class_new]))
+        if (length(value_old) == 0) value_old <- as.character("")
+        if (length(value_new) == 0) value_new <- as.character("")
+        values <- cbind(value_old, value_new)
+        values <- unique(values)
+        missings <- na.omit(unlist(strsplit(x$missings, ";")))
+        missings <- c(missings, rep("", NROW(values) - length(missings)))
+        recodes <- na.omit(unlist(strsplit(x$recodes, ";")))
+        recodes <- c(recodes, rep("", NROW(values) - length(recodes)))
+        
+        zz <- data.frame(name_old = x$name_old,
+                         name_new = x$name_new,
+                         class_old = x$class_old,
+                         class_new = x$class_new,
+                         value_old = values[ , "value_old"],
+                         value_new = values[ , "value_new"],
+                         missings = missings,
+                         recodes = recodes, stringsAsFactors = FALSE)
+        ##zz <- lapply(zz, function(obj) if (length(obj) == 0) "" else x)
+        zz
+    }
+
+    
     ## keysplit
     name_old.new <- paste0(key[ , "name_old"], ".", key[ , "name_new"])
     name_old.new <- factor(name_old.new, levels = unique(name_old.new))
     ks <- split(key, name_old.new, drop = TRUE)
-    
-    ksl <- lapply(ks, function(x){
-        zz <- list(name_old = x$name_old,
-                   name_new = x$name_new,
-                   class_old = x$class_old,
-                   class_new = x$class_new,
-                   value_old = unlist(strsplit(x$value_old, sep[x$class_old])),
-                   value_new = unlist(strsplit(x$value_new, sep[x$class_new])),
-                   missings = if(is.character(x$missings)) unlist(strsplit(x$missings, ";")) else NA,
-                   recodes = if(is.character(x$recodes)) unlist(strsplit(x$recodes, ";")) else NA )
-        zz <- lapply(zz, function(x) if (length(x) == 0) "" else x)
-    })
+
+    ## build a "long stanza" for each variable
+    ksl <- lapply(ks, makeOneVar)
 
     keylong <- do.call(rbind, lapply(ksl, as.data.frame, stringsAsFactors = FALSE))
 
-    class(keylong) <- c("keylong", class(keylong))
+    class(keylong) <- c("keylong", "data.frame")
     keylong
 }
+
 
 
 ##' convert a key object from long to wide format
@@ -1180,8 +1197,10 @@ wide2long <- function(key, sep = c(character = "\\|", logical = "\\|",
 ##' mydf <- read.csv(mydf.path, stringsAsFactors=FALSE)
 ##' ## A wide key we are trying to match:
 ##' mydf.key <- keyTemplate(mydf, long = FALSE, sort = TRUE)
+##' mydf.key["x4", "missings"] <- "c(999)"
 ##' ## A long ke we will convert next
 ##' mydf.keylong <- keyTemplate(mydf, long = TRUE, sort = TRUE)
+##' mydf.keylong["11", "missings"] <- "c(999)"
 ##' mydf.long2wide <- long2wide(mydf.keylong)
 ##' ## Tune the rownames to match style of long key
 ##' rownames(mydf.key) <- paste0(mydf.key$name_old, ".", mydf.key$name_new)
@@ -1195,20 +1214,31 @@ long2wide <- function(keylong){
     makeOneWide <- function(x){
         sep_old <- if(unique(x$class_old) == "ordered") "<" else "|"
         sep_new <- if(unique(x$class_new) == "ordered") "<" else "|"
+        ## Replace "" with NA, then get rid of NAs
+        missings <- n2NA(unique(x$missings))
+        missings <- na.omit(missings)
+        recodes <- n2NA(unique(x$recodes))
+        recodes <- na.omit(recodes)
+        ## TODO: reconsider cleaning up value proposal as follows.
+        ## is there any benefit or danger in it?
+        ## Do we have NA versus "NA" versus "" problem there?
+        values <- cbind(value_old = x$value_old, value_new = x$value_new)
+        values <- unique(values)
+        
         list(name_old = unique(x$name_old),
              name_new = unique(x$name_new),
              class_old = unique(x$class_old),
              class_new = unique(x$class_new),
-             value_old = paste(x$value_old, collapse = sep_old),
-             value_new = paste(x$value_new, collapse = sep_new),
-             missings = if(all(is.na(x$missings))) "" else paste(unique(x$missings), collapse = ";"),
-             recodes = if(all(is.na(x$recodes))) "" else paste(unique(x$recodes), collapse = ";"))
+             value_old = paste(values[ , "value_old"], collapse = sep_old),
+             value_new = paste(values[ , "value_new"], collapse = sep_new),
+             missings = paste(missings, collapse = ";"),
+             recodes =  paste(recodes, collapse = ";"))
     }
 
     keywide <- lapply(kls, makeOneWide)
 
     key <- do.call("rbind", lapply(keywide, data.frame, stringsAsFactors = FALSE))
-    class(key) <- c("key", class(key))
+    class(key) <- c("key", "data.frame")
     key
 }
 
