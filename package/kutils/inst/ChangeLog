@@ -1,3 +1,14 @@
+2016-09-22  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (wide2long): rework to correct handling of
+	recodes and missings, which should not be repeated throughout
+	the column when there is only one value.
+
+2016-09-21  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (long2wide): correct problem that NA values
+	were turned to "NA" strings in missings and recodes.
+
 2016-09-20  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (keyApply): The use of split was causing
