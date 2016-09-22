@@ -413,8 +413,8 @@ checkValues <- function(x, value_old, xname){
 ##' ## write.csv(mydf.key, file = "../inst/extdata/mydf.key.csv", row.names = FALSE)
 ##' ## write.csv(mydf.keylong, file = "../inst/extdata/mydf.keylong.csv", row.names = FALSE)
 ##' ## smartSave(mydf.key, file = "mydf.key.xlsx", outdir = ".")
-##' ## smartSave(mydf.keylong, file = "mydf.keylong.xlsx", outdir = ".") 
-##' 
+##' ## smartSave(mydf.keylong, file = "mydf.keylong.xlsx", outdir = ".")
+##'
 ##' ## Try with the national longitudinal study data
 ##' data(natlongsurv)
 ##' natlong.key <- keyTemplate(natlongsurv, file = "natlongsurv.key.csv",
@@ -554,7 +554,7 @@ smartSave <- function(obj, file, outdir){
 ##' @param file name of file to be imported, including path to
 ##'     file. file name must end in "csv", "xlsx" or "rds"
 ##' @param ... additional arguments for read.csv or read.xlsx.
-##' @return A data frame or matrix. 
+##' @return A data frame or matrix.
 ##' @importFrom utils read.csv
 ##' @importFrom openxlsx read.xlsx write.xlsx
 ##' @keywords internal
@@ -563,25 +563,35 @@ smartRead <- function(file, ...){
     ## TODO: implement code to sort out the dots arguments, find
     ## which are aimed at read.xlsx or read.csv, and divide them. See
     ## peek() function example.
+    require(openxlsx)
+    dots <- list(...)
+    readxlsxFormals <- names(formals(openxlsx::read.xlsx))
+    readcsvFormals <- names(formals(read.csv))
+    dotsforxlsx <- dots[readxlsxFormals[readxlsxFormals %in% names(dots)]]
+    dotsforcsv <- dots[readcsvFormals[readcsvFormals %in% names(dots)]]
     if (!is.character(file) || !file.exists(file)){
         messg <- paste("smartRead: argument 'file' should be a character string",
                        "that gives the full path and file name to be used")
         stop(messg)
     } else {
-        
+
         ## key is file name, so scan for suffix
         if (length(grep("xlsx$", tolower(file))) > 0){
-            key  <- openxlsx::read.xlsx(file, colNames = TRUE, check.names = FALSE, ...)
+            xlsxargs <- list(file = file)
+            xlsxargz <- modifyList(xlsxargs, dotsforxlsx)
+            names(xlsxargz)[which(names(xlsxargz) == "file")] <- "xlsxFile"
+            key <- do.call("read.xlsx", xlsxargz)
         } else if (length(grep("csv$", tolower(file))) > 0){
-            key <- read.csv(file, stringsAsFactors = FALSE, colClasses = "character", ...)
+            csvargs <- list(file = file)
+            csvargz <- modifyList(csvargs, dotsforcsv)
+            key <- do.call("read.csv", csvargz)
         } else if (length(grep("rds$", tolower(file))) > 0){
             key <- readRDS(file)
-    
+
         }
     }
     key
 }
-
 
 
 ##' Convert nothing to R missing(NA).
@@ -707,7 +717,7 @@ NULL
 ##'     keynames = c(name_old = "oldvar", name_new = "newname", class_old =
 ##'     "vartype", class_new = "class", value_old = "score", value_new
 ##'     = "val")
-##' . 
+##' .
 ##' @export
 ##' @return key object
 ##' @author Paul Johnson <pauljohn@@ku.edu>
@@ -715,7 +725,7 @@ NULL
 ##' mydf.key.path <- system.file("extdata", "mydf.key_new.csv", package = "kutils")
 ##' mydf.key <-  keyImport(mydf.key.path)
 ##'
-##' mydf.keylong.path <- system.file("extdata", "mydf.keylong_new.csv", package = "kutils") 
+##' mydf.keylong.path <- system.file("extdata", "mydf.keylong_new.csv", package = "kutils")
 ##' mydf.keylong <- keyImport(mydf.keylong.path)
 keyImport <- function(file, ignoreCase = TRUE,
                       sep = c(character = "\\|", logical = "\\|",
@@ -739,7 +749,7 @@ keyImport <- function(file, ignoreCase = TRUE,
                           missings = "missings",
                           recodes = "recodes")
         keynames.std[names(keynames)] <- keynames
-        key <- colnamesReplace(key, newnames = names(keynames.std), oldnames = keynames.std) 
+        key <- colnamesReplace(key, newnames = names(keynames.std), oldnames = keynames.std)
     }
     ## TODO: omit blank rows
 
@@ -752,11 +762,11 @@ keyImport <- function(file, ignoreCase = TRUE,
     }
 
     key.orig <- key
-    if (!long) key <- wide2long(key, sep) 
+    if (!long) key <- wide2long(key, sep)
     ## protect against user-inserted spaces (leading or trailing)
     key$name_old <- zapspace(key$name_old)
     key$name_new <- zapspace(key$name_new)
-    
+
     ## if this is long key, following is safe. How about wide key?
     key$value_old <- n2NA(zapspace(key$value_old))
     key$value_new <- n2NA(zapspace(key$value_new))
@@ -766,7 +776,7 @@ keyImport <- function(file, ignoreCase = TRUE,
     ## Delete repeated rows:
     dups <- duplicated(key)
     if (any(dups, na.rm = TRUE))key <- key[!(dups), ]
-    
+
     attr(key, "ignoreCase") <- ignoreCase
     if (long){
         class(key) <- c("keylong", "data.frame")
@@ -779,7 +789,7 @@ keyImport <- function(file, ignoreCase = TRUE,
     stop("keyImport should not reach this point")
 }
 
-    
+
 
 ##' Convert the variable key into a keylist structure for
 ##' use in keyApply
@@ -819,7 +829,7 @@ makeKeylist <- function(key,
     } else if (inherits(key, "keylong")){
         long <- TRUE
     }
-     
+
     ## TODO: if name_new is missing or empty, remove that from key
     name_old.new <- paste0(key[ , "name_old"], ".", key[ , "name_new"])
 
@@ -934,13 +944,13 @@ NULL
 ##' nls.keylong <- keyImport(nls.keylong.path, long = TRUE)
 ##' data(natlongsurv)
 ##' nls.dat <- keyApply(natlongsurv, nls.keylong)
-##' 
+##'
 keyApply <- function(dframe, key, diagnostic = TRUE,
                      safeNumericToInteger = TRUE, ignoreCase = TRUE){
 
     dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
     if (diagnostic) dforig <- dframe
-    
+
     ## implement ignoreCase by keeping vector name_old.orig that we
     ## can use later to put old names back onto data frame.
     ## If key has multiple entries that are identcal after tolower(), will use
@@ -1336,12 +1346,12 @@ keyUpdate <- function(key, dframe, long = TRUE, bottom = TRUE,
 
     ## CHECK: what does "long2wide" do when rows in a long key are
     ## "shuffled" or if the new values all exist at end of long key.
-    
+
     ## TODO: Some danger here that key column names are not abstracted,
     ## but I stopped abstracting them in other functions as well
     ## because it is too much work.
-   
-    
+
+
     newkey$key <- 1
     key$key <- 0
     tmpkey <- rbind.fill(key, newkey)
