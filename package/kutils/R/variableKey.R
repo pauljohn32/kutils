@@ -559,11 +559,13 @@ smartSave <- function(obj, file, outdir){
 ##' @importFrom openxlsx read.xlsx write.xlsx
 ##' @keywords internal
 ##' @author Paul Johnson <pauljohn@@ku.edu>
+##' @examples
+##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
+##' mydf <- smartRead(mydf.path)
 smartRead <- function(file, ...){
     ## TODO: implement code to sort out the dots arguments, find
     ## which are aimed at read.xlsx or read.csv, and divide them. See
     ## peek() function example.
-    require(openxlsx)
     dots <- list(...)
     readxlsxFormals <- names(formals(openxlsx::read.xlsx))
     readcsvFormals <- names(formals(read.csv))
@@ -577,17 +579,16 @@ smartRead <- function(file, ...){
 
         ## key is file name, so scan for suffix
         if (length(grep("xlsx$", tolower(file))) > 0){
-            xlsxargs <- list(file = file)
+            xlsxargs <- list(file = file, colNames = TRUE, check.names = FALSE)
             xlsxargz <- modifyList(xlsxargs, dotsforxlsx)
             names(xlsxargz)[which(names(xlsxargz) == "file")] <- "xlsxFile"
             key <- do.call("read.xlsx", xlsxargz)
         } else if (length(grep("csv$", tolower(file))) > 0){
-            csvargs <- list(file = file)
+            csvargs <- list(file = file, stringsAsFactors = FALSE, colClasses = "character")
             csvargz <- modifyList(csvargs, dotsforcsv)
             key <- do.call("read.csv", csvargz)
         } else if (length(grep("rds$", tolower(file))) > 0){
             key <- readRDS(file)
-
         }
     }
     key
