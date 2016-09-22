@@ -563,6 +563,14 @@ smartRead <- function(file, ...){
     ## TODO: implement code to sort out the dots arguments, find
     ## which are aimed at read.xlsx or read.csv, and divide them. See
     ## peek() function example.
+
+    dots <- list(...)
+    readxlsxFormals <- names(formals(openxlsx::read.xlsx))
+    readcsvFormals <- names(formals(read.csv))
+
+    dotsforxlsx <- dots[readxlsxFormals[readxlsxFormals %in% names(dots)]]
+    dotsforcsv <- dots[readcsvFormals[readcsvFormals %in% names(dots)]]
+    
     if (!is.character(file) || !file.exists(file)){
         messg <- paste("smartRead: argument 'file' should be a character string",
                        "that gives the full path and file name to be used")
@@ -571,7 +579,10 @@ smartRead <- function(file, ...){
         
         ## key is file name, so scan for suffix
         if (length(grep("xlsx$", tolower(file))) > 0){
-            key  <- openxlsx::read.xlsx(file, colNames = TRUE, check.names = FALSE, ...)
+            xlsxargs <- list(file = file)
+            xlsxargz <- modifyList(xlsxargs, dotsforxlsx)
+            do.call("openxlsx::read.xlsx", xlsxargz)
+            #key  <- openxlsx::read.xlsx(file, colNames = TRUE, check.names = FALSE, ...)
         } else if (length(grep("csv$", tolower(file))) > 0){
             key <- read.csv(file, stringsAsFactors = FALSE, colClasses = "character", ...)
         } else if (length(grep("rds$", tolower(file))) > 0){
