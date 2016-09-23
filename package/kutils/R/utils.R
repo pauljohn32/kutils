@@ -172,7 +172,8 @@ shorten <- function(x, k = 20, unique = FALSE){
 }
 
 
-##' Insert "\\n" after the k'th character in a string
+##' Insert "\\n" after the k'th character in a string. This IS vectorized,
+##' so can receive just one or many character strings in a vector.
 ##'
 ##' If a string is long, insert linebreak "\\n"
 ##'
@@ -188,20 +189,25 @@ shorten <- function(x, k = 20, unique = FALSE){
 ##' stringbreak(x, 10)
 ##' stringbreak(x, 20)
 ##' stringbreak(x, 25)
+##' x <- c("asdf asdfjl asfdjkl asdfjklasdfasd", "qrweqwer qwerqwerjklqw erjqwe")
+##' stringbreak(x, 5)
 stringbreak <- function(x, k = 20){
     if (!is.character(x)) return(x)
-    xlength <- nchar(x)
-    if (xlength <= k) return (x)
-    
-    xseq <- seq(1, xlength, by = k)
-
-    ## iterate on successive pairs of xseq, but exclude last one
-    res <- ""
-    for(i in seq_along(xseq[-length(xseq)])){
-        res <- paste0(res, paste0(substr(x, xseq[i], (xseq[i+1] - 1)), "\n"))
+    breakOneString <- function(y, k){
+        ylength <- nchar(y)
+        if (ylength <= k) return (y)
+        
+        yseq <- seq(1, ylength, by = k)
+        
+        ## iterate on successive pairs of yseq, but exclude last one
+        res <- ""
+        for(i in seq_along(yseq[-length(yseq)])){
+            res <- paste0(res, paste0(substr(y, yseq[i], (yseq[i+1] - 1)), "\n"))
+        }
+        if (yseq[i] < ylength) res <- paste0(res, substr(y, yseq[i + 1], ylength))
+        res
     }
-    if (xseq[i] < xlength) res <- paste0(res, substr(x, xseq[i + 1], xlength))
-    res
+    vapply(x, breakOneString, k = k, character(1))
 }
 
 
@@ -262,7 +268,7 @@ padW0 <- function (x, n = 0) {
     xismiss <- is.na(x)
     ## springf trouble with characters, not platform independent
     if(is.numeric(x)) {
-        x <- if (is.double(x)) as.integer(x)
+        if (is.double(x)) x <- as.integer(x)
         maxlength <- max(nchar(x), n, na.rm = TRUE)
         vtype <- "d"
         res <- sprintf(paste0("%0", maxlength, vtype), x)

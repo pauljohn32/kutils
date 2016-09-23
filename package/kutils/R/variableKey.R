@@ -559,9 +559,6 @@ smartSave <- function(obj, file, outdir){
 ##' @importFrom openxlsx read.xlsx write.xlsx
 ##' @keywords internal
 ##' @author Paul Johnson <pauljohn@@ku.edu>
-##' @examples
-##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
-##' mydf <- smartRead(mydf.path)
 smartRead <- function(file, ...){
     ## TODO: implement code to sort out the dots arguments, find
     ## which are aimed at read.xlsx or read.csv, and divide them. See

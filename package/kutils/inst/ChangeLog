@@ -1,7 +1,8 @@
 2016-09-23  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/utils.R (padW0): fix error that was causing integers to
-	turn to all NA. Now is vectorized.
+	turn to all NA.
+	(stringbreak): vectorize stringbreak.
 
 2016-09-22  Paul Johnson  <pauljohn@delllap-16>
 
