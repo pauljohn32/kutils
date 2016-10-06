@@ -730,7 +730,7 @@ NULL
 ##' mydf.key <-  keyImport(mydf.key.path)
 ##'
 ##' mydf.keylong.path <- system.file("extdata", "mydf.key_long.csv", package = "kutils")
-##' mydf.keylong <- keyImport(mydf.key_long.path)
+##' mydf.keylong <- keyImport(mydf.keylong.path)
 keyImport <- function(file, ignoreCase = TRUE,
                       sep = c(character = "\\|", logical = "\\|",
                               integer = "\\|", factor = "[\\|<]",

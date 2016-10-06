@@ -3,6 +3,7 @@
 export(assignMissing)
 export(assignRecode)
 export(cfaTable)
+export(cleanDataFrame)
 export(colnamesReplace)
 export(compareCFA)
 export(deleteBogusColumns)
