@@ -1,5 +1,5 @@
 
-##' If a numeric variable is very close to an integer, then
+##' If a numeric variable has only integer values, then
 ##' make it an integer.
 ##'
 ##' Users often accidentally create floating point numeric variables
@@ -256,11 +256,13 @@ assignRecode <- function(x, recode = NULL){
 }
 
 
-##' Check \& Clean data.frame for usage with variable key functions
+##' Check and Clean data.frame for usage with variable key functions
 ##'
 ##' Checks that the data.frame is made up of simple individual
 ##' columns. Checks numeric columns to find out if they are
-##' acceptable to treat as integers.
+##' acceptable to treat as integers. If they are acceptable to
+##' treat as integers, then convert those numeric to integer class
+##' variables.
 ##' @param dframe A data frame
 ##' @param safeNumericToInteger Default TRUE: Should we treat values
 ##'     which appear to be integers as integers? If a column is
@@ -268,7 +270,8 @@ assignRecode <- function(x, recode = NULL){
 ##'     csv data sets, the values coded c(1, 2, 3) are really
 ##'     integers, not floats c(1.0, 2.0, 3.0). See
 ##'     \code{safeInteger}.
-##' @return A checked & cleaned data frame
+##' @export
+##' @return A checked and cleaned data frame
 ##' @keywords internal
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 cleanDataFrame <- function(dframe, safeNumericToInteger = TRUE){
@@ -296,11 +299,13 @@ cleanDataFrame <- function(dframe, safeNumericToInteger = TRUE){
 }
 
 
-##' Compare observed levels with old and new values
+##' Compare observed values with the values listed
+##' (presumably from a variable key).
 ##'
-##' This is purely diagnostic.  Will print messages notifying user
-##' that observed data has values that are not in the value_old, or
-##' that value_old has values that are not in the data.
+##' This is purely diagnostic. It prints warnings in
+##' either of 2 cases. 1)  observed data has values that
+##' are not in the value_old, or 2) that value_old has
+##' values that are not in the data.
 ##'
 ##' @param x a variable, either character or factor
 ##' @param value_old a vector of old values for which we are checking
@@ -329,14 +334,15 @@ checkValues <- function(x, value_old, xname){
 
 
 
-##' Create variable key
+##' Create variable key template
 ##'
-##' A variable key is a human readable document that can be
-##' interpreted by R to import and recode data. This might also be
-##' referred to as a "programmable codebook."  This function inspects
-##' a data frame, takes notice of its variable names, their classes,
-##' and legal values, and then it creates a table summarizing that
-##' information. The aim is to create a document that principal
+##' A variable key is a human readable document that describes the
+##' variables in a data set. A key can be revised and re-imported by R
+##' so as to guide the re-importation and recoding of data. This might
+##' also be referred to as a "programmable codebook."  This function
+##' inspects a data frame, takes notice of its variable names, their
+##' classes, and legal values, and then it creates a table summarizing
+##' that information. The aim is to create a document that principal
 ##' investigators and research assistants can use to keep a project
 ##' well organize.  Please see the vignette in this package.
 ##'
@@ -408,25 +414,25 @@ checkValues <- function(x, value_old, xname){
 ##'
 ##' ## Should be same as content of
 ##' ## write.csv(mydf, file = "../inst/extdata/mydf.csv", row.names = FALSE)
-##' mydf.key <- keyTemplate(mydf, file = "mydf.key.csv")
-##' mydf.keylong <- keyTemplate(mydf, long = TRUE, file = "mydf.keylong.csv")
-##' ## write.csv(mydf.key, file = "../inst/extdata/mydf.key.csv", row.names = FALSE)
-##' ## write.csv(mydf.keylong, file = "../inst/extdata/mydf.keylong.csv", row.names = FALSE)
-##' ## smartSave(mydf.key, file = "mydf.key.xlsx", outdir = ".")
-##' ## smartSave(mydf.keylong, file = "mydf.keylong.xlsx", outdir = ".")
+##' mydf.templ <- keyTemplate(mydf, file = "mydf.templ.csv")
+##' mydf.templ_long <- keyTemplate(mydf, long = TRUE, file = "mydf.templlong.csv")
+##' ## write.csv(mydf.templ, file = "../inst/extdata/mydf.templ.csv", row.names = FALSE)
+##' ## write.csv(mydf.templ_long, file = "../inst/extdata/mydf.templ_long.csv", row.names = FALSE)
+##' ## smartSave(mydf.templ, file = "mydf.templ.xlsx", outdir = ".")
+##' ## smartSave(mydf.templ_long, file = "mydf.templ_long.xlsx", outdir = ".")
 ##'
 ##' ## Try with the national longitudinal study data
 ##' data(natlongsurv)
-##' natlong.key <- keyTemplate(natlongsurv, file = "natlongsurv.key.csv",
+##' natlong.templ <- keyTemplate(natlongsurv, file = "natlongsurv.templ.csv",
 ##'                            max.levels = 15, sort = TRUE)
 ##'
-##' natlong.keylong <- keyTemplate(natlongsurv, long = TRUE,
-##'                    file = "natlongsurv.keylong.csv", sort = TRUE)
+##' natlong.templlong <- keyTemplate(natlongsurv, long = TRUE,
+##'                    file = "natlongsurv.templ_long.csv", sort = TRUE)
 ##'
 ##' \donttest{
 ##' if (require(openxlsx)){
-##'    openxlsx::write.xlsx(natlong.key, file = "natlongsurv.key.xlsx")
-##'    openxlsx::write.xlsx(natlong.keylong, file = "natlongsurv.keylong.xlsx")
+##'    openxlsx::write.xlsx(natlong.templ, file = "natlongsurv.templ.xlsx")
+##'    openxlsx::write.xlsx(natlong.templlong, file = "natlongsurv.templ_long.xlsx")
 ##' }
 ##' }
 ##'
@@ -720,11 +726,11 @@ NULL
 ##' @return key object
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @examples
-##' mydf.key.path <- system.file("extdata", "mydf.key_new.csv", package = "kutils")
+##' mydf.key.path <- system.file("extdata", "mydf.key.csv", package = "kutils")
 ##' mydf.key <-  keyImport(mydf.key.path)
 ##'
-##' mydf.keylong.path <- system.file("extdata", "mydf.keylong_new.csv", package = "kutils")
-##' mydf.keylong <- keyImport(mydf.keylong.path)
+##' mydf.keylong.path <- system.file("extdata", "mydf.key_long.csv", package = "kutils")
+##' mydf.keylong <- keyImport(mydf.key_long.path)
 keyImport <- function(file, ignoreCase = TRUE,
                       sep = c(character = "\\|", logical = "\\|",
                               integer = "\\|", factor = "[\\|<]",
@@ -931,14 +937,14 @@ NULL
 ##' @export
 ##' @importFrom plyr mapvalues
 ##' @examples
-##' mydf.key.path <- system.file("extdata", "mydf.key_new.csv", package = "kutils")
+##' mydf.key.path <- system.file("extdata", "mydf.key.csv", package = "kutils")
 ##' mydf.key <-  keyImport(mydf.key.path)
 ##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
 ##'
 ##' mydf <- read.csv(mydf.path, stringsAsFactors=FALSE)
 ##' mydf2 <- keyApply(mydf, mydf.key)
 ##'
-##' nls.keylong.path <- system.file("extdata", "natlongsurv.keylong_new.csv", package = "kutils")
+##' nls.keylong.path <- system.file("extdata", "natlongsurv.key_long.csv", package = "kutils")
 ##' nls.keylong <- keyImport(nls.keylong.path, long = TRUE)
 ##' data(natlongsurv)
 ##' nls.dat <- keyApply(natlongsurv, nls.keylong)
@@ -1056,14 +1062,18 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             }
         }
     }
-
+    ## How to pass stringsAsFactors=FALSE as argument? Only way is
+    ## run through environment?
+    stringsAsFactors.orig <-  unname(unlist(options("stringsAsFactors")))
+    options(stringsAsFactors = FALSE)
     dframe <- do.call(data.frame, xlist)
+    options(stringsAsFactors = stringsAsFactors.orig )
     if(diagnostic) keyDiagnostic(dforig, dframe, keylist)
     dframe
 }
 NULL
 
-##' Diagnose accuracy of variable key application
+##' Diagnose accuracy of result from applying variable key to data
 ##'
 ##' Compare the old and new data frames, checking for accuracy of
 ##' calculations in various ways.
@@ -1125,7 +1135,8 @@ keyDiagnostic <-
 ##' Convert a key object from wide to long format
 ##'
 ##' This is not flexible, assumes columns are named in our canonical
-##' style, but works
+##' style, which means the columns are named c("name_old", "name_new",
+##' "class_old", "class_new", "value_old", "value_new").
 ##' @param key A variable key in the wide format
 ##' @param sep Default separator is the pipe, "\\|" for most
 ##'     variables, while ordered accepts pipe or less than, "\\|<". If
@@ -1195,7 +1206,9 @@ wide2long <- function(key, sep = c(character = "\\|", logical = "\\|",
 
 ##' convert a key object from long to wide format
 ##'
-##' No comments needed
+##' ##' This is not flexible, assumes columns are named in our canonical
+##' style, which means the columns are named c("name_old", "name_new",
+##' "class_old", "class_new", "value_old", "value_new").
 ##' @param keylong A variable key in the long format
 ##' @return A wide format variable key
 ##' @export
@@ -1250,59 +1263,67 @@ long2wide <- function(keylong){
     key
 }
 
+## PJ 20161006: this is not ready, project where we were planning to
+## us it discontinued.
+## ##' Stack together several separate key templates, make a "jumbo key".
+## ##'
+## ##' Try to homogenize classes and name_old
+## ##'
+## ##' Try to tolerate inconsistent capitalization in name_old
+## ##' @param aList list of key template objects
+## ##' @param file file name intended for output
+## ##' @param outdir directory name intended for output
+## ##' @return A stacked variable key in the long format
+## ##' @importFrom plyr rbind.fill
+## ##' @author Paul Johnson
+## keyStacker <- function(aList, file, outdir = "."){
+##     ## TODO: Must convert keys to long form for stacking
 
-##' Stack together several separate key templates, make a "jumbo key".
+##     key_jumbo <- rbind.fill(aList)
+##     key_jumbo <- key_jumbo[order(key_jumbo$name_old), ]
+##     key_jumbo <- unique(key_jumbo)
+
+##     ## check for capitalization differences, remove equivalent rows.
+
+##     keytest <- key_jumbo
+##     keytest$name_old <- tolower(keytest$name_old)
+##     keytest$name_new <- tolower(keytest$name_new)
+##     key_jumbo[!duplicated(keytest), ]
+
+##     if (!missing(file) && !is.null(file)){
+##         smartSave(key_jumbo, file, outdir)
+##     }
+##     key_jumbo
+##  }
+
+
+##' Update a key in light of a new data frame (add variables and
+##' values)
 ##'
-##' Try to homogenize classes and name_old
-##'
-##' Try to tolerate inconsistent capitalization in name_old
-##' @param aList list of key template objects
-##' @param file file name intended for output
-##' @param outdir directory name intended for output
-##' @return A stacked variable key in the long format
-##' @importFrom plyr rbind.fill
-##' @author Paul Johnson
-keyStacker <- function(aList, file, outdir){
-    ## TODO: Must convert keys to long form for stacking
-
-    key_jumbo <- rbind.fill(aList)
-    key_jumbo <- key_jumbo[order(key_jumbo$name_old), ]
-    key_jumbo <- unique(key_jumbo)
-
-    ## check for capitalization differences, remove equivalent rows.
-
-    keytest <- key_jumbo
-    keytest$name_old <- tolower(keytest$name_old)
-    keytest$name_new <- tolower(keytest$name_new)
-    key_jumbo[!duplicated(keytest), ]
-
-    if (!missing(file) && !is.null(file)){
-        smartSave(key_jumbo, file, outdir)
-    }
-    key_jumbo
- }
-
-
-##' Update a key in light of a new data frame.
-##'
-##' If the data frame provided has variables which are not currently
+##' The following chores must be handled.
+##' 1. If the data.frame has variables which are not currently
 ##' listed in the variable key's "name_old" variable, then new
 ##' variables are added to the key.
+##' 2. If the data.frame has new values for the previously
+##' existing variables, then those values must be added to the
+##' keys.
+##' 3. If the old key has "name_new" or "class_new" designated
+##' for variables, those MUST be preserved in the new key
+##' for all new values of those variables.
 ##'
 ##' This function will not alter key values for "class_old",
 ##' "value_old" or "value_new" for variables that have no new
-##' information.  If the variables in the data frame which are
-##' currently included in the key have values that are not currently
-##' observed, then additional values are added to the key.
+##' information.
 ##'
+##' This function deduces if the key provided is in the wide
+##' or long format from the class of the object.
 ##' @param key A variable key
 ##' @param dframe A data.frame object.
-##' @param long Is key in long format? Default is TRUE.
-##' @param bottom If long key, should all new rows be added to the
-##'     bottom of the updated key? Default is TRUE.
-##' @param safeNumericToInteger Default TRUE: Should we treat values
-##'     which appear to be integers as integers? If a column is
-##'     numeric, it might be safe to treat it as an integer.  In many
+##' @param append If long key, should new rows be added to the
+##'     end of the updated key? Default is TRUE. If FALSE,
+##'     new rows will be sorted with the original values.
+##' @param safeNumericToInteger Default TRUE: Should we treat variables
+##'     which appear to be integers as integers? In many
 ##'     csv data sets, the values coded c(1, 2, 3) are really
 ##'     integers, not floats c(1.0, 2.0, 3.0). See
 ##'     \code{safeInteger}.
@@ -1315,33 +1336,56 @@ keyStacker <- function(aList, file, outdir){
 ##' @examples
 ##' dat1 <- data.frame("Score" = c(1, 2, 3, 42, 4, 2),
 ##'                    "Gender" = c("M", "M", "M", "F", "F", "F"))
+##' ## First try with a long key
 ##' key1 <- keyTemplate(dat1, long = TRUE)
 ##' key1[5, "value_new"] <- 10
 ##' key1[6, "value_new"] <- "female"
 ##' key1[7, "value_new"] <- "male"
-##' dat2 <- data.frame("Score" = 7, "Gender" = "other")
-##' dat2 <- rbind(dat1, dat2)
+##' key1[key1$name_old == "Score", "name_new"] <- "NewScore"
+##' dat2 <- data.frame("Score" = 7, "Gender" = "other", "Weight" = rnorm(3))
+##' dat2 <- plyr::rbind.fill(dat1, dat2)
 ##' dat2 <- dat2[-1,]
-##' keyUpdate(key1, dat2, bottom = TRUE)
-##' keyUpdate(key1, dat2, bottom = FALSE)
-keyUpdate <- function(key, dframe, long = TRUE, bottom = TRUE,
+##' keyUpdate(key1, dat2, append = TRUE)
+##' keyUpdate(key1, dat2, append = FALSE)
+##' key1c <- key1
+##' key1c[key1c$name_old == "Score", "class_new"] <- "character"
+##' keyUpdate(key1c, dat2, append = TRUE)
+##' str(dat3 <- keyApply(dat2, key1c))
+##' ## Now try a wide key
+##' key1 <- keyTemplate(dat1)
+##' (key1.u <- keyUpdate(key1, dat2))
+##' str(keyApply(dat2, key1.u))
+##' str(keyApply(dat2, key1c))
+keyUpdate <- function(key, dframe, append = TRUE,
                       safeNumericToInteger = TRUE)
 {
+
+    if(class(key)[1] == "keylong") {
+        long <- TRUE
+    } else if (class(key)[1] == "key") {
+        long <- FALSE
+    } else {
+        messg <- paste("The key object is neither a longkey or key object")
+        stop(messg)
+    }
+        
     dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
     if(!long){
         key <- wide2long(key)
     }
-    newkey <- keyTemplate(dframe, long = TRUE)
-    if (identical(newkey, key)){
-        return(newkey)
+    keynew <- keyTemplate(dframe, long = TRUE)
+    if (identical(keynew, key)){
+        return(keynew)
     }
-    ## PJ Stop here, re-think.
-    ## Safer to delete rows from newkey before binding.
-    ## Dangerous to use rbind.fill here because if key input
-    ## has illegal columns, we'd rather fail it than continue.
-    ## If name_old and value_old are already in key, drop them from newkey.
 
-
+    ## Work to do
+    ## 1. All new "variable-value" combinations must be added
+    ## to the new key, whether they are for variables currently listed
+    ## in "name_old" or not.
+    ## 2. New values for previous variables must be added to key
+    ## 3. name_new and class_new have to be copied over to key
+    ## rows that are added.
+   
     ## CHECK: what does "long2wide" do when rows in a long key are
     ## "shuffled" or if the new values all exist at end of long key.
 
@@ -1349,28 +1393,43 @@ keyUpdate <- function(key, dframe, long = TRUE, bottom = TRUE,
     ## but I stopped abstracting them in other functions as well
     ## because it is too much work.
 
+    nameval.old <- paste0(key$name_old, key$value_old)
+    nameval.new <- paste0(keynew$name_old, keynew$value_old)
+    ## Throw away previously observed name-value combinations
+    ## Creates new rows to insert in original key long form
+    keynew2 <- keynew[!nameval.new %in% nameval.old, ]
 
-    newkey$key <- 1
-    key$key <- 0
-    tmpkey <- rbind.fill(key, newkey)
-    tmpkey <- tmpkey[order(tmpkey$name_old),]
-    tmpkey <- unique(tmpkey)
-    tmpkey <- tmpkey[order(tmpkey$key),]
-    row.names(tmpkey) <- seq(1, nrow(tmpkey), 1)
-    tmp <- tmpkey[,c("name_old", "class_old", "value_old")]
-    keep <- !duplicated(tmp)
-    output <- tmpkey[keep,]
-    output <- output[ , !names(output) %in% "key"]
-    if(bottom){
-        if(!long){
-            output <- long2wide(output)
-        }
-        row.names(output) <- seq(1, nrow(output), 1)
+    ## if name_new and class_new are re-defined in old key,
+    ## copy  those into new key
+    name.old.new <- unique(key[ , c("name_old", "name_new")])
+    rownames(name.old.new) <- name.old.new[ , "name_old"]
+
+    ## Tricky if new variable arrived with data, can't just copy
+    ## name_new without checking
+    ## Tried hard to find an index way to do this, but frustrating
+    keynew2$name_new <- ifelse(keynew2$name_old %in% name.old.new[ , "name_old"],
+                               name.old.new[keynew2$name_old, "name_new"],
+                               keynew2$name_new)
+   
+    class.old.new <- unique(key[ , c("name_old", "class_old", "class_new")])
+    rownames(class.old.new)<- class.old.new[ , "name_old"]
+    ## for same-name_old cases, copy in class
+    keynew2$class_new <- ifelse(keynew2$name_old %in% name.old.new[ , "name_old"],
+                                class.old.new[keynew2$name_old, "class_new"],
+                                keynew2$class_new)
+    
+
+    
+    
+    output <- rbind(key, keynew2)
+    ## User expects key returned in same format, keylong or key
+    if(!long) {
+        output <- long2wide(output)
+        row.names(output) <- output$name_old
         return(output)
-    }else{
-        output <- output[order(output$name_old),]
-        if(!long){
-            output <- long2wide(output)
+    } else {
+        if (!append) {
+            output <- output[order(output$name_old),]
         }
         row.names(output) <- seq(1, nrow(output), 1)
         return(output)
