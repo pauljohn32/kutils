@@ -120,8 +120,21 @@ initProject <- function(dir = NULL, ddir = "data",
     sysinfo <- Sys.info()
     systime <- Sys.time()
 
-    readme <- paste0("## ", sysinfo[["user"]], "\n", "## ", format(systime,"%Y%m%d\n"))
-    cat(readme, file = paste("00-README.txt"))
+    fileheader <- paste0("## ", sysinfo[["user"]], "\n", "## ", format(systime,"%Y%m%d\n"))
+    cat(fileheader, file = paste("00-README.txt"))
+
+    rheader <- paste0(fileheader, 
+                      paste0("\n\nwdir <- \"../workingdata/\"\n",
+                             "ddir <- \"../data/\"\n",
+                             "odir <- \"../output/\"\n",
+                             "tdir <- \"../tmp/\"\n\n",
+                             "library(kutils)\n\n",
+                             "pdf.options(onefile=FALSE, family=\"Times\", paper=\"special\", height=4,\n",
+                             "            width=6, pointsize=6)\n"))
+                             
+
+    cat(rheader,
+        file = paste("rheader.R"))
     
     changelog <- paste(format(systime, "%Y-%m-%d"), sysinfo[["user"]], "\n\n")
     changelog <- paste0(changelog, "\t* " , dir, "(initProject):\n")
