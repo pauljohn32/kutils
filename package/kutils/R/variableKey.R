@@ -402,12 +402,12 @@ checkValues <- function(x, value_old, xname){
 ##'                    x3 = ordered(sample(c("lo", "med", "hi"),
 ##'                    size = N, replace=TRUE),
 ##'                    levels = c("med", "lo", "hi")),
-##'                    x2 = letters[sample(c(1:4,6), 200, replace = TRUE)],
+##'                    x2 = letters[sample(c(1:4,6), N, replace = TRUE)],
 ##'                    x1 = factor(sample(c("cindy", "bobby", "marcia",
-##'                                         "greg", "peter"), 200,
+##'                                         "greg", "peter"), N,
 ##'                    replace = TRUE)),
-##'                    x7 = ordered(letters[sample(c(1:4,6), 200, replace = TRUE)]),
-##'                    x6 = sample(c(1:5), 200, replace = TRUE),
+##'                    x7 = ordered(letters[sample(c(1:4,6), N, replace = TRUE)]),
+##'                    x6 = sample(c(1:5), N, replace = TRUE),
 ##'                    stringsAsFactors = FALSE)
 ##' mydf$x4[sample(1:N, 10)] <- 999
 ##' mydf$x5[sample(1:N, 10)] <- -999
@@ -1356,6 +1356,35 @@ long2wide <- function(keylong){
 ##' (key1.u <- keyUpdate(key1, dat2))
 ##' str(keyApply(dat2, key1.u))
 ##' str(keyApply(dat2, key1c))
+##'
+##' mydf.key.path <- system.file("extdata", "mydf.key.csv", package = "kutils")
+##' mydf.key <-  keyImport(mydf.key.path)
+##'
+##' set.seed(112233)
+##' N <- 20
+##' ## The new Jan data arrived!
+##' mydf2 <- data.frame(x5 = rnorm(N),
+##'                     x4 = rpois(N, lambda = 3),
+##'                     x3 = ordered(sample(c("lo", "med", "hi"),
+##'                                        size = N, replace=TRUE),
+##'                                 levels = c("med", "lo", "hi")),
+##'                     x2 = letters[sample(c(1:4,6), N, replace = TRUE)],
+##'                     x1 = factor(sample(c("jan"), N, replace = TRUE)),
+##'                     x7 = ordered(letters[sample(c(1:4,6), N, replace = TRUE)]),
+##'                     x6 = sample(c(1:5), N, replace = TRUE),
+##'                     stringsAsFactors = FALSE)
+##' mydf.key2 <- keyUpdate(mydf.key, mydf2)
+##' mydf.key2
+##' mydf.key2["x1", "value_old"] <- "cindy|bobby|jan|peter|marcia|greg"
+##' mydf.key2["x1", "value_new"] <- "Cindy<Bobby<Jan<Peter<Marcia<Greg"
+##'
+##' mydf.key.path <- system.file("extdata", "mydf.key.csv", package = "kutils")
+##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
+##' mydf <- read.csv(mydf.path, stringsAsFactors=FALSE)
+##' mydf3 <- rbind(mydf, mydf2)
+##' ## Now recode with revised key
+##' mydf4 <- keyApply(mydf3, mydf.key2)
+##' rockchalk::summarize(mydf4)
 keyUpdate <- function(key, dframe, append = TRUE,
                       safeNumericToInteger = TRUE)
 {
