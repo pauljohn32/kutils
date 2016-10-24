@@ -1,5 +1,5 @@
 
-##' Create project directories, initialize a git repo, create README
+##' Create project directories, initialize a git repo, create README.md
 ##' and ChangeLog
 ##'
 ##' This creates folders for the separate parts of a project. It tries
@@ -64,7 +64,8 @@
 ##' initProject(paste(tempdir, "test3", sep = "/"))
 ##' list.files(all.files = TRUE)
 ##' setwd(tempdir)
-##' initProject(paste(tempdir, "test4", sep = "/"), list(food = "menu", bev = "drink_orders"))
+##' initProject(paste(tempdir, "test4", sep = "/"),
+##'             list(food = "menu", bev = "drink_orders"))
 ##' list.files(all.files = TRUE)
 ##' setwd(tempdir)
 ##' initProject("test5", odir = NA, tdir = NA, writedir = NA)
@@ -120,8 +121,8 @@ initProject <- function(dir = NULL, ddir = "data",
     sysinfo <- Sys.info()
     systime <- Sys.time()
 
-    fileheader <- paste0("## ", sysinfo[["user"]], "\n", "## ", format(systime,"%Y%m%d\n"))
-    cat(fileheader, file = paste("00-README.txt"))
+    fileheader <- paste0("#### ", sysinfo[["user"]], "  \n", "####", format(systime,"%Y%m%d  \n"))
+    cat(fileheader, file = paste("README.md"))
 
     rheader <- paste0(fileheader, 
                       paste0("\n\nwdir <- \"../workingdata/\"\n",
@@ -130,11 +131,11 @@ initProject <- function(dir = NULL, ddir = "data",
                              "tdir <- \"../tmp/\"\n\n",
                              "library(kutils)\n\n",
                              "pdf.options(onefile=FALSE, family=\"Times\", paper=\"special\", height=4,\n",
-                             "            width=6, pointsize=6)\n"))
+                             "            width=6, pointsize=10)\n"))
                              
 
     cat(rheader,
-        file = paste("rheader.R"))
+        file = paste("R/rheader.R"))
     
     changelog <- paste(format(systime, "%Y-%m-%d"), sysinfo[["user"]], "\n\n")
     changelog <- paste0(changelog, "\t* " , dir, "(initProject):\n")
@@ -145,7 +146,7 @@ initProject <- function(dir = NULL, ddir = "data",
         makeGit <- "git init --shared=group"
         gitout <- system(makeGit, intern = TRUE)
         
-        messg1 <- "git add 00-README.txt ChangeLog"
+        messg1 <- "git add README.md ChangeLog"
         log1 <- system(messg1, intern = TRUE)
         messg2 <- paste("git commit -a -m \"Initialized project in", dir, "\"")
         log2 <- system(messg2, intern = TRUE)

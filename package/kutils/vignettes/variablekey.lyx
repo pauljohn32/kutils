@@ -1,7 +1,9 @@
-#LyX 2.1 created this file. For more info see http://www.lyx.org/
-\lyxformat 474
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
 \begin_document
 \begin_header
+\save_transient_properties true
+\origin unavailable
 \textclass scrartcl
 \begin_preamble
 %\VignetteIndexEntry{variablekey}
@@ -86,7 +88,7 @@
 \fvset{listparameters={\setlength{\topsep}{0em}}}
 \def\Sweavesize{\scriptsize} 
 \def\Rcolor{\color{black}} 
-\def\Rbackground{\color[gray]{0.90}}
+\def\Rbackground{\color[gray]{0.95}}
 
 % for sideways table
 \usepackage{rotating}
@@ -101,16 +103,16 @@ logicalmkup
 \language_package default
 \inputencoding utf8
 \fontencoding global
-\font_roman lmodern
-\font_sans lmss
-\font_typewriter lmtt
-\font_math auto
+\font_roman "lmodern" "default"
+\font_sans "lmss" "default"
+\font_typewriter "lmtt" "default"
+\font_math "auto" "auto"
 \font_default_family default
 \use_non_tex_fonts false
 \font_sc false
 \font_osf false
-\font_sf_scale 100
-\font_tt_scale 100
+\font_sf_scale 100 100
+\font_tt_scale 100 100
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -171,7 +173,7 @@ The Variable Key Data Programming Framework
 
 \begin_layout Author
 Paul E.
- Johnson, Benjamin A.
+ Johnson and Benjamin A.
  Kite
 \end_layout
 
@@ -218,6 +220,32 @@ status open
 
 \begin_layout Plain Layout
 
+<<>>=
+\end_layout
+
+\begin_layout Plain Layout
+
+if(!dir.exists("plots")) dir.create("plots")
+\end_layout
+
+\begin_layout Plain Layout
+
+@
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\lang english
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
 % In document Latex options:
 \end_layout
 
@@ -236,7 +264,7 @@ topsep}{0em}}}
 
 
 \backslash
-SweaveOpts{ae=F,nogin=T}
+SweaveOpts{prefix.string=plots/t,split=T,ae=F,height=4,width=5.5}
 \end_layout
 
 \end_inset
@@ -245,6 +273,8 @@ SweaveOpts{ae=F,nogin=T}
 \end_layout
 
 \begin_layout Standard
+
+\lang english
 \begin_inset ERT
 status open
 
@@ -260,12 +290,22 @@ options(device = pdf)
 
 \begin_layout Plain Layout
 
-options(width=80, prompt=" ", continue="  ")
+options(width=100, prompt=" ", continue="  ")
 \end_layout
 
 \begin_layout Plain Layout
 
 options(useFancyQuotes = FALSE) 
+\end_layout
+
+\begin_layout Plain Layout
+
+options(SweaveHooks=list(fig=function() par(ps=10)))
+\end_layout
+
+\begin_layout Plain Layout
+
+pdf.options(onefile=F,family="Times",pointsize=10)
 \end_layout
 
 \begin_layout Plain Layout
@@ -298,8 +338,8 @@ The staff of the Center for Research Methods and Data Analysis has been
 \begin_layout Standard
 In projects like that, the challenge of importing and fixing the data seems
  overwhelming.
- The challenge seems overwhelming to the graduate research assistants who
- are asked to cobble together thousands of lines of 
+ The graduate research assistants are asked to cobble together thousands
+ of lines of 
 \begin_inset Quotes eld
 \end_inset
 
@@ -309,18 +349,19 @@ recodes
 
  as they rename, regroup, and otherwise harmonize the information.
  From a managerial point of view, that is not the main problem.
- The time of graduate students is, well, there to be spent.
- While it may be tedious to read a codebook and write recodes, one after
- the other, it is not all that difficult.
+ We expect to spend the time of research assistants.
+ While it may be tedious to read a codebook and write recodes, social scientists
+ have been doing that since the 1960s.
+ It is not all that difficult.
  The truly difficult part is mustering up the confidence in the resulting
  recoded data.
  How can a supervisor check thousands of recode statements for accuracy?
- The very extensibility of R itself, its openness to new functions and language
- elements, makes proof-reading more difficult.
+ The very extensibility of R itself–its openness to new functions and language
+ elements–makes proof-reading more difficult.
  We might shift some of the proof reading duty to the principle investigators,
- but they are sometimes unfamiliar with R (and are not thrilled to wade
- through code).
- The responsibility for verifying the recodes falls on the project supervisors.
+ but they sometimes not interested in details.
+ In the end, the responsibility for verifying the recodes falls on the project
+ supervisors.
  While most supervisors with whom we are personally acquainted have nearly
  super-human reading skills and almost-perfect comprehension, we have documented
  a case in which one of them was unable to catch an error on line 827 within
@@ -362,8 +403,9 @@ Enter the Variable Key
 \begin_layout Standard
 The variable key process was first developed for a very large project for
  which we were hired by a commercial consulting company.
- As it happened, the project manager who hired us was an SPSS user who did
- not know about R, but he was otherwise a very capable person.
+ As it happened, the project manager who hired us was an Excel user who
+ did not know about R.
+ He was given several SPSS datasets.
  After going through the usual R process of importing and recoding data
  from 6 files, the aggregate of which included more than 40,000 observations
  on 150 variables, we arrived at a renamed set of columns.
@@ -384,23 +426,30 @@ Or graduated, we are not sure which.
 \begin_layout Standard
 With the unavailability of our key asset, it was difficult to know for sure
  what was in which column.
- There was nobody to quickly answer 
+ There was nobody to quickly answer questions like 
 \begin_inset Quotes eld
 \end_inset
 
-sex is V23418, where we changed the 1 to male and 2 to female
+which column is the respondent's sexual identity?
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+if sex is V23418, did we change 1 to male or female
 \begin_inset Quotes erd
 \end_inset
 
 .
- The only way to understand the translation was by hunting and pecking through
- a giant R file.
+ The only way to find out is by hunting and pecking through a giant R file.
  
 \end_layout
 
 \begin_layout Standard
-In order to better understand what had happened, we developed a table that
- looked like Table 
+In order to better communicate about that project, we developed a table
+ that looked like Table 
 \begin_inset CommandInset ref
 LatexCommand ref
 reference "tab:A-Small-Variable-key"
@@ -439,7 +488,7 @@ name "tab:A-Small-Variable-key"
 \begin_layout Plain Layout
 \begin_inset Tabular
 <lyxtabular version="3" rows="4" columns="4">
-<features rotate="0" tabularvalignment="middle">
+<features tabularvalignment="middle">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
@@ -695,15 +744,17 @@ It was tedious to assemble that table, but it helped quite a bit in our
 In the middle of preparing that summary table of recoded values, we realized
  that it was possible to write an R program to import the key table and
  use its information to recode and rename the variables.
- The variable key table was not just a 
-\begin_inset Quotes eld
-\end_inset
-
-codebook.
-\begin_inset Quotes erd
-\end_inset
-
- It was a programmable codebook.
+ The recodes would 
+\emph on
+just happen
+\emph default
+.
+ If we prepared the functions properly, we had not just a table masquerading
+ as a codebook, we had a 
+\emph on
+programmable codebook
+\emph default
+.
  We wrote some functions that could import variables (as named in column
  1), apply the new values (from columns 3 and 4), then apply the new name
  from column 2.
@@ -740,36 +791,30 @@ kutils
 \end_layout
 
 \begin_layout Standard
-So far, then, we have outlined a transition process in which project supervisors
- create a table that instructs the research assistants in the importation
+The variable key process allows project supervisors to create a table that
+ instructs the research assistants in the importation, renaming, and recoding
  of data.
  There is still a daunting problem, however, because the supervisors must
- create that variable key table itself.
+ create that variable key table.
  In a large data set, it might be arduous to simply type the old names of
  the variables and their observed values.
  In 2015 one of the graduate assistants in our lab was asked to type up
  a variable key and he couldn't quite believe that was a good use of his
  time.
- After some discussion
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-violent argument
-\end_layout
-
-\end_inset
-
-, we realized that it was not necessary to type the variable key at all.
- Instead of typing this table into a spreadsheet, we decided to make the
- work lighter by using R to write a first draft of the variable key.
+ After some discussion, we realized that it was not necessary to type the
+ variable key at all.
+ We would write a function to do so.
  If R can import the candidate data set, then R can certainly output its
  column names and a roster of observed values.
- A function was created to scan a data frame and write a template for the
- key.
  This lightened the workload considerably.
  By tabulating all of the observed variables and their values, the most
  tedious part of the process was done mechanically.
+ 
+\end_layout
+
+\begin_layout Standard
+In the remainder of this essay, we discuss the process of creating a variable
+ key template, revising it, and putting it to use.
  
 \end_layout
 
@@ -778,25 +823,25 @@ Four Simple Steps
 \end_layout
 
 \begin_layout Standard
-Suppose a 
+The variable key process has four steps.
+ First, inspect an R data.frame object and create a key template file.
+ The key template summarizes the existing state of the variables and creates
+ 
 \begin_inset Quotes eld
 \end_inset
 
-raw
+placeholders
 \begin_inset Quotes erd
 \end_inset
 
- data frame has been imported.
- The variable key process has four steps.
- First, create a key template file summarizing the existing state of the
- variables.
+ where we might like to specify revisions.
  Second, edit the key template file in a spreadsheet or other program that
  can work with comma separate variables.
  Change the names, values, and designate other recodes (which we will describe
  next).
  Third, import the revised key into R.
- Fourth, run a function that generates a new, improved data frame by applying
- the imported key to the data frame.
+ Fourth, apply the key to the data to generate a new, improved data frame.
+ Then run some diagnostic routines.
 \end_layout
 
 \begin_layout Standard
@@ -821,11 +866,22 @@ Diagnostic tables are reported to clearly demonstrate the effect of each
 \end_layout
 
 \begin_layout Standard
-For testing purposes, we have created an example data frame with seven variables
- of various types.
- The data frame mydf has most of the challenges that we see in actual projects.
+For purposes of illustration, we have create an example data frame with
+ various types of variables.
+ This data frame, 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+mydf
+\end_layout
+
+\end_inset
+
+, has most of the challenges that we see in actual projects.
  It has integer variables that need to be reorganized and turned into character
  or factor variables.
+ It has character variables that might become integers or factors.
  
 \end_layout
 
@@ -850,58 +906,57 @@ N <- 200
 
 \begin_layout Plain Layout
 
-mydf <- data.frame(x5 = rnorm(N),
+mydf <- data.frame(
 \end_layout
 
 \begin_layout Plain Layout
 
-                   x4 = rpois(N, lambda = 3),
+    x5 = rnorm(N),
 \end_layout
 
 \begin_layout Plain Layout
 
-                   x3 = ordered(sample(c("lo", "med", "hi"),
+    x4 = rpois(N, lambda = 3),
 \end_layout
 
 \begin_layout Plain Layout
 
-                                       size = N, replace=TRUE),
+    x3 = ordered(sample(c("lo", "med", "hi"), size = N, replace=TRUE),
 \end_layout
 
 \begin_layout Plain Layout
 
-                                levels = c("med", "lo", "hi")),
+            levels = c("med", "lo", "hi")),
 \end_layout
 
 \begin_layout Plain Layout
 
-                   x2 = letters[sample(c(1:4,6), 200, replace = TRUE)],
+    x2 = letters[sample(c(1:4,6), 200, replace = TRUE)],
 \end_layout
 
 \begin_layout Plain Layout
 
-                   x1 = factor(sample(c("cindy", "jan", "marcia"), 200,
+    x1 = factor(sample(c("cindy", "jan", "marcia"), 200,
 \end_layout
 
 \begin_layout Plain Layout
 
-                        	          replace = TRUE)),
+            replace = TRUE)),
 \end_layout
 
 \begin_layout Plain Layout
 
-                   x7 = ordered(letters[sample(c(1:4,6), 200, replace =
- TRUE)]),
+    x7 = ordered(letters[sample(c(1:4,6), 200, replace = TRUE)]),
 \end_layout
 
 \begin_layout Plain Layout
 
-                   x6 = sample(c(1:5), 200, replace = TRUE),
+    x6 = sample(c(1:5), 200, replace = TRUE),
 \end_layout
 
 \begin_layout Plain Layout
 
-                   stringsAsFactors = FALSE)
+            stringsAsFactors = FALSE)
 \end_layout
 
 \begin_layout Plain Layout
@@ -924,33 +979,9 @@ mydf$x5[sample(1:N, 10)] <- -999
 
 \end_layout
 
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-<<>>=
-\end_layout
-
-\begin_layout Plain Layout
-
-rockchalk::summarize(mydf, alphaSort = FALSE)
-\end_layout
-
-\begin_layout Plain Layout
-
-@
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
 \begin_layout Subsection
 Step 1.
- keyTemplate
+ Create a Key Template
 \end_layout
 
 \begin_layout Standard
@@ -983,7 +1014,24 @@ keyTemplate
 \end_layout
 
 \begin_layout Standard
-The 
+At the current time, there are two formats for the key template, 
+\begin_inset Quotes eld
+\end_inset
+
+long
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+wide
+\begin_inset Quotes erd
+\end_inset
+
+.
+ The 
 \begin_inset Flex Code
 status open
 
@@ -993,15 +1041,17 @@ keyTemplate
 
 \end_inset
 
- function has an argument named 
-\begin_inset Quotes eld
-\end_inset
+ function's argument 
+\begin_inset Flex Code
+status open
 
+\begin_layout Plain Layout
 long
-\begin_inset Quotes erd
+\end_layout
+
 \end_inset
 
-, which can be set as 
+ can be set as 
 \begin_inset Flex Code
 status open
 
@@ -1032,25 +1082,11 @@ FALSE
 
 \end_inset
 
-, the key template will be in the format we call 
-\begin_inset Quotes eld
-\end_inset
-
-wide
-\begin_inset Quotes erd
-\end_inset
-
-, while if it is true, the result will be a 
-\begin_inset Quotes eld
-\end_inset
-
-long
-\begin_inset Quotes erd
-\end_inset
-
- key.
- The difference between these two things is most apparent if we begin with
- the example 
+, the key template will be in the wide.
+ The essence of the difference is that the wide format puts all of the required
+ information into a one-row-per-variable format, while the long version
+ creates one-row-per-value.
+ The difference is most apparent if we begin with the example 
 \begin_inset Flex Code
 status open
 
@@ -1064,27 +1100,190 @@ mydf
 \end_layout
 
 \begin_layout Standard
-The key template file that is demonstrated in Table 
+A LaTeX rendition of the data.frame object that holds a wide key template
+ is demonstrated in Table 
 \begin_inset CommandInset ref
 LatexCommand ref
-reference "tab:Wide-Key"
+reference "tab:The-Wide-Key"
 
 \end_inset
 
- is the type we call a 
-\emph on
-wide
-\emph default
- key.
- It is a wide key in the sense that there is one row per variable, and the
- old/new value information is tightly packed into a pair of columns.
+.
+ It is called a wide key because the recoding information is tightly packed
+ into 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+value_old
+\end_layout
+
+\end_inset
+
+ and 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+value_new
+\end_layout
+
+\end_inset
+
+.
  The key includes more or less obvious columns for the old and new variable
  names, their classes, and values of the variables.
+ That key results from the following code.
  
 \end_layout
 
 \begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+<<key0, include=F>>=
+\end_layout
+
+\begin_layout Plain Layout
+
+library(kutils)
+\end_layout
+
+\begin_layout Plain Layout
+
+library(xtable)
+\end_layout
+
+\begin_layout Plain Layout
+
+@
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+<<key10>>=
+\end_layout
+
+\begin_layout Plain Layout
+
+keywide <- keyTemplate(mydf, long = FALSE, max.levels = 5)
+\end_layout
+
+\begin_layout Plain Layout
+
+@
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+The 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+\noindent
+max.levels
+\end_layout
+
+\end_inset
+
+ parameter defaults to 15, so that an integer variable with less than 15
+ values will have each value displayed.
+ The display of that variable key was too wide for the page in this essay,
+ so we reduced the number of values.
+ When the observed number of scores is above 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+\noindent
+max.levels
+\end_layout
+
+\end_inset
+
+, the key does not try to list the individual values (compare the treatment
+ of variables 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+\noindent
+x4
+\end_layout
+
+\end_inset
+
+ and 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+\noindent
+x6
+\end_layout
+
+\end_inset
+
+).
+ 
+\end_layout
+
+\begin_layout Standard
+A long key template is displayed in Table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:Long-Key"
+
+\end_inset
+
+.
+ That key is produced as follows.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+<<key30>>=
+\end_layout
+
+\begin_layout Plain Layout
+
+keylong <- keyTemplate(mydf, long = TRUE, max.levels = 5)
+\end_layout
+
+\begin_layout Plain Layout
+
+@
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 \begin_inset Float table
+placement h
 wide false
 sideways false
 status open
@@ -1093,10 +1292,10 @@ status open
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Key Template, Wide Type
+The Wide Key Template
 \begin_inset CommandInset label
 LatexCommand label
-name "tab:Wide-Key"
+name "tab:The-Wide-Key"
 
 \end_inset
 
@@ -1114,145 +1313,29 @@ status open
 
 \begin_layout Plain Layout
 
-{
+
 \backslash
-footnotesize
+def
+\backslash
+Sweavesize{
+\backslash
+tiny}
 \end_layout
 
 \begin_layout Plain Layout
 
+<<key20,echo=FALSE,results=tex>>=
 \end_layout
 
 \begin_layout Plain Layout
 
-
-\backslash
-begin{tabular}{lllllllll}
+print(xtable(keywide), include.rownames = FALSE, size = "small", floating
+ = FALSE )
 \end_layout
 
 \begin_layout Plain Layout
 
-  
-\backslash
-toprule
-\end_layout
-
-\begin_layout Plain Layout
-
-name
-\backslash
-_old & name
-\backslash
-_new & class
-\backslash
-_old & class
-\backslash
-_new & value
-\backslash
-_old & value
-\backslash
-_new & missings & recodes 
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-  
-\backslash
-midrule
-\end_layout
-
-\begin_layout Plain Layout
-
-x5 & x5 & numeric & numeric &  &  &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x4 & x4 & numeric & numeric &  &  &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x3 & x3 & ordered & ordered & med$<$lo$<$hi & med$<$lo$<$hi &  & 
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x2 & x2 & character & character & a$|$b$|$c$|$d$|$f & a$|$b$|$c$|$d$|$f
-  &  & 
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x1 & x1 & factor & factor & cindy$|$jan$|$marcia & cindy$|$jan$|$marcia
- &  & 
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x7 & x7 & ordered & ordered & a$<$b$<$c$<$d$<$f & a$<$b$<$c$<$d$<$f  & 
- & 
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x6 & x6 & integer & integer & 1$|$2$|$3$|$4$|$5 & 1$|$2$|$3$|$4$|$5 &  &
- 
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-   
-\backslash
-bottomrule
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-end{tabular}
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-}
+@
 \end_layout
 
 \end_inset
@@ -1260,56 +1343,9 @@ end{tabular}
 
 \end_layout
 
-\begin_layout Plain Layout
-
-\end_layout
-
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-The wide style key was the first type that we developed.
- We have more experience with it.
- However, sometimes there is trouble with the wide key, mostly due to the
- fact that some spread sheet programs do not handle character strings in
- the way that we have come to expect.
- There are practical issues as well, because editing an elaborate string
- within a cell may be inconvenient and frustrating in some programs.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-If users could be persuaded to edit the key template as a CSV file in an
- high quality text editor, such as Emacs, this would not be problem.
-\end_layout
-
-\end_inset
-
- Using some spread sheet programs, some researchers have had difficulty
- with very wide columns.
- Since the value_old and value_new columns must match exactly, there is
- an element of human error in play.
- At the expense of making a key that has many more rows, we obtain clarity
- by asking instead for a long key template.
- The long key includes one row per value per variable, as illustrated in
- Table 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "tab:Long-Key"
-
-\end_inset
-
-.
- We assert that the long key template is nearly foolproof.
- It is simple to match the old and new values with one another because there
- is only one value per cell.
- In a project with hundreds of variables, the key may be thousands of lines
- long.
- That is an unfortunate fact of life, but we suggest it is much more easily
- revised and proof-read than the R code that one usually sees in recoding
- exercises.
 \end_layout
 
 \begin_layout Standard
@@ -1319,14 +1355,10 @@ sideways false
 status open
 
 \begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Key Template, Long Type
+The Long Key Template
 \begin_inset CommandInset label
 LatexCommand label
 name "tab:Long-Key"
@@ -1349,263 +1381,27 @@ status open
 
 
 \backslash
-begin{tabular}{llllllll}
+def
+\backslash
+Sweavesize{
+\backslash
+tiny}
 \end_layout
 
 \begin_layout Plain Layout
 
-  
-\backslash
-toprule
+<<key40,echo=FALSE,results=tex>>=
 \end_layout
 
 \begin_layout Plain Layout
 
-name
-\backslash
-_old & name
-\backslash
-_new & class
-\backslash
-_old & class
-\backslash
-_new & value
-\backslash
-_old & value
-\backslash
-_new & missings & recodes 
-\backslash
-
-\backslash
-
+print(xtable(keylong), include.rownames = FALSE, size = "small", floating
+ = FALSE)
 \end_layout
 
 \begin_layout Plain Layout
 
-  
-\backslash
-midrule
-\end_layout
-
-\begin_layout Plain Layout
-
-x5 & x5 & numeric & numeric &  &  &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x4 & x4 & numeric & numeric &  &  &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x3 & x3 & ordered & ordered & med & med &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x3 & x3 & ordered & ordered & lo & lo &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x3 & x3 & ordered & ordered & hi & hi &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x2 & x2 & character & character & a & a &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x2 & x2 & character & character & b & b &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x2 & x2 & character & character & c & c &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x2 & x2 & character & character & d & d &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x2 & x2 & character & character & f & f &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x1 & x1 & factor & factor & cindy & marcia &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x1 & x1 & factor & factor & jan & marcia &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x1 & x1 & factor & factor & marcia & marcia &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x7 & x7 & ordered & ordered & a & a &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x7 & x7 & ordered & ordered & b & b &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x7 & x7 & ordered & ordered & c & c &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x7 & x7 & ordered & ordered & d & d &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x7 & x7 & ordered & ordered & f & f &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x6 & x6 & integer & integer & 1 & 1 &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x6 & x6 & integer & integer & 2 & 2 &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x6 & x6 & integer & integer & 3 & 3 &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x6 & x6 & integer & integer & 4 & 4 &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-x6 & x6 & integer & integer & 5 & 5 &  &  
-\backslash
-
-\backslash
-
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-bottomrule
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-end{tabular}
+@
 \end_layout
 
 \end_inset
@@ -1619,10 +1415,42 @@ end{tabular}
 \end_layout
 
 \begin_layout Standard
-There is a major difference in the treatment of continuous and discrete
- variables.
- As readers will note in the example key templates, the information for
+It is necessary to treat categorical and numeric data differently.
+ If a column includes floating point numbers (temperatures, dollar values,
+ etc), then we would not plan for a research mission that wants to recode
+ individual values one-by-one.
+ However, if a column includes integers, then the project may intend to
+ treat them as discrete values (1 = male, 2 = female).
+ They may also be numeric, however, and we don't expect to recode individual
+ values (age, IQ score).
+ A numeric variable may need to be recoded, say by the elimination of missing
+ values or by the application of a transformation (logarithm, etc).
+ We handle those recodes from a different point of view, with the 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+missings
+\end_layout
+
+\end_inset
+
+ and 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+recodes
+\end_layout
+
+\end_inset
+
+ columns in the variable key.
  
+\end_layout
+
+\begin_layout Standard
+The information for 
 \begin_inset Flex Code
 status open
 
@@ -1643,51 +1471,17 @@ values_new
 \end_inset
 
  is much more elaborate for discrete variables.
- When a variable has a floating point value in R, that is, as numeric and
- not an integer, then it does not make sense to tabulate individual values.
- A numeric variable may need to be recoded, say by the elimination of missing
- values or by the application of a transformation (logarithm, etc).
- But we should not want to, and cannot reliably, map individual floating
- point values to newly designated variables.
- 
+ For discrete variables (factors, characters, integers), researchers do
+ want to freely reassign and regroup the observed values.
+ If the observed number of unique scores is smaller than max.levels, then
+ the key will enumerate them.
+ If more values are observed, the key will not enumerate them.
+ If a researchers feels this is incorrect, then the key can be edited to
+ enumerate and change the values (see below).
 \end_layout
 
 \begin_layout Standard
-On the other hand, for many discrete variables (factors, characters, integers),
- we do want to freely reassign and regroup the observed values.
- However, it is not certain that the variable key should include all of
- the observed values for every discrete variable.
- In the 
-\begin_inset Quotes eld
-\end_inset
-
-raw
-\begin_inset Quotes erd
-\end_inset
-
- data sets, integers and characters are used in various ways.
- Sometimes the integers represent discrete levels (1 = 
-\begin_inset Quotes eld
-\end_inset
-
-male
-\begin_inset Quotes erd
-\end_inset
-
-, 2 = 
-\begin_inset Quotes eld
-\end_inset
-
-female
-\begin_inset Quotes erd
-\end_inset
-
-), while sometimes integers represent age or dollar values that we would
- not individually re-assign one-at-a-time.
- In the first case (integers are a substitute for labels), we want the key
- to include all of the observed values so that we can relabel, while in
- the other case we do not.
- The same difference is found in character variables.
+The same issue arises with character variables.
  A column coded as 
 \begin_inset Quotes eld
 \end_inset
@@ -1708,86 +1502,42 @@ female
  a survey respondent's name or ID number.
  We want the key to include all of the values of the former type of character,
  but it probably should not enumerate all of values of the other type.
- 
-\end_layout
-
-\begin_layout Standard
-There is no fool-proof way to separate the two types of discretely scored
- variables.
- The number of different observed values is not certain to differentiate
- these different types of variables, but we allow it to serve as a guide.
- The same strategy is used in the R foreign packages to import data from
- SPSS.
- The 
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-keyTemplate
-\end_layout
-
-\end_inset
-
- function has an argument, 
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-max.levels
-\end_layout
-
-\end_inset
-
-, which places an upper limit on the allowed number of categories.
- If the number of discrete values exceeds 
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-max.levels
-\end_layout
-
-\end_inset
-
-, then the values of that will no longer be treated as a discrete variable
- at all, since we do not intend to recode individual values with the variable
- key.
- As it does for floating-point variables, the key template (whether wide
- or long) will include only one row for discrete variables with more than
- 
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-max.levels
-\end_layout
-
-\end_inset
-
- observed values.
- The user can adjust max.levels in various ways, as explained in the documentatio
-n.
-\end_layout
-
-\begin_layout Standard
-TODO: Go back to source code and embellish max.levels to treat characters,
- integers as described here.
- Now I believe it is printing 
+ The max.levels parameter is just a way of guessing how many unique levels
+ is 
 \begin_inset Quotes eld
 \end_inset
 
-max.levels
+too many
 \begin_inset Quotes erd
 \end_inset
 
- values, but should not.
+ for an enumeration.
 \end_layout
 
 \begin_layout Standard
 Despite the possibility that a factor (or ordered) variable may have many
  values, we believe that all of the levels of those variables should be
- included in the key.
- 
+ usually be included in the key.
+ If a variable is declared as a factor, it means the researcher has assigned
+ meaning to the various observed values and we are reluctant to ignore them.
+\end_layout
+
+\begin_layout Standard
+Some users have asked 
+\begin_inset Quotes eld
+\end_inset
+
+should we use the wide key or the long key?
+\begin_inset Quotes erd
+\end_inset
+
+ This is simply a matter of taste.
+ In a project that has variables with many unique observed values, the wide
+ format may become hard to manage.
+ The long format eliminates any ambiguity about the old value and the new
+ value.
+ The disadvantage of the long format is that it is somewhat verbose, with
+ repeated values in the name and class values.
 \end_layout
 
 \begin_layout Subsection
@@ -1807,8 +1557,20 @@ keyTemplate
 \end_inset
 
  should, without editing, be sufficient to re-import the data and reproduce
- exactly the same information.
- As a result, it is not necessary to make extensive changes.
+ exactly the same data frame.
+ As a result, it is not necessary to make extensive changes in a key.
+ One may simply intend to rename all of the columns, for example, by editing
+ 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+name_new
+\end_layout
+
+\end_inset
+
+.
  The supervisor and principal investigator can change just a few variable
  names or values.
  In a large project, there may be quite a bit of work involved.
@@ -1816,29 +1578,8 @@ keyTemplate
 \end_layout
 
 \begin_layout Standard
-Over time, our strategy for naming elements in the key has evolved, as has
- the notation for specifying changes.
- At the current time, we believe that the column names in the key should
- include the suffixes 
-\begin_inset Quotes eld
-\end_inset
-
-_new
-\begin_inset Quotes erd
-\end_inset
-
- or 
-\begin_inset Quotes eld
-\end_inset
-
-_old
-\begin_inset Quotes erd
-\end_inset
-
- to make the meaning perfectly obvious.
- The verbose variable value style that we illustrate here works dependably,
- while the some abbreviated methods will work.
- 
+The changes to be made in the wide or long format keys are equivalent.
+ The only difference is the 
 \end_layout
 
 \begin_layout Subsubsection
@@ -1864,7 +1605,7 @@ class_new
 
 \end_inset
 
- will probably be 
+ will be 
 \begin_inset Flex Code
 status open
 
@@ -1957,6 +1698,8 @@ reference "tab:Change-Type-Example1"
 \end_inset
 
 .
+ Here we show the middle section of the revised key in which we have spawned
+ 3 new variants of x2, each with its own name
 \end_layout
 
 \begin_layout Standard
@@ -1987,13 +1730,23 @@ name "tab:Change-Type-Example1"
 
 \begin_layout Plain Layout
 \begin_inset Tabular
-<lyxtabular version="3" rows="4" columns="4">
-<features rotate="0" tabularvalignment="middle">
+<lyxtabular version="3" rows="4" columns="5">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+name_new
+\end_layout
+
+\end_inset
+</cell>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
@@ -2036,6 +1789,15 @@ value_new
 \begin_inset Text
 
 \begin_layout Plain Layout
+x2.char
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
 character
 \end_layout
 
@@ -2063,13 +1825,22 @@ a|b|c|d|f
 \begin_inset Text
 
 \begin_layout Plain Layout
-Excellent|Proficient|Adequate|Marginal|Inadequate
+Excellent|Proficient|Good|Fair|Poor
 \end_layout
 
 \end_inset
 </cell>
 </row>
 <row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+x2.fac
+\end_layout
+
+\end_inset
+</cell>
 <cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
@@ -2101,13 +1872,22 @@ a|b|c|d|f
 \begin_inset Text
 
 \begin_layout Plain Layout
-Excellent|Proficient|Adequate|Marginal|Inadequate
+Excellent|Proficient|Good|Fair|Poor
 \end_layout
 
 \end_inset
 </cell>
 </row>
 <row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+x2.gpa
+\end_layout
+
+\end_inset
+</cell>
 <cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
@@ -2169,20 +1949,22 @@ reference "tab:Change-Type-Example1"
 
 \end_inset
 
-, the class of the variable remains the same.
- It produces a new character variable with embellished values.
- If we want this to become an R factor variable, line two demonstrates how
- to change the key class_new value.
- It is also possible to convert the character input into integer values,
- as we see in line 3.
+, the class 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+character
 \end_layout
 
-\begin_layout Standard
+\end_inset
 
-\series bold
-TODO question: could we allow the key to specify multiple recodings for
- a variable, one to create character, one to create factor, etc? I'm not
- sure it is designed to do that now.
+ remains the same.
+ That line will produce a new character variable with embellished values.
+ Line two demonstrates how to create an R factor variable.
+ We change the class_new to factor.
+ It is also possible to convert the character input into integer values,
+ as we see in line 3.
 \end_layout
 
 \begin_layout Standard
@@ -2227,7 +2009,7 @@ name "tab:Change-Type-Example2"
 \begin_layout Plain Layout
 \begin_inset Tabular
 <lyxtabular version="3" rows="4" columns="5">
-<features rotate="0" tabularvalignment="middle">
+<features tabularvalignment="middle">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
@@ -2285,7 +2067,7 @@ value_new
 \begin_inset Text
 
 \begin_layout Plain Layout
-x6.1
+x6.i100
 \end_layout
 
 \end_inset
@@ -2481,13 +2263,23 @@ name "tab:Change-Type-Example3"
 
 \begin_layout Plain Layout
 \begin_inset Tabular
-<lyxtabular version="3" rows="4" columns="4">
-<features rotate="0" tabularvalignment="middle">
+<lyxtabular version="3" rows="4" columns="5">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+name_new
+\end_layout
+
+\end_inset
+</cell>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
@@ -2530,6 +2322,15 @@ value_new
 \begin_inset Text
 
 \begin_layout Plain Layout
+x7.grades
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
 ordered
 \end_layout
 
@@ -2568,6 +2369,15 @@ F<D<C<B<A
 \begin_inset Text
 
 \begin_layout Plain Layout
+x7.passfail
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
 ordered
 \end_layout
 
@@ -2602,6 +2412,15 @@ Fail<Fail<Pass<Pass<Pass
 </cell>
 </row>
 <row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+x7.gpa
+\end_layout
+
+\end_inset
+</cell>
 <cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
@@ -2686,7 +2505,17 @@ combined
 \begin_layout Standard
 Working with ordered variables, whether as input or output, becomes more
  complicated if the existing data is not ordered in the way we want.
- In the toy data example, the variable 
+ In the 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+mydf
+\end_layout
+
+\end_inset
+
+ example, the variable 
 \begin_inset Flex Code
 status open
 
@@ -2844,13 +2673,23 @@ name "tab:Reorder-Values"
 
 \begin_layout Plain Layout
 \begin_inset Tabular
-<lyxtabular version="3" rows="3" columns="4">
-<features rotate="0" tabularvalignment="middle">
+<lyxtabular version="3" rows="3" columns="5">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
@@ -2893,6 +2732,15 @@ value_new
 \begin_inset Text
 
 \begin_layout Plain Layout
+x3.lo2hi
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
 ordered
 \end_layout
 
@@ -2927,6 +2775,15 @@ low<medium<high
 </cell>
 </row>
 <row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+x3.passfail
+\end_layout
+
+\end_inset
+</cell>
 <cell alignment="center" valignment="top" bottomline="true" usebox="none">
 \begin_inset Text
 
@@ -3086,7 +2943,7 @@ midrule
 
 \begin_layout Plain Layout
 
-x3 & x3new & ordered & ordered & lo & low &  &  
+x3 & x3lo2hi & ordered & ordered & lo & low &  &  
 \backslash
 
 \backslash
@@ -3095,7 +2952,7 @@ x3 & x3new & ordered & ordered & lo & low &  &
 
 \begin_layout Plain Layout
 
-x3 & x3new & ordered & ordered & med & medium &  &  
+x3 & x3lo2hi & ordered & ordered & med & medium &  &  
 \backslash
 
 \backslash
@@ -3104,7 +2961,34 @@ x3 & x3new & ordered & ordered & med & medium &  &
 
 \begin_layout Plain Layout
 
-x3 & x3new & ordered & ordered & hi & high &  &  
+x3 & x3lo2hi & ordered & ordered & hi & high &  &  
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+x3 & x3.passfail & ordered & ordered & low & low & & 
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+x3 & x3.passfail & ordered & ordered & medium & pass & & 
+\backslash
+
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+x3 & x3.passfail & ordered & ordered & high & pass & & 
 \backslash
 
 \backslash
@@ -3136,17 +3020,8 @@ end{tabular}
 \end_layout
 
 \begin_layout Standard
-In our first efforts, we tried to stick to the principle that the observed
- scores in the value_old column should not be altered and we should concentrate
- our effort on setting the corresponding value_new.
- However, that makes it difficult to reorder the levels of a factor, which
- can be especially important for ordered variables.
-\end_layout
-
-\begin_layout Standard
-In addition, the R symbol for missing values, NA, can be used in place of
- any new value to indicate that cases with a particular score should be
- treated as missing.
+The R symbol for missing values, NA, can be used in place of any new value
+ to indicate that cases with a particular score should be treated as missing.
  Sometimes there is confusion when data is passed in and out of CSV or XLSX
  format, because a character variable might have a legal value 
 \begin_inset Quotes eld
@@ -3231,8 +3106,8 @@ About numeric variables
 
 \begin_layout Standard
 In the process that creates the variable key template, we attempt to separate
- the variables with meaningfully discrete values--ones that we recode by
- reassignment of one-by-one values--from numeric variables that we think
+ the variables with meaningfully discrete values–ones that we recode by
+ reassignment of one-by-one values–from numeric variables that we think
  of differently.
  The non-discrete variables are included as one row in a variable key (whether
  wide or long) and the main elements of interest for these variables are
@@ -3389,7 +3264,7 @@ name "tab:Recode-Examples"
 \begin_layout Plain Layout
 \begin_inset Tabular
 <lyxtabular version="3" rows="6" columns="3">
-<features rotate="0" tabularvalignment="middle">
+<features tabularvalignment="middle">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
@@ -4014,6 +3889,11 @@ width "100col%"
 special "none"
 height "1in"
 height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
 status open
 
 \begin_layout Plain Layout
@@ -4100,6 +3980,11 @@ width "100col%"
 special "none"
 height "1in"
 height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
 status open
 
 \begin_layout Plain Layout
@@ -4254,6 +4139,11 @@ width "100col%"
 special "none"
 height "1in"
 height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
 status open
 
 \begin_layout Plain Layout
@@ -4274,11 +4164,19 @@ class_new
 \end_inset
 
  value must be one of the following
+\begin_inset Separator latexpar
+\end_inset
+
+
 \end_layout
 
 \begin_deeper
 \begin_layout Enumerate
 discrete variable types:
+\begin_inset Separator latexpar
+\end_inset
+
+
 \end_layout
 
 \begin_deeper
@@ -4309,6 +4207,10 @@ Date
 \end_deeper
 \begin_layout Enumerate
 floating-point numeric variable types:
+\begin_inset Separator latexpar
+\end_inset
+
+
 \end_layout
 
 \begin_deeper
@@ -4328,11 +4230,19 @@ Creating new variables.
 \begin_layout Enumerate
 Assigning new values.
  
+\begin_inset Separator latexpar
+\end_inset
+
+
 \end_layout
 
 \begin_deeper
 \begin_layout Enumerate
 discrete variable types.
+\begin_inset Separator latexpar
+\end_inset
+
+
 \end_layout
 
 \begin_deeper
@@ -4401,6 +4311,10 @@ value_new
 \begin_layout Enumerate
 numeric variable types.
  
+\begin_inset Separator latexpar
+\end_inset
+
+
 \end_layout
 
 \begin_deeper
@@ -4438,11 +4352,19 @@ value_new
 \end_deeper
 \begin_layout Enumerate
 Assign missings:
+\begin_inset Separator latexpar
+\end_inset
+
+
 \end_layout
 
 \begin_deeper
 \begin_layout Enumerate
 discrete variables: several options, we should settle on one suggestion
+\begin_inset Separator latexpar
+\end_inset
+
+
 \end_layout
 
 \begin_deeper

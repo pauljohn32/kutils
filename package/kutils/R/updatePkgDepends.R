@@ -66,7 +66,7 @@ updatePackages <- function(ask = FALSE, checkBuilt = TRUE,
 {
     ## See if package asks for dependencies not currently installed
     installedPackages <- rownames(installed.packages())
-    update.packages(ask = FALSE, checkBuilt = TRUE, repos = repos, ...)
+    update.packages(ask = ask, checkBuilt = checkBuilt, repos = repos, ...)
     avail <- available.packages(repos = repos)
     alldeps <- unique(unlist(tools::package_dependencies(installedPackages, which = dependencies,
                                                          db = avail,

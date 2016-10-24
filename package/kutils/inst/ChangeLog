@@ -1,3 +1,13 @@
+2016-10-24  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (## keyUpdate):demonstrate mydf case after
+	adding Jan to new data
+
+2016-10-20  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/updatePkgDepends.R (updatePackages): pass through arguments
+	ask and checkBuilt from command line to update.packages.
+
 2016-10-09  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/project.R (initProject): insert new rheader file which
