@@ -10,6 +10,7 @@
 ##' @param x a string
 ##' @param type "tex" is default, could be "filename" or "html"
 ##' @return corrected character vector
+##' @export
 ##' @author Paul Johnson
 ##' @examples
 ##' x1 <- c("_asdf&_&$", "asd adf asd_", "^ % & $asdf_")
@@ -67,6 +68,6 @@ escape <- function (x, type = "tex"){
         xn <- gsub("_AMPERSAND_", "&amp;", xn)
         return(xn)
     }
-    messg(paste("escape function can only handle \"tex\", \"html\" and \"filename"))
+    messg <- paste("escape function can only handle \"tex\", \"html\" and \"filename")
     stop(messg)
 }
