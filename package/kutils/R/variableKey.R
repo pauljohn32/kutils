@@ -316,13 +316,17 @@ cleanDataFrame <- function(dframe, safeNumericToInteger = TRUE){
 checkValues <- function(x, value_old, xname){
     if (!is.factor(x) && !is.character(x)) return(NULL)
     xobs <- unique(x)
-    if (length(keynotintobs <- value_old[!value_old %in% xobs]) > 0){
+    keynotinobs <- value_old[!value_old %in% xobs]
+    keynotinobs <- na.omit(keynotinobs)
+    if (length(keynotinobs) > 0){
         messg <- paste("Data Check (variable", xname, ":)\n",
                      "Key values were not observed in the input data: ",
-                     paste(keynotintobs, collapse = ", "), "\n")
+                     paste(keynotinobs, collapse = ", "), "\n")
         cat(messg)
     }
-    if (length(tobsnotinkey <- xobs[!xobs %in% value_old]) > 0) {
+    tobsnotinkey <- xobs[!xobs %in% value_old]
+    tobsnotinkey <- na.omit(tobsnotinkey)
+    if (length(tobsnotinkey) > 0) {
         messg <- paste("Data Check (variable", xname, ":)\n",
                        "These values in the input data were not in value_old: ",
                        paste(tobsnotinkey, collapse = ", "), "\n")
@@ -763,6 +767,7 @@ keyImport <- function(file, ignoreCase = TRUE,
         long <- TRUE
     } else {
         long <- FALSE
+
     }
 
     key.orig <- key
@@ -933,6 +938,7 @@ NULL
 ##'     differently than name_old in the key, but the two are
 ##'     otherwise identical, then the difference in capitalization
 ##'     will be ignored.
+##' @param debug Default FALSE. If TRUE, emit some warnings.
 ##' @return A recoded version of dframe
 ##' @export
 ##' @importFrom plyr mapvalues
@@ -950,7 +956,8 @@ NULL
 ##' nls.dat <- keyApply(natlongsurv, nls.keylong)
 ##'
 keyApply <- function(dframe, key, diagnostic = TRUE,
-                     safeNumericToInteger = TRUE, ignoreCase = TRUE){
+                     safeNumericToInteger = TRUE, ignoreCase = TRUE,
+                     debug = FALSE){
 
     dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
     if (diagnostic) dforig <- dframe
@@ -980,6 +987,10 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
     xlist <- list()
 
     for (v in keylist) {
+        if(debug){
+            print(paste("\n debug"))
+            print(v)
+        }
         class_new.key <- v$class_new
         class_old.key <- v$class_old
         class_old.data <- class_old.dframe[v$name_old]
@@ -1008,17 +1019,16 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             }
         }
 
-        ## Be simple. If they
-        ## have "recodes" in key, apply them.
+        ## Be simple. If they have "recodes" in key, apply them.
         ## TODO: Must decide if we enforce either/or logic in key
         ## Should we SKIP value_new and not do next step if they do that.
+        ## 20161028: I noticed conflict, so now conclude
+        ## if recode is applied, do not do value-based recode.
         if (length(v$recodes) > 0 && !all(is.na(v$recodes))) {
             for (cmd in v$recodes) xnew <- assignRecode(xnew, cmd)
             mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew")
             eval(parse(text = mytext))
-        }
-
-        if(class_new.key %in% c("ordered", "factor")) {
+        } else if(class_new.key %in% c("ordered", "factor")) {
             ## TODO: check mapvalues works with NA on output value
             ## TODO: If $v$value_old is empty, what to do?
             ## Too risky to assing value_new in that case, cutting out code which
@@ -1035,7 +1045,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
                 mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew")
                 eval(parse(text = mytext))
             } else {
-                stop("Can't understand why value_old and value_new are not equal in length")
+                    stop("We can't understand why value_old and value_new are not equal in length")
             }
         } else {
             ## TODO: about numerics. Should we allow recodes AS WELL AS value_old, value_new??
@@ -1121,7 +1131,8 @@ keyDiagnostic <-
         if (length(unique(dfold[ , v$name_old])) <= max.values){
             name_new.trunc <- substr(v$name_new, 1, min(nchar(v$name_new), nametrunc))
             name_old.trunc <- paste0(substr(v$name_old, 1, min(nchar(v$name_old), nametrunc)), " (old var)")
-            print(round(table(dfnew[ , v$name_new], dfold[ , v$name_old], exclude = NULL, dnn = c(name_new.trunc, name_old.trunc)), roundAt))
+            print(round(table(dfnew[ , v$name_new], dfold[ , v$name_old],
+                              exclude = NULL, dnn = c(name_new.trunc, name_old.trunc)), roundAt))
         } else {
             print("many values were observed than we can put in a table. What to do?")
         }

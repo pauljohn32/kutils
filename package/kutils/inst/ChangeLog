@@ -1,3 +1,9 @@
+2016-10-28  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (checkValues): prevent NA from triggering
+	output
+	(keyApply): add debug argument
+
 2016-10-25  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/textUtils.R (escape): html escape "/" as well
