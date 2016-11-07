@@ -1008,20 +1008,21 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
                      debug = FALSE){
     legalClasses = c("integer", "numeric", "double", "factor",
                      "ordered", "character", "logical")
+    
     dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
     if (diagnostic) dforig <- dframe
 
-    ## implement ignoreCase by keeping vector name_old.orig that we
+    ## implement ignoreCase by keeping vector dfname_old.orig that we
     ## can use later to put old names back onto data frame.
     ## If key has multiple entries that are identcal after tolower(), will use
     ## first one.
     ## Keep vector of original names. If ignoreCase=FALSE, this changes nothing.
-    name_old.orig <- colnames(dframe)
+    dfname_old.orig <- colnames(dframe)
     if (ignoreCase){
-        ## lowercase the names, keep record in named vector
+        ## lowercase the names
         colnames(dframe) <- tolower(colnames(dframe))
     }
-    names(name_old.orig) <- colnames(dframe)
+    names(dfname_old.orig) <- colnames(dframe)
 
     ## Hmm. Need to snapshot class of input variables before changing anything
     class_old.dframe <- sapply(dframe, function(x) class(x)[1])
@@ -1043,21 +1044,21 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         class_new.key <- v$class_new
         class_old.key <- v$class_old
         class_old.data <- class_old.dframe[v$name_old]
+        ## keep spare copy of original name, in case it gets lowercased next
+        v$name_old.orig <- v$name_old
         if(ignoreCase) v$name_old <- tolower(v$name_old)
 
         ## TODO: what if class_old does not match class of imported
         ## data.  Need to think through implications of doing something like
         ## xnew <- as(xnew, class_old)
 
-        ## If variable name from key is not in the data frame,
-        ## go to next variable.
+        ## If variable name from key is not in the data frame, go to next variable.
         if (!v$name_old %in% colnames(dframe)){
-            messg <- paste("Key has variable ", name_old.orig[v$name_old],
-                           "which is not in this data frame.",
-                           "This may be harmless, we are just warning you.")
+            messg <- paste("Notice: The data.frame does not include ", v$name_old.orig,
+                           "which is in the key. That key element has no effect.")
             print(messg)
             next()
-            }
+        }
 
         ## Extract candidate variable to column.
         xnew <- dframe[ , v$name_old]
@@ -1073,7 +1074,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             for (cmd in v$recodes) xnew <- assignRecode(xnew, cmd)
             if(class(xnew) != class_new.key){
                 messg <- paste("The return from the recode function was not of the correct class.",
-                               "The returned object shoudl be of type designated in key as 'class_new'."                               )
+                               "The returned object should be from 'class_new' by the key.")
                 print(v)
                 stop(messg)
             }
@@ -1089,7 +1090,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
                     mytext <- paste0("xnew <- ", class_new.key, "(xnew, levels = v$value_old)")
                     eval(parse(text = mytext))
                     newlevels <- v$value_new
-                    checkValues(xnew, v$value_old, name_old.orig[v$name_old])
+                    checkValues(xnew, v$value_old, dfname_old.orig[v$name_old])
                     names(newlevels) <- v$value_old
                     levels(xnew) <- newlevels[levels(xnew)]
                     mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew")
@@ -1103,7 +1104,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             ## There was no recode function, and this is not a factor or an ordered variable.
             ## Then process value_old to value_new.  Relying heavily on plyr::mapvalues
             if (length(v$value_old) == length(v$value_new)){
-                checkValues(xnew, v$value_old, name_old.orig[v$name_old])
+                checkValues(xnew, v$value_old, dfname_old.orig[v$name_old])
                 ## Only change xnew if there are value_old and differences with value_new
                 ## 20161107: could eliminate same-value old, new pairs, to be efficient,
                 ## but this applies them all.
@@ -1128,7 +1129,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
                 mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew")
                 eval(parse(text = mytext))
             } else {
-                messg <- paste(name_old.orig[v$name_old], "is neither factor not ordered.",
+                messg <- paste(dfname_old.orig[v$name_old], "is neither factor not ordered.",
                                "Why are new and old value vectors not same in length?")
                 stop(messg)
             }
@@ -1190,6 +1191,10 @@ keyDiagnostic <-
         roundAt <- 2
     }
     for (v in keylist){
+        if (!v$name_new %in% colnames(dfnew)){
+            messg <- paste("Variable", v$name_new, "is not included in the new data frame")
+            next()
+        }
         if (length(unique(dfold[ , v$name_old])) <= max.values){
             name_new.trunc <- substr(v$name_new, 1, min(nchar(v$name_new), nametrunc))
             name_old.trunc <- paste0(substr(v$name_old, 1, min(nchar(v$name_old), nametrunc)), " (old var)")
