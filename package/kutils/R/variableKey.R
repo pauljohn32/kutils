@@ -1082,7 +1082,6 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         } else if(class_new.key %in% c("ordered", "factor")) {
             ## There was no recode, so apply special fixup for ordered and factor variables. 
             ## TODO: If $v$value_old is "" (character empty), what to do? 
-            browser()
             if (sum(!is.na(v$value_old) > 0)){
                 if (length(v$value_old) == length(v$value_old)){
                     ## TODO: keep only differences between value_old and value_new?
@@ -1108,7 +1107,6 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
                 ## Only change xnew if there are value_old and differences with value_new
                 ## 20161107: could eliminate same-value old, new pairs, to be efficient,
                 ## but this applies them all.
-                browser()
                 if (any(!is.na(v$value_old)) && (!identical(v$value_old, v$value_new))){
                     xnew <- plyr::mapvalues(xnew, v$value_old, v$value_new, warn_missing = FALSE)
                 } 
