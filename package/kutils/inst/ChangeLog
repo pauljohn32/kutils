@@ -1,3 +1,13 @@
+2016-11-07  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/peek.R (dev.create): create graphic device on user
+	workstation. Needed to defeat R Studio
+
+	* ../R/variableKey.R (cleanDataFrame): use new function
+	is.data.frame.simple.
+	(is.data.frame.simple): new function returns FALSE if data frame
+	is not made up of columns.
+
 2016-10-28  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (checkValues): prevent NA from triggering

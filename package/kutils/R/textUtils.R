@@ -1,5 +1,5 @@
-##' Text that is to be included as content in documents is cleaned (escaped) to prevent
-##' errors
+##' Text that is to be included as content in documents is cleaned
+##' (escaped) to prevent errors
 ##'
 ##' This is for fixing up "untrusted text" that is to be passed into a
 ##' file as content. It protects against "bad" text strings in 3
@@ -17,8 +17,8 @@
 ##' gigantic set anymore.
 ##'
 ##' If type = "filename", then symbols that are not allowed in file
-##' names, such as
-##' "\", "*", are replaced. Do not use this on a full path, since it will obliterate path separators.
+##' names, such as "\", "*", are replaced. Do not use this on a
+##' full path, since it will obliterate path separators.
 ##'
 ##' @param x a string, or vector of strings (each of which is
 ##'     processed separately)

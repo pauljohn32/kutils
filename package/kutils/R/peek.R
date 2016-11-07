@@ -101,6 +101,7 @@
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @aliases histOMatic
 ##' @examples
+##' \donttest{
 ##' set.seed(234234)
 ##' N <- 200
 ##' mydf <- data.frame(x5 = rnorm(N), x4 = rnorm(N), x3 = rnorm(N),
@@ -111,18 +112,24 @@
 ##' ## Insert 16 missings
 ##' mydf$x1[sample(1:150, 16,)] <- NA
 ##' mydf$adate <- as.Date(c("1jan1960", "2jan1960", "31mar1960", "30jul1960"), format = "%d%b%y")
-##' peek(mydf)
+##' peek(mydf, width = 8, height = 5)
+##' dev.off()
 ##' peek(mydf, sort = FALSE)
+##' dev.off()
 ##' ## Demonstrate the dot-dot-dot usage to pass in hist params
 ##' peek(mydf, breaks = 30, ylab = "These are Counts, not Densities", freq = TRUE)
+##' dev.off()
 ##' ## Not Run: file output
 ##' ## peek(mydf, sort = FALSE, file = "three_histograms.pdf")
 ##' ## Use some objects from the datasets package
 ##' library(datasets)
-##' peek(cars)
-##' peek(EuStockMarkets)
-##'
-##' peek(EuStockMarkets, breaks = 50, freq = TRUE)
+##' peek(cars, xlabstub = "R cars data: ")
+##' dev.off()
+##' peek(EuStockMarkets, xlabstub = "Euro Market Data: ")
+##' devloff()
+##' peek(EuStockMarkets, xlabstub = "Euro Market Data: ", breaks = 50,
+##'      freq = TRUE)
+##' dev.off()
 ##' ## Not run
 ##' ## peek(EuStockMarkets, breaks = 50, file = "myeuro.pdf",
 ##' ##      height = 4, width=3, family = "Times")
@@ -130,17 +137,22 @@
 ##' ##      onefile = FALSE, family = "Times", textout = TRUE)
 ##' ## xlab goes into "..." and affects both histograms and barplots
 ##' peek(mydf, breaks = 30, ylab = "These are Counts, not Densities",
-##'     freq = TRUE, xlab = "Whatever I say")
+##'     freq = TRUE)
+##' dev.off()
 ##' ## xlab is added in the barargs list.
 ##' peek(mydf, breaks = 30, ylab = "These are Counts, not Densities",
 ##'     freq = TRUE, barargs = list(horiz = TRUE, las = 1, xlab = "I'm in barargs"))
+##' dev.off()
 ##' peek(mydf, breaks = 30, ylab = "These are Counts, not Densities", freq = TRUE,
-##'      barargs = list(horiz = TRUE, las = 1, xlim = c(0,100), xlab = "I'm in barargs"))
+##'      barargs = list(horiz = TRUE, las = 1, xlim = c(0, 100),
+##'      xlab = "I'm in barargs, not in histargs"))
 ##' levels(mydf$x1) <- c(levels(mydf$x1), "arthur philpot smythe")
 ##' mydf$x1[4] <- "arthur philpot smythe"
 ##' mydf$x2[1] <- "I forgot what letter"
 ##' peek(mydf, breaks = 30,
 ##'      barargs = list(horiz = TRUE, las = 1))
+##' dev.off()
+##' }
 peek <-
     function(dat, sort = TRUE, file = NULL, textout = FALSE, ask, ...,
              xlabstub = "kutils peek: ", freq = FALSE,
@@ -256,10 +268,9 @@ peek <-
                     "fillOddEven", "compress")
     dotsForPDF <- dots[pdfFormals[pdfFormals %in% names(dots)]]
 
-    deviceFormals <- c("width", "height")
+    deviceFormals <- c("width", "height", "noRStudioGD")
     dotsForDevice <- dots[deviceFormals[deviceFormals %in% names(dots)]]
     dots[names(dotsForPDF)] <- NULL
-
      
     
     ## Unless user sets ask, we assume TRUE if there is no file argument
@@ -273,22 +284,54 @@ peek <-
         pdfargz <- modifyList(pdfargs, dotsForPDF)
         do.call("pdf", pdfargz)
     } else {
-        do.call("dev.new", dotsForDevice)
+        do.call("dev.create", dotsForDevice)
     }
     
     if (is.null(file) || isTRUE(ask)) devAskNewPage(TRUE)
     
     for (i in names(colTypes)){
-        if ( colTypes[i] == "numeric" ){
+        if (colTypes[i] == "numeric" ){
             quickhist(i)
         } else {
             quickbar(i)
         }
     }
-    if (!is.null(file)) dev.off()
+    if(!is.null(file)) dev.off()
     namez
 }
 
 
 
 
+
+##' Create a graphics device
+##'
+##' This is a way to create a graphic device on screen that can
+##' display R plots. It is performing the same purpose as R's dev.new,
+##' but it overcomes the limitations of RStudio.  It is needed because
+##' RStudio does not implement fully the functionality of
+##' dev.new. This is suitable for Windows, Linux, and
+##' Macintosh operating systems.
+##'
+##' The argument in dev.new named noRStudioGD seems to aimed at same
+##' puroose. But it does not do what I want and documentation is too
+##' sparse.
+##' @param ... Currently, height and width parameters that would be
+##'     suitable with dev.new
+##' @return NULL
+##' @author Paul Johnson <pauljohn@@ku.edu>
+##' @export
+##' @examples
+##' \donttest{
+##' dev.create(height = 7, width = 3)
+##' dev.off()
+##' }
+dev.create <- function(...){
+    dots <- list(...)
+    systype <- tolower(Sys.info()["sysname"])
+    devtype = switch(systype,
+                     "darwin"  = "quartz",
+                     "linux"   = "x11",
+                     "windows" = "windows")
+    do.call(devtype, dots)
+}

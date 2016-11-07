@@ -317,6 +317,7 @@ cleanDataFrame <- function(dframe, safeNumericToInteger = TRUE){
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @export
 ##' @examples
+##' N <- 100
 ##' mydf <- data.frame(x5 = rnorm(N),
 ##'                    x4 = rpois(N, lambda = 3),
 ##'                    x3 = ordered(sample(c("lo", "med", "hi"),
@@ -779,7 +780,7 @@ keyImport <- function(file, ignoreCase = TRUE,
                               integer = "\\|", factor = "[\\|<]",
                               ordered = "[\\|<]", numeric = "\\|")
                      ,
-                      na.strings = c(".", "",  "\\s",  "NA", "N/A")
+                      na.strings = c(".", "", "\\s",  "NA", "N/A")
                      ,
                       ...
                      ,
@@ -821,8 +822,7 @@ keyImport <- function(file, ignoreCase = TRUE,
     key$value_old <- n2NA(zapspace(key$value_old))
     key$value_new <- n2NA(zapspace(key$value_new))
     key$value_new[key$value_new %in% na.strings] <- NA
-    ## key$recodes[key$recodes %in% na.strings] <- NA
-    ## key$missings[key$missings %in% na.strings] <- NA
+   
     ## Delete repeated rows:
     dups <- duplicated(key)
     if (any(dups, na.rm = TRUE))key <- key[!(dups), ]
@@ -995,7 +995,7 @@ NULL
 ##' mydf.key <-  keyImport(mydf.key.path)
 ##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
 ##'
-##' mydf <- read.csv(mydf.path, stringsAsFactors=FALSE)
+##' mydf <- read.csv(mydf.path, stringsAsFactors = FALSE)
 ##' mydf2 <- keyApply(mydf, mydf.key)
 ##'
 ##' nls.keylong.path <- system.file("extdata", "natlongsurv.key_long.csv", package = "kutils")
@@ -1057,7 +1057,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
                            "This may be harmless, we are just warning you.")
             print(messg)
             next()
-        }
+            }
 
         ## Extract candidate variable to column.
         xnew <- dframe[ , v$name_old]
@@ -1069,10 +1069,6 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         }
 
         ## Be simple. If they have "recodes" in key, apply them.
-        ## TODO: Must decide if we enforce either/or logic in key
-        ## Should we SKIP value_new and not do next step if they do that.
-        ## 20161028: I noticed conflict, so now conclude
-        ## if recode is applied, do not do value-based recode.
         if (length(v$recodes) > 0 && !all(is.na(v$recodes))) {
             for (cmd in v$recodes) xnew <- assignRecode(xnew, cmd)
             if(class(xnew) != class_new.key){
@@ -1084,40 +1080,44 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew")
             eval(parse(text = mytext))
         } else if(class_new.key %in% c("ordered", "factor")) {
-            ## TODO: check mapvalues works with NA on output value
-            ## TODO: If $v$value_old is empty, what to do?
-            ## Too risky to assing value_new in that case, cutting out code which
-            ## tried to guess and do so.
-            if (!is.na(v$value_old) && length(v$value_old) == length(v$value_old)){
-                ## TODO: keep only differences between value_old and value_new?
-                ## Following to Work around the "deprecated duplicated levels" and "unused levels problem"
-                mytext <- paste0("xnew <- ", class_new.key, "(xnew, levels = v$value_old)")
-                eval(parse(text = mytext))
-                newlevels <- v$value_new
-                checkValues(xnew, v$value_old, name_old.orig[v$name_old])
-                names(newlevels) <- v$value_old
-                levels(xnew) <- newlevels[levels(xnew)]
-                mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew")
-                eval(parse(text = mytext))
-            } else {
-                    stop("We can't understand why value_old and value_new are not equal in length")
+            ## There was no recode, so apply special fixup for ordered and factor variables. 
+            ## TODO: If $v$value_old is "" (character empty), what to do? 
+            browser()
+            if (sum(!is.na(v$value_old) > 0)){
+                if (length(v$value_old) == length(v$value_old)){
+                    ## TODO: keep only differences between value_old and value_new?
+                    ## Following to Work around the "deprecated duplicated levels" and "unused levels problem"
+                    mytext <- paste0("xnew <- ", class_new.key, "(xnew, levels = v$value_old)")
+                    eval(parse(text = mytext))
+                    newlevels <- v$value_new
+                    checkValues(xnew, v$value_old, name_old.orig[v$name_old])
+                    names(newlevels) <- v$value_old
+                    levels(xnew) <- newlevels[levels(xnew)]
+                    mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew")
+                    eval(parse(text = mytext))
+                } else {
+                    messg <- "keyApply: value_old and value_new are not equal in length"
+                    stop(messg)
+                }
             }
         } else {
-            ## If no recode, then value_old to value_new
+            ## There was no recode function, and this is not a factor or an ordered variable.
+            ## Then process value_old to value_new.  Relying heavily on plyr::mapvalues
             if (length(v$value_old) == length(v$value_new)){
-                ## TODO: need to stress test this on other variable types.
-                ## so only do re-assignment if any value_old are not NA.
                 checkValues(xnew, v$value_old, name_old.orig[v$name_old])
-                if (any(!is.na(v$value_old))) {
+                ## Only change xnew if there are value_old and differences with value_new
+                ## 20161107: could eliminate same-value old, new pairs, to be efficient,
+                ## but this applies them all.
+                browser()
+                if (any(!is.na(v$value_old)) && (!identical(v$value_old, v$value_new))){
                     xnew <- plyr::mapvalues(xnew, v$value_old, v$value_new, warn_missing = FALSE)
-                }
-                ## 20161107
-                ## TODO fixme!
-                ## Arrive here with no guidance except class_new value. Use brutal
-                ## R coercion and hope there's no error.
-                ## Key may have changed "numeric" to "integer", for example.
-                if ((class(xnew) != class_new.key))
-                    if (!class_new.key %in% legalClasses)){
+                } 
+                ## 20161107: Plan implemented now:
+                ## Arrive here with no guidance except class_new value. Use
+                ## R coercion and hope there's no error, but only for legalClasses.
+                ## If class_new is some other, and xnew is not one of those, STOP!
+                if ((class(xnew) != class_new.key)){
+                    if (!class_new.key %in% legalClasses) {
                         ## class is not correct, so try coercion
                         xnew <- as(xnew, class_new.key)
                     } else {
@@ -1126,10 +1126,10 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
                         print(v)
                         stop(messg)
                     }
-            
-            mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew")
+                }
+                mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew")
                 eval(parse(text = mytext))
-        } else {
+            } else {
                 messg <- paste(name_old.orig[v$name_old], "is neither factor not ordered.",
                                "Why are new and old value vectors not same in length?")
                 stop(messg)
