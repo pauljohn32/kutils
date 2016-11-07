@@ -108,7 +108,8 @@ NULL
 ##' not dependable.  Exact comparisons with == are
 ##' unreliable, so don't ask for them.
 ##'
-##' @return A (hopefully) cleaned column of data
+##' @return A cleaned column in which R's NA symbol replaces values
+##'     that should be missing
 ##' @export
 ##' @importFrom utils head
 ##' @author Paul Johnson
@@ -224,7 +225,7 @@ assignMissing <- function(x, missings = NULL){
 ##' A variable is transformed in an indicated way
 ##'
 ##' In the variable key framework, the user might request
-##' transormations such as the logarithm, exponential, or square
+##' transformations such as the logarithm, exponential, or square
 ##' root. This is done by including strings in the recodes column,
 ##' such as "log(x + 1)" or "3 + 1.1 * x + 0.5 * x ^ 2". This
 ##' function implements the user's request by parsing the character
@@ -279,26 +280,64 @@ cleanDataFrame <- function(dframe, safeNumericToInteger = TRUE){
         messg <- paste("keyUpdate: The dframe object must be a data frame")
         stop(messg)
     }
-    ## Does this data frame have any embedded matrices or lists? If it
-    ## is not "single column" elements, stop.
-    ## See: http://stackoverflow.com/questions/38902880/data-frame-in-which-elements-are-not-single-columns
-    no.dims <- function(x) {!is.null(dim(x))}
-    if (sum(sapply(dframe, no.dims)) > 0) {
-        messg <- paste("cleanDataFrame checked if dframe elements are not single columns.",
-                       "This frame has some elements that are not single columns.")
+  
+    if (!(res <- is.data.frame.simple(dframe))) {
+        messg <- paste(paste("cleanDataFrame checked if dframe elements are not single columns.",
+                       "This frame has some elements that are not single columns.",
+                       "The troublesome elements are:", collapse = ""),
+                       paste(attr(res, "not_a_simple_column"), collapse = ", "))
         stop(messg)
     }
 
     ## If integer-like columns exist, turn them into integers
     if (safeNumericToInteger){
         for(i in colnames(dframe)){
-            if(is.numeric(dframe[ , i]) && !is.null(tmp <- safeInteger(dframe[ , i]))) dframe[ , i] <- tmp
+            if(is.numeric(dframe[ , i])
+               && !is.null(tmp <- safeInteger(dframe[ , i])))
+                dframe[ , i] <- tmp
         }
     }
     dframe
 }
 
 
+##' Check if a data frame is a simple collection of columns (no lists
+##' or matrices within)
+##'
+##' Checks for the existence of dimensions within the data
+##' frame. Returns FALSE if any object within dframe has non-null dim
+##' value.
+##'
+##' See: http://stackoverflow.com/questions/38902880/data-frame-in-which-elements-are-not-single-columns
+##'  
+##' @param dframe A data frame
+##' @return Boolean, TRUE or FALSE. An attribute "not_a_simple_column"
+##'     is created, indicating which of the elements in the dframe
+##'     have dimensions
+##' @author Paul Johnson <pauljohn@@ku.edu>
+##' @export
+##' @examples
+##' mydf <- data.frame(x5 = rnorm(N),
+##'                    x4 = rpois(N, lambda = 3),
+##'                    x3 = ordered(sample(c("lo", "med", "hi"),
+##'                    size = N, replace=TRUE)))
+##' is.data.frame.simple(mydf)
+##' mydf$amatr <- matrix(0, ncol = 2, nrow = NROW(mydf))
+##' is.data.frame.simple(mydf)
+##' mydf$amatr <- NULL
+##' is.data.frame.simple(mydf)
+##' mydf$adf <- mydf
+##' is.data.frame.simple(mydf)
+is.data.frame.simple <- function(dframe){
+    no.dims <- function(x) {!is.null(dim(x))}
+    elemdims <- sapply(dframe, no.dims)
+    res <-  if(sum(elemdims) > 0) FALSE else TRUE
+    attr(res, "not_a_simple_column") <- names(which(elemdims))
+    res
+}
+
+
+    
 ##' Compare observed values with the values listed
 ##' (presumably from a variable key).
 ##'
@@ -743,10 +782,13 @@ keyImport <- function(file, ignoreCase = TRUE,
                       na.strings = c(".", "",  "\\s",  "NA", "N/A")
                      ,
                       ...
-                      , keynames = NULL)
+                     ,
+                      keynames = NULL)
 {
     key <- smartRead(file)
-
+    
+    legalClasses = c("integer", "numeric", "double", "factor",
+                     "ordered", "character", "logical")
     if(!is.null(keynames)){
         keynames.std <- c(name_old = "name_old",
                           name_new = "name_new",
@@ -767,7 +809,6 @@ keyImport <- function(file, ignoreCase = TRUE,
         long <- TRUE
     } else {
         long <- FALSE
-
     }
 
     key.orig <- key
@@ -786,6 +827,13 @@ keyImport <- function(file, ignoreCase = TRUE,
     dups <- duplicated(key)
     if (any(dups, na.rm = TRUE))key <- key[!(dups), ]
 
+    if (any(!unique(key$class_new) %in% legalClasses)){
+        messg <- paste("Some values of class_new in the key are unexpected.",
+                       "Please supply appropriate recode statements which ",
+                       "return objects of the class you specify in class_new.")
+        warning(messg)
+    }
+    
     attr(key, "ignoreCase") <- ignoreCase
     if (long){
         class(key) <- c("keylong", "data.frame")
@@ -958,7 +1006,8 @@ NULL
 keyApply <- function(dframe, key, diagnostic = TRUE,
                      safeNumericToInteger = TRUE, ignoreCase = TRUE,
                      debug = FALSE){
-
+    legalClasses = c("integer", "numeric", "double", "factor",
+                     "ordered", "character", "logical")
     dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
     if (diagnostic) dforig <- dframe
 
@@ -1026,6 +1075,12 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         ## if recode is applied, do not do value-based recode.
         if (length(v$recodes) > 0 && !all(is.na(v$recodes))) {
             for (cmd in v$recodes) xnew <- assignRecode(xnew, cmd)
+            if(class(xnew) != class_new.key){
+                messg <- paste("The return from the recode function was not of the correct class.",
+                               "The returned object shoudl be of type designated in key as 'class_new'."                               )
+                print(v)
+                stop(messg)
+            }
             mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew")
             eval(parse(text = mytext))
         } else if(class_new.key %in% c("ordered", "factor")) {
@@ -1048,8 +1103,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
                     stop("We can't understand why value_old and value_new are not equal in length")
             }
         } else {
-            ## TODO: about numerics. Should we allow recodes AS WELL AS value_old, value_new??
-
+            ## If no recode, then value_old to value_new
             if (length(v$value_old) == length(v$value_new)){
                 ## TODO: need to stress test this on other variable types.
                 ## so only do re-assignment if any value_old are not NA.
@@ -1057,15 +1111,25 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
                 if (any(!is.na(v$value_old))) {
                     xnew <- plyr::mapvalues(xnew, v$value_old, v$value_new, warn_missing = FALSE)
                 }
-                ## coerce data to class type in key if that differs
-                ## from data. Key may have changed "numeric" to "integer", for example.
-                if (class(xnew) != class_new.key){
-                    xnew <- as(xnew, class_new.key)
-                }
-
-                mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew")
+                ## 20161107
+                ## TODO fixme!
+                ## Arrive here with no guidance except class_new value. Use brutal
+                ## R coercion and hope there's no error.
+                ## Key may have changed "numeric" to "integer", for example.
+                if ((class(xnew) != class_new.key))
+                    if (!class_new.key %in% legalClasses)){
+                        ## class is not correct, so try coercion
+                        xnew <- as(xnew, class_new.key)
+                    } else {
+                        messg <- paste("The class of the variable did not match",
+                                       "the class specified in the variable key.")
+                        print(v)
+                        stop(messg)
+                    }
+            
+            mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew")
                 eval(parse(text = mytext))
-            } else {
+        } else {
                 messg <- paste(name_old.orig[v$name_old], "is neither factor not ordered.",
                                "Why are new and old value vectors not same in length?")
                 stop(messg)
