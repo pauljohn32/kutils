@@ -1,3 +1,11 @@
+2016-11-08  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (keyApply): create new  if/then for factor ->
+	numeric conversion.
+	(printvals): Brent's example showed that value_old as "NA" was
+	manufactured by long to wide in a paste statement. ifelse logic
+	should prevent that now.
+
 2016-11-07  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (keyDiagnostic): if variable is not in

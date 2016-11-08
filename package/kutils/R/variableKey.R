@@ -355,6 +355,8 @@ is.data.frame.simple <- function(dframe){
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 checkValues <- function(x, value_old, xname){
     if (!is.factor(x) && !is.character(x)) return(NULL)
+    ## if value_old is length 1 and is equal to NA, don't bother
+    if(all(value_old %in% c("NA", NA))) return(NULL)
     xobs <- unique(x)
     keynotinobs <- value_old[!value_old %in% xobs]
     keynotinobs <- na.omit(keynotinobs)
@@ -1113,6 +1115,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         } else {
             ## There was no recode function, and this is not a factor or an ordered variable.
             ## Then process value_old to value_new.  Relying heavily on plyr::mapvalues
+            xnew <- zapspace(xnew)
             if (length(v$value_old) == length(v$value_new)){
                 checkValues(xnew, v$value_old, dfname_old.orig[v$name_old])
                 ## Only change xnew if there are value_old and differences with value_new
@@ -1328,18 +1331,21 @@ long2wide <- function(keylong){
         missings <- na.omit(missings)
         recodes <- n2NA(unique(x$recodes))
         recodes <- na.omit(recodes)
-        ## TODO: reconsider cleaning up value proposal as follows.
-        ## is there any benefit or danger in it?
-        ## Do we have NA versus "NA" versus "" problem there?
         values <- cbind(value_old = x$value_old, value_new = x$value_new)
         values <- unique(values)
+
+        ## Cleans up fact that NA -> "NA" in paste statement.
+        printvals <- function(x, collapse){
+            x <- ifelse(is.na(x), "", x)
+            paste(x, collapse = collapse)
+        }
         
         list(name_old = unique(x$name_old),
              name_new = unique(x$name_new),
              class_old = unique(x$class_old),
              class_new = unique(x$class_new),
-             value_old = paste(values[ , "value_old"], collapse = sep_old),
-             value_new = paste(values[ , "value_new"], collapse = sep_new),
+             value_old = printvals(values[ , "value_old"], collapse = sep_old),
+             value_new = printvals(values[ , "value_new"], collapse = sep_new),
              missings = paste(missings, collapse = ";"),
              recodes =  paste(recodes, collapse = ";"))
     }

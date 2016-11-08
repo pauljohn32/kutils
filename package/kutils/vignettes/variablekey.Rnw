@@ -135,7 +135,7 @@ the intentions of principal investigators the implementation by code
 writers. The framework is implemented in the R \citep{RCore} package
 \code{kutils}. 
 \end{abstract}
-<<>>=
+<<echo=F>>=
 if(!dir.exists("plots")) dir.create("plots")
 @
 
@@ -161,8 +161,8 @@ time. In one very large project, we were asked to combine, recode,
 and integrate variables from 21 different files. The various files
 used different variable names and had different, unique coding schemes.
 A skeptic might have thought that the firm which created the data
-sets intentionally obfuscated the variable names and codings to prevent
-the comparison of variables across a series of surveys. 
+sets intentionally obfuscated the records to prevent the comparison
+of variables across a series of surveys.
 
 In projects like that, the challenge of importing and fixing the data
 seems overwhelming. The graduate research assistants are asked to
@@ -341,18 +341,57 @@ mydf$x5[sample(1:N, 10)] <- -999
 
 \subsection{Step 1. Create a Key Template}
 
-In \code{kutils}, we offer a function called \code{keyTemplate}
-that can scan a data frame and generate a new key template. The new
-template will have the old column names and observed values and it
-will leave place holders for new names and values. The function will
-handle the work of creating the key template object in the R workspace
-or writing it into a file in CSV, XLSX, or RDS format. 
+The function \code{keyTemplate} scans a data frame and generates
+a new key template. The key has 8 pieces of information about each
+variable:
+\begin{enumerate}
+\item name\_old
+\item name\_new
+\item class\_old
+\item class\_new
+\item value\_old
+\item value\_new
+\item missings
+\item recodes
+\end{enumerate}
+The first 6 elements will be filled in with the old values equal to
+the new values. 
 
 At the current time, there are two formats for the key template, ``long''
-and ``wide''. The \code{keyTemplate} function's argument \code{long}
-can be set as \code{TRUE} or \code{FALSE}. If \code{FALSE}, the
-key template will be in the wide. The essence of the difference is
-that the wide format puts all of the required information into a one-row-per-variable
+and ``wide''. These names are used in the same sense in which those
+terms are used in R's reshape function. The two key formats are intended
+to be interchangeable in functionality. Some users may prefer to edit
+variable information in one method and the re-importation of the key's
+information should deal gracefully with either type of variable key. 
+
+A wide format key can be produced with a call to the \code{keyTemplate}
+function like so:
+
+<<eval=F>>=
+key <- keyTemplate(mydf, file = "key_wide.csv")
+@
+
+\noindent That will produce a ``wide'' key (the default). On the
+other hand, one can ask for a long format key by including the long
+argument:
+
+<<eval=F>>=
+key <- keyTemplate(mydf, long = TRUE, file = "key_long.csv")
+@
+
+\noindent Because the file argument is supplied, a file is created
+at the same time. At the current time, names ending in ``\code{\noindent .csv}'',
+``\code{\noindent .xlsx}'', and ``\code{\noindent .rds}'' are
+allowed (for creating comma separated variables, Excel spreadsheets,
+and R serialization data structures). Some users may prefer to save
+the key in other formats, but that will not be handled by \code{\noindent keyTemplate}
+automatically. One should save the key object in a separate step in
+another format is needed.
+
+The \code{keyTemplate} function's argument \code{long} can be set
+as \code{TRUE} or \code{FALSE}. If \code{FALSE}, the key template
+will be in the wide. The essence of the difference is that the wide
+format puts all of the required information into a one-row-per-variable
 format, while the long version creates one-row-per-value. The difference
 is most apparent if we begin with the example \code{mydf}.
 
@@ -369,7 +408,7 @@ library(xtable)
 @
 
 <<key10>>=
-keywide <- keyTemplate(mydf, long = FALSE, max.levels = 5)
+keywide <- keyTemplate(mydf, max.levels = 5)
 @
 
 \noindent The \code{\noindent max.levels} parameter defaults to 15,
@@ -458,10 +497,58 @@ the columns, for example, by editing \code{name\_new}. The supervisor
 and principal investigator can change just a few variable names or
 values. In a large project, there may be quite a bit of work involved. 
 
-The changes to be made in the wide or long format keys are equivalent.
-The only difference is the 
+Because editing the key can be a rather involved process, we will
+wait to discuss the details until section 
 
-\subsubsection{Factor, ordered, and character variables}
+\subsection{Step 3. keyImport}
+
+Once any desired changes to variables have been entered into the variable
+key, the file needs to be imported back into R. First, the csv (\code{read.csv}),
+xlsx (\code{openxlsx::read.xlsx}), or rds (\code{readRDS}) file
+containing the edited key needs to be read into R. It is important
+to specify \code{stringsAsFactor = FALSE} as an argument when reading
+the key into R. Next the key is provided to the \code{keyImport}
+function in \code{kutils}. The \code{keyImport} function is set
+to read short keys by default, providing the argument \code{long = TRUE}
+will switch to a long key. The \code{keyImport} function always returns
+a list with information about how each variable is to be recoded.
+The structure of the list will be the same with a long or short key
+being provided. Inspecting the key list will show that each item contains
+the information provided in a single row of a short key. The key list
+has a fixed format so that the process of using the key list to manipulate
+the data is not influenced by what key format was used. We do not
+suggest attempting to create a key list manually. See the code below
+for a basic example of how a key file is read into R and then provided
+to \code{keyImport}. 
+
+\noindent\begin{minipage}[t]{1\columnwidth}%
+\inputencoding{latin9}\begin{lstlisting}
+mydf.key <- read.csv("mydf.key.csv", stringsAsFactor = FALSE) 
+mydf.keylist <- keyImport(mydf.key, long = FALSE)
+\end{lstlisting}
+\inputencoding{utf8}%
+\end{minipage}
+
+\subsection{Step 4. Apply the imported key to the data}
+
+The final step is to apply the key to the data frame that needs variables
+recoded. The recoded data frame is obtained by assigning a name to
+the output of the \code{kutils} function \code{keyApply}. The \code{keyApply}
+function takes the name of the data frame to be recoded and the key
+list created in Step 3 to produce a new data frame with the desired
+recodings. See the code below for a basic example of how an imported
+key is applied to a data frame. 
+
+\noindent\begin{minipage}[t]{1\columnwidth}%
+\inputencoding{latin9}\begin{lstlisting}
+keyed.df <- keyApply(mydf, mydf.keylist)
+\end{lstlisting}
+\inputencoding{utf8}%
+\end{minipage}
+
+\section{Editing the variable key\label{sec:Editing-the-key}}
+
+\subsection{Factor, ordered, and character variables}
 
 The recoding of discrete variables is a fairly obvious chore. For
 each old value, a new value may be specified. 
@@ -489,7 +576,6 @@ x2.fac & character & factor & a|b|c|d|f & Excellent|Proficient|Good|Fair|Poor\ta
 x2.gpa & character & integer & a|b|c|d|f & 4|3|2|1|0\tabularnewline
 \hline 
 \end{tabular}
-
 \end{table}
 
 In line one of Table \ref{tab:Change-Type-Example1}, the class \code{character}
@@ -515,14 +601,12 @@ x6.c & integer & character & 1|2|3|4|5 & Austin|Denver|Nashville|Provo|Miami\tab
 x6.f & integer & factor & 1|2|3|4|5 & F|D|C|B|A\tabularnewline
 \hline 
 \end{tabular}
-
 \end{table}
 
 If a variable's class\_old is ordered, and we simply want to relabel
 the existing levels, the work is also easy (see Table \ref{tab:Change-Type-Example3}).
 
 \begin{table}[H]
-
 \caption{Change Class, Example 3\label{tab:Change-Type-Example3}}
 
 \begin{tabular}{ccccc}
@@ -534,7 +618,6 @@ x7.passfail & ordered & ordered & f<d<c<b<a & Fail<Fail<Pass<Pass<Pass\tabularne
 x7.gpa & ordered & integer & f<d<c<b<a & 0|1|2|3|4\tabularnewline
 \hline 
 \end{tabular}
-
 \end{table}
 
 The second row in Table \ref{tab:Change-Type-Example3} shows that
@@ -573,7 +656,6 @@ x3.lo2hi & ordered & ordered & low<med<hi & low<medium<high\tabularnewline
 x3.passfail & ordered & ordered & low<med<hi & low<pass<pass\tabularnewline
 \hline 
 \end{tabular}
-
 \end{table}
 
 The key importer will check that all ``duplicated levels'' are adjacent
@@ -585,7 +667,6 @@ to re-order the rows to indicate the lo is lower than med, and then
 for the new values we put in the desired names (see Table \ref{tab:Reorder-Values-Example2}).
 
 \begin{table}[H]
-
 \caption{Reorder Values, Example 2\label{tab:Reorder-Values-Example2}}
 
 \begin{tabular}{llllllll}
@@ -677,7 +758,6 @@ x6 & x6 & integer & integer & 1$|$2$|$3$|$4$|$5 & 1$|$2$|$3$|$4$|$5 & c(-9) & \\
 \end{tabular}
 
 }
-
 \end{table}
 
 
@@ -708,52 +788,6 @@ the more ambiguous class\_old value ``numeric'' is used for variables
 that are truly double-precision floating point numbers or integer
 variables that have not were not declared as integers when the data
 was imported.
-
-\subsection{Step 3. keyImport}
-
-Once any desired changes to variables have been entered into the variable
-key, the file needs to be imported back into R. First, the csv (\code{read.csv}),
-xlsx (\code{openxlsx::read.xlsx}), or rds (\code{readRDS}) file
-containing the edited key needs to be read into R. It is important
-to specify \code{stringsAsFactor = FALSE} as an argument when reading
-the key into R. Next the key is provided to the \code{keyImport}
-function in \code{kutils}. The \code{keyImport} function is set
-to read short keys by default, providing the argument \code{long = TRUE}
-will switch to a long key. The \code{keyImport} function always returns
-a list with information about how each variable is to be recoded.
-The structure of the list will be the same with a long or short key
-being provided. Inspecting the key list will show that each item contains
-the information provided in a single row of a short key. The key list
-has a fixed format so that the process of using the key list to manipulate
-the data is not influenced by what key format was used. We do not
-suggest attempting to create a key list manually. See the code below
-for a basic example of how a key file is read into R and then provided
-to \code{keyImport}. 
-
-\noindent\begin{minipage}[t]{1\columnwidth}%
-\inputencoding{latin9}\begin{lstlisting}
-mydf.key <- read.csv("mydf.key.csv", stringsAsFactor = FALSE) 
-mydf.keylist <- keyImport(mydf.key, long = FALSE)
-\end{lstlisting}
-\inputencoding{utf8}%
-\end{minipage}
-
-\subsection{Step 4. Apply the imported key to the data}
-
-The final step is to apply the key to the data frame that needs variables
-recoded. The recoded data frame is obtained by assigning a name to
-the output of the \code{kutils} function \code{keyApply}. The \code{keyApply}
-function takes the name of the data frame to be recoded and the key
-list created in Step 3 to produce a new data frame with the desired
-recodings. See the code below for a basic example of how an imported
-key is applied to a data frame. 
-
-\noindent\begin{minipage}[t]{1\columnwidth}%
-\inputencoding{latin9}\begin{lstlisting}
-keyed.df <- keyApply(mydf, mydf.keylist)
-\end{lstlisting}
-\inputencoding{utf8}%
-\end{minipage}
 
 \section{Discussion}
 
