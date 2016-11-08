@@ -1104,6 +1104,12 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
                     stop(messg)
                 }
             }
+        } else if(class_new.key %in% c("integer", "numeric") && class_old.key %in% c("ordered", "factor")){
+            mytext <- paste0("xvals <- as.", class_new.key, "(v$value_new)")
+            eval(parse(text = mytext))
+            xnew <- as.numeric(levels(xnew))[xnew]
+            mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew")
+            eval(parse(text = mytext))
         } else {
             ## There was no recode function, and this is not a factor or an ordered variable.
             ## Then process value_old to value_new.  Relying heavily on plyr::mapvalues
