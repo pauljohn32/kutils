@@ -719,7 +719,9 @@ zapspace <- function(x){
 NULL
 
 
-
+## 20161108 TODO: apply logic to cause error when numeric or integer class
+## have character values.  Caution about "NA" no "N/A" is needed
+## before rejecting value_new vectors.
 
 ##' Import a file and clean up for use as variable key
 ##'
@@ -828,9 +830,11 @@ keyImport <- function(file, ignoreCase = TRUE,
     if (any(dups, na.rm = TRUE))key <- key[!(dups), ]
 
     if (any(!unique(key$class_new) %in% legalClasses)){
-        messg <- paste("Some values of class_new in the key are unexpected.",
-                       "Please supply appropriate recode statements which ",
-                       "return objects of the class you specify in class_new.")
+        messg <- paste("Unfamiliar class_new values observed!\n", 
+                       "No pre-set converters are available for the classes: ",
+                       paste(unique(key$class_new)[!unique(key$class_new) %in% legalClasses], collapse = ", "),
+                       "Suitable recode statements in the key should generate variables from those classes."
+                       )
         warning(messg)
     }
     
