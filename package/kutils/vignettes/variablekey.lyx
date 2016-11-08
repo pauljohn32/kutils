@@ -220,7 +220,7 @@ status open
 
 \begin_layout Plain Layout
 
-<<>>=
+<<echo=F>>=
 \end_layout
 
 \begin_layout Plain Layout
@@ -330,8 +330,8 @@ The staff of the Center for Research Methods and Data Analysis has been
  The various files used different variable names and had different, unique
  coding schemes.
  A skeptic might have thought that the firm which created the data sets
- intentionally obfuscated the variable names and codings to prevent the
- comparison of variables across a series of surveys.
+ intentionally obfuscated the records to prevent the comparison of variables
+ across a series of surveys.
  
 \end_layout
 
@@ -1008,13 +1008,7 @@ keyTemplate
  that can scan a data frame and generate a new key template.
  The new template will have the old column names and observed values and
  it will leave place holders for new names and values.
- The function will handle the work of creating the key template object in
- the R workspace or writing it into a file in CSV, XLSX, or RDS format.
- 
-\end_layout
-
-\begin_layout Standard
-At the current time, there are two formats for the key template, 
+ At the current time, there are two formats for the key template, 
 \begin_inset Quotes eld
 \end_inset
 
@@ -1031,7 +1025,102 @@ wide
 \end_inset
 
 .
- The 
+ Both of these are equally useful, they simply organize the information
+ differently.
+ 
+\end_layout
+
+\begin_layout Standard
+Code like this
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+<<eval=F>>=
+\end_layout
+
+\begin_layout Plain Layout
+
+key <- keyTemplate(mydf, file = "key_wide.csv")
+\end_layout
+
+\begin_layout Plain Layout
+
+@
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+will produce a 
+\begin_inset Quotes eld
+\end_inset
+
+wide
+\begin_inset Quotes erd
+\end_inset
+
+ key because that is the default.
+ The key will be saved in a comma-separated variable file.
+ 
+\end_layout
+
+\begin_layout Standard
+If the 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+file
+\end_layout
+
+\end_inset
+
+ argument is included, the suffix servers as a signal of the desired file
+ type.
+ At the current time, we allow for file names ending in 
+\begin_inset Quotes eld
+\end_inset
+
+.csv
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+.xlsx
+\begin_inset Quotes erd
+\end_inset
+
+, and 
+\begin_inset Quotes eld
+\end_inset
+
+.rds
+\begin_inset Quotes erd
+\end_inset
+
+.
+ These create comma separated variable files, Excel spreadsheets, and R
+ serialization data structures.
+ It is certainly allowed to save the key object in other file types, but
+ then the duty of re-importing the key information after editing falls on
+ the user.
+ This will be discussed in the third step below.
+\end_layout
+
+\begin_layout Standard
+The 
 \begin_inset Flex Code
 status open
 
@@ -1578,11 +1667,278 @@ name_new
 \end_layout
 
 \begin_layout Standard
-The changes to be made in the wide or long format keys are equivalent.
- The only difference is the 
+Because editing the key can be a rather involved process, we will wait to
+ discuss the details until section 
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Subsection
+Step 3.
+ keyImport
+\end_layout
+
+\begin_layout Standard
+Once any desired changes to variables have been entered into the variable
+ key, the file needs to be imported back into R.
+ First, the csv (
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+read.csv
+\end_layout
+
+\end_inset
+
+), xlsx (
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+openxlsx::read.xlsx
+\end_layout
+
+\end_inset
+
+), or rds (
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+readRDS
+\end_layout
+
+\end_inset
+
+) file containing the edited key needs to be read into R.
+ It is important to specify 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+stringsAsFactor = FALSE
+\end_layout
+
+\end_inset
+
+ as an argument when reading the key into R.
+ Next the key is provided to the 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+keyImport
+\end_layout
+
+\end_inset
+
+ function in 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+kutils
+\end_layout
+
+\end_inset
+
+.
+ The 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+keyImport
+\end_layout
+
+\end_inset
+
+ function is set to read short keys by default, providing the argument 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+long = TRUE
+\end_layout
+
+\end_inset
+
+ will switch to a long key.
+ The 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+keyImport
+\end_layout
+
+\end_inset
+
+ function always returns a list with information about how each variable
+ is to be recoded.
+ The structure of the list will be the same with a long or short key being
+ provided.
+ Inspecting the key list will show that each item contains the information
+ provided in a single row of a short key.
+ The key list has a fixed format so that the process of using the key list
+ to manipulate the data is not influenced by what key format was used.
+ We do not suggest attempting to create a key list manually.
+ See the code below for a basic example of how a key file is read into R
+ and then provided to 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+keyImport
+\end_layout
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+mydf.key <- read.csv("mydf.key.csv", stringsAsFactor = FALSE) 
+\end_layout
+
+\begin_layout Plain Layout
+
+mydf.keylist <- keyImport(mydf.key, long = FALSE)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Step 4.
+ Apply the imported key to the data
+\end_layout
+
+\begin_layout Standard
+The final step is to apply the key to the data frame that needs variables
+ recoded.
+ The recoded data frame is obtained by assigning a name to the output of
+ the 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+kutils
+\end_layout
+
+\end_inset
+
+ function 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+keyApply
+\end_layout
+
+\end_inset
+
+.
+ The 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+keyApply
+\end_layout
+
+\end_inset
+
+ function takes the name of the data frame to be recoded and the key list
+ created in Step 3 to produce a new data frame with the desired recodings.
+ See the code below for a basic example of how an imported key is applied
+ to a data frame.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Box Frameless
+position "t"
+hor_pos "c"
+has_inner_box 1
+inner_pos "t"
+use_parbox 0
+use_makebox 0
+width "100col%"
+special "none"
+height "1in"
+height_special "totalheight"
+thickness "0.4pt"
+separation "3pt"
+shadowsize "4pt"
+framecolor "black"
+backgroundcolor "none"
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+keyed.df <- keyApply(mydf, mydf.keylist)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Editing the variable key
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Editing-the-key"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
 Factor, ordered, and character variables
 \end_layout
 
@@ -1932,10 +2288,6 @@ a|b|c|d|f
 
 \end_layout
 
-\begin_layout Plain Layout
-
-\end_layout
-
 \end_inset
 
 
@@ -2210,10 +2562,6 @@ F|D|C|B|A
 
 \end_layout
 
-\begin_layout Plain Layout
-
-\end_layout
-
 \end_inset
 
 
@@ -2237,10 +2585,6 @@ placement H
 wide false
 sideways false
 status open
-
-\begin_layout Plain Layout
-
-\end_layout
 
 \begin_layout Plain Layout
 \begin_inset Caption Standard
@@ -2462,10 +2806,6 @@ f<d<c<b<a
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Plain Layout
 
 \end_layout
 
@@ -2828,10 +3168,6 @@ low<pass<pass
 
 \end_layout
 
-\begin_layout Plain Layout
-
-\end_layout
-
 \end_inset
 
 
@@ -2871,10 +3207,6 @@ placement H
 wide false
 sideways false
 status open
-
-\begin_layout Plain Layout
-
-\end_layout
 
 \begin_layout Plain Layout
 \begin_inset Caption Standard
@@ -3672,10 +4004,6 @@ end{tabular}
 
 \end_layout
 
-\begin_layout Plain Layout
-
-\end_layout
-
 \end_inset
 
 
@@ -3749,262 +4077,6 @@ numeric
  is used for variables that are truly double-precision floating point numbers
  or integer variables that have not were not declared as integers when the
  data was imported.
-\end_layout
-
-\begin_layout Subsection
-Step 3.
- keyImport
-\end_layout
-
-\begin_layout Standard
-Once any desired changes to variables have been entered into the variable
- key, the file needs to be imported back into R.
- First, the csv (
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-read.csv
-\end_layout
-
-\end_inset
-
-), xlsx (
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-openxlsx::read.xlsx
-\end_layout
-
-\end_inset
-
-), or rds (
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-readRDS
-\end_layout
-
-\end_inset
-
-) file containing the edited key needs to be read into R.
- It is important to specify 
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-stringsAsFactor = FALSE
-\end_layout
-
-\end_inset
-
- as an argument when reading the key into R.
- Next the key is provided to the 
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-keyImport
-\end_layout
-
-\end_inset
-
- function in 
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-kutils
-\end_layout
-
-\end_inset
-
-.
- The 
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-keyImport
-\end_layout
-
-\end_inset
-
- function is set to read short keys by default, providing the argument 
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-long = TRUE
-\end_layout
-
-\end_inset
-
- will switch to a long key.
- The 
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-keyImport
-\end_layout
-
-\end_inset
-
- function always returns a list with information about how each variable
- is to be recoded.
- The structure of the list will be the same with a long or short key being
- provided.
- Inspecting the key list will show that each item contains the information
- provided in a single row of a short key.
- The key list has a fixed format so that the process of using the key list
- to manipulate the data is not influenced by what key format was used.
- We do not suggest attempting to create a key list manually.
- See the code below for a basic example of how a key file is read into R
- and then provided to 
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-keyImport
-\end_layout
-
-\end_inset
-
-.
- 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "100col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
-
-\begin_layout Plain Layout
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-mydf.key <- read.csv("mydf.key.csv", stringsAsFactor = FALSE) 
-\end_layout
-
-\begin_layout Plain Layout
-
-mydf.keylist <- keyImport(mydf.key, long = FALSE)
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Subsection
-Step 4.
- Apply the imported key to the data
-\end_layout
-
-\begin_layout Standard
-The final step is to apply the key to the data frame that needs variables
- recoded.
- The recoded data frame is obtained by assigning a name to the output of
- the 
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-kutils
-\end_layout
-
-\end_inset
-
- function 
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-keyApply
-\end_layout
-
-\end_inset
-
-.
- The 
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-keyApply
-\end_layout
-
-\end_inset
-
- function takes the name of the data frame to be recoded and the key list
- created in Step 3 to produce a new data frame with the desired recodings.
- See the code below for a basic example of how an imported key is applied
- to a data frame.
- 
-\end_layout
-
-\begin_layout Standard
-\begin_inset Box Frameless
-position "t"
-hor_pos "c"
-has_inner_box 1
-inner_pos "t"
-use_parbox 0
-use_makebox 0
-width "100col%"
-special "none"
-height "1in"
-height_special "totalheight"
-thickness "0.4pt"
-separation "3pt"
-shadowsize "4pt"
-framecolor "black"
-backgroundcolor "none"
-status open
-
-\begin_layout Plain Layout
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-keyed.df <- keyApply(mydf, mydf.keylist)
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
 \end_layout
 
 \begin_layout Section
