@@ -168,13 +168,48 @@ logicalmkup
 \begin_body
 
 \begin_layout Title
-The Variable Key Data Programming Framework
+The Variable Key Data Management Framework
 \end_layout
 
 \begin_layout Author
+
+\lang english
 Paul E.
- Johnson and Benjamin A.
- Kite
+ Johnson<pauljohn@ku.edu>
+\begin_inset Newline newline
+\end_inset
+
+Benjamin A.
+ Kite<bakite@ku.edu> 
+\begin_inset Newline newline
+\end_inset
+
+Center for Research Methods and Data Analysis
+\begin_inset Newline newline
+\end_inset
+
+University of Kansas
+\end_layout
+
+\begin_layout Date
+\paragraph_spacing single
+\noindent
+
+\series bold
+\lang english
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+today
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Abstract
@@ -358,7 +393,7 @@ recodes
  The very extensibility of R itself–its openness to new functions and language
  elements–makes proof-reading more difficult.
  We might shift some of the proof reading duty to the principle investigators,
- but they sometimes not interested in details.
+ but they sometimes are not interested in details.
  In the end, the responsibility for verifying the recodes falls on the project
  supervisors.
  While most supervisors with whom we are personally acquainted have nearly
@@ -757,10 +792,10 @@ programmable codebook
  We wrote some functions that could import variables (as named in column
  1), apply the new values (from columns 3 and 4), then apply the new name
  from column 2.
- The functions to do that are, of course, somewhat difficult to prepare,
- but, from a supervisor's point of view, they are very appealing.
+ The functions to do that are somewhat difficult to prepare, but they are
+ very appealing from a supervisor's point of view.
  There will be less proof-reading to do, at least in the R code itself.
- Once we can validate the functions, then we never have proof-read them
+ Once we can validate the functions, then we never have to proof-read them
  again.
  These functions can be applied, row by row, to create a new data frame.
  Instead, we need to concentrate our attention on the substance of the problem,
@@ -1386,7 +1421,7 @@ max.levels
 
 \end_inset
 
-, then the key will not enumerate them.
+, for which the default is 15, then the key will not enumerate them.
  
 \end_layout
 
@@ -1435,6 +1470,56 @@ value_new
  names, their classes, and values of the variables.
  Note that the values of x5 and x4 are not enumerated because we set max.levels
  at 5.
+ The 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+\noindent
+max.levels
+\end_layout
+
+\end_inset
+
+ parameter defaults to 15, so that an integer variable with less than 15
+ values will have each value displayed.
+ For this example, the display of that variable key was too wide for the
+ page, so we reduced the number of values.
+ When the observed number of scores is above 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+\noindent
+max.levels
+\end_layout
+
+\end_inset
+
+, the key does not try to list the individual values (compare the treatment
+ of variables 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+\noindent
+x4
+\end_layout
+
+\end_inset
+
+ and 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+\noindent
+x6
+\end_layout
+
+\end_inset
+
+).
  
 \end_layout
 
@@ -1489,61 +1574,6 @@ key_wide <- keyTemplate(mydf, max.levels = 5)
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-\noindent
-The 
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-\noindent
-max.levels
-\end_layout
-
-\end_inset
-
- parameter defaults to 15, so that an integer variable with less than 15
- values will have each value displayed.
- The display of that variable key was too wide for the page in this essay,
- so we reduced the number of values.
- When the observed number of scores is above 
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-\noindent
-max.levels
-\end_layout
-
-\end_inset
-
-, the key does not try to list the individual values (compare the treatment
- of variables 
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-\noindent
-x4
-\end_layout
-
-\end_inset
-
- and 
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-\noindent
-x6
-\end_layout
-
-\end_inset
-
-).
- 
 \end_layout
 
 \begin_layout Standard
@@ -1733,6 +1763,226 @@ print(xtable(key_long), include.rownames = FALSE, size = "small", floating
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+The value of 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+class_old
+\end_layout
+
+\end_inset
+
+ in the key is the first element in the return from the function class for
+ a variable.
+ There is one exception, where we have tried to differentiate integer variables
+ from numeric variables.
+ This is a confusing isssue in the history of R, as discussed in the R help
+ page for the function 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+as.double
+\end_layout
+
+\end_inset
+
+.
+ ,In the 
+\emph on
+Note on names
+\emph default
+ section, that page explains an 
+\begin_inset Quotes eld
+\end_inset
+
+anomaly
+\begin_inset Quotes erd
+\end_inset
+
+ in the usage of term 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+numeric
+\end_layout
+
+\end_inset
+
+.
+ The R function 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+as.numeric
+\end_layout
+
+\end_inset
+
+ creates a double precision floating point value, not an integer.
+ However, the is.numeric function responds TRUE for both integers and floating
+ point values.
+ For purposes of editing the key, it is useful to differentiate integers
+ from floating point numbers.
+ 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+kutils
+\end_layout
+
+\end_inset
+
+ includes a function named 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+safeInteger
+\end_layout
+
+\end_inset
+
+.
+ It checks the observed values of a variable to find out if any floating
+ point values are present.
+ If the aggregate deviations from integer values are miniscule, then a variable
+ is classified as an integer.
+ As a result, the keyTemplate function's column 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+class_old
+\end_layout
+
+\end_inset
+
+ should be 
+\begin_inset Quotes eld
+\end_inset
+
+integer
+\begin_inset Quotes erd
+\end_inset
+
+ or 
+\begin_inset Quotes eld
+\end_inset
+
+numeric
+\begin_inset Quotes erd
+\end_inset
+
+, and by the latter we mean a floating point number.
+ 
+\end_layout
+
+\begin_layout Standard
+In some of our early projects, the variable key was in the wide format.
+ Difficulty in editing that caused us to shift some projects to the long
+ key.
+ The idea that we would glide back and forth between keys created in the
+ wide and long formats dawned on us only recently.
+ To ease the conversion back-and-forth between the formats, we developed
+ the functions named 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+wide2long
+\end_layout
+
+\end_inset
+
+ and 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+long2wide
+\end_layout
+
+\end_inset
+
+.
+ We believe these functions work effectively, but we have experienced some
+ troubles related to the way spreadsheets store character strings.
+ If the key in long format has a column of values 
+\begin_inset Quotes eld
+\end_inset
+
+Yes
+\begin_inset Quotes erd
+\end_inset
+
+,
+\begin_inset Quotes erd
+\end_inset
+
+No
+\begin_inset Quotes erd
+\end_inset
+
+, and 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+, the wide representation should be 
+\begin_inset Quotes eld
+\end_inset
+
+Yes|No|
+\begin_inset Quotes erd
+\end_inset
+
+, but there is some inclination to say we should have nested quotation marks,
+ as in 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+Yes
+\begin_inset Quotes erd
+\end_inset
+
+|
+\begin_inset Quotes erd
+\end_inset
+
+No
+\begin_inset Quotes erd
+\end_inset
+
+|
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+.
+ That kind of string will not generally survive importation to and export
+ from a spread sheet at the current time.
 \end_layout
 
 \begin_layout Subsection
@@ -2475,6 +2725,8 @@ The diagnostic output will include information about mismatch between the
 \begin_layout Standard
 The diagnostic will also create a cross tabulation of each new variable
  against its older counterpart.
+ This works very well with discrete variables with 10 or so values, but
+ for variables with more values it is rather unmanageable.
  
 \end_layout
 
@@ -2487,6 +2739,42 @@ name "sec:Editing-the-key"
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+The work of revising the variable key can be driven by the separation of
+ variables into two type.
+ The variables with enumerated values–the ones for which we intend to rename
+ or re-assign values one-by-one–are treated in a very different way than
+ the other ones.
+ The enumerated value strategy works well with variables for which we simply
+ need to rename categories (e.g, 
+\begin_inset Quotes eld
+\end_inset
+
+cons
+\begin_inset Quotes erd
+\end_inset
+
+ to 
+\begin_inset Quotes eld
+\end_inset
+
+Conservative
+\begin_inset Quotes erd
+\end_inset
+
+).
+ Variables for which we do not do so (e.g., convert Fahrenheit to Celsius)
+ are treated differently.
+\end_layout
+
+\begin_layout Standard
+As we will see in this section, the revision of variables of the enumerated
+ value type emphasizes the revision of the value_old and value_new columns
+ in the key.
+ On the other hand, the other types will depend on writing correctly formatted
+ statements in the recode column of the variable key.
 \end_layout
 
 \begin_layout Subsection
@@ -2549,7 +2837,7 @@ value_old
 
 .
  If one wishes to convert a variable from being treated as an enumerated
- to a numeric type, then one can simply delete all values from 
+ to a numeric type, then one can delete all values from 
 \begin_inset Flex Code
 status open
 
@@ -2575,7 +2863,7 @@ value_new
 
 \begin_layout Standard
 The recoding of discrete variables is a fairly obvious chore.
- For each old value, a new value may be specified.
+ For each old value, a new value must be specified.
  We first consider the case of a variable that enters as a character variable
  but we might like to recode it and also create factor and integer variants
  of it.
@@ -3577,7 +3865,7 @@ f<d<c<b<a
 
 \begin_layout Standard
 Working with ordered variables, whether as input or output, becomes more
- complicated if the existing data is not ordered in the way we want.
+ complicated if the existing data are not ordered in the way we want.
  In the 
 \begin_inset Flex Code
 status open
@@ -4278,6 +4566,10 @@ assignMissing
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
 TODO: fix this, describe the output key 
 \begin_inset Quotes eld
 \end_inset
@@ -4342,6 +4634,11 @@ marcia
 ).
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
 \begin_layout Subsection
 About non-enumerated variables
 \end_layout
@@ -4350,7 +4647,7 @@ About non-enumerated variables
 In the process that creates the variable key template, we think differently
  about the enumerated variables–ones that have meaningfully discrete values
  that can be reassigned one-by-one–and numeric variables.
- Numeric variables, whether we literally mean integers like age or the nuber
+ Numeric variables, whether we literally mean integers like age or the number
  of pennies in a jar, or floating point numbers (weight, temperature, volume,
  etc) are different.
  If we guessed right with 
@@ -4936,40 +5233,165 @@ end{tabular}
 \end_layout
 
 \begin_layout Subsection
-Other Classes
+Class conversions
 \end_layout
 
 \begin_layout Standard
-By far, the most troublesome class for data import is date and time information.
+The problem of recoding a variable, but leaving its class the same, is mostly
+ solved.
+ 
+\end_layout
+
+\begin_layout Standard
+The conversion of variables from one class to another requires special care.
+ R's built in functions for coercion of variables from one type to another
+ succeed meaningfully in many cases, but not all.
+ The coercion of an integer to a floating point number produces understandable
+ effects.
+ The coercion of a character to an integer is not always understandable,
+ and the conversion of factors to integers or numeric is, well, almost always
+ a source of concern.
+\end_layout
+
+\begin_layout Standard
+We are intending to support, at minimum, the 6 safe classes, which can be
+ used in any combination of 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+value_old
+\end_layout
+
+\end_inset
+
+ and 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+value_new
+\end_layout
+
+\end_inset
+
+.
+ We need to be sure that conversion from each one into the other types is
+ handled accurately.
+ 
+\end_layout
+
+\begin_layout Standard
+In the 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+keyApply
+\end_layout
+
+\end_inset
+
+ function, we have implemented special purpose code to handle a class change
+ from factor to numeric, for example, in a way that preserves the levels
+ as the new values.
+ This is needed when the input data has values like 10, 12, 14, and 
+\begin_inset Quotes eld
+\end_inset
+
+unknown
+\begin_inset Quotes erd
+\end_inset
+
+.
+ If an R function like read.table is used to import a column with those values,
+ the default behavior will convert that to a factor variable with values
+ 
+\begin_inset Quotes eld
+\end_inset
+
+10
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+12, 
+\begin_inset Quotes eld
+\end_inset
+
+14
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+unknown
+\begin_inset Quotes erd
+\end_inset
+
+.
+ What the user probably wants–and what we do now–is open the possibility
+ that 
+\begin_inset Quotes eld
+\end_inset
+
+unknown
+\begin_inset Quotes erd
+\end_inset
+
+ should be treated as NA and the values that appear to be numbers (but are
+ actually text strings) are converted into integer format.
+\end_layout
+
+\begin_layout Subsection
+Unanticipated 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+class_new
+\end_layout
+
+\end_inset
+
+ values
+\end_layout
+
+\begin_layout Standard
+By far, the most troublesome variable type is date and time information.
  This is difficult for a number of reasons.
  In order from less troublesome to more troublesome:
 \end_layout
 
 \begin_layout Enumerate
-No two people seem to represent dates in the same way.
- Virtuous people write 2016-12-01, while others are disorganized with 12/01/2016
- and some are baffling with 01/12/2016 or 01-12-2016.
+No two people seem to represent dates with the same style.
+ Virtuous people (the authors) write 2016-12-01, while others write ambiguous
+ strings like 12/01/2016, 01/12/2016 or 01-12-2016.
 \end_layout
 
 \begin_layout Enumerate
-No two computer programs record date information in the same format.
- Dates can be entered in a human-understandable calendar format, but software
- converts them into integers which represent the number of days since an
- origin date.
+Computer programs absorb dates and convert them to internal numeric schemes.
+ However, programs differ in the way they record and export date information.
+ Most software converts dates as integers, for example.
+ The value is the number of days since time began.
  
 \end_layout
 
 \begin_deeper
 \begin_layout Standard
-Microsoft Excel records dates as integers, and (shockingly!) the origin
+Unfortunately, it appears that the day on which time began differs among
+ programs.
+ Microsoft Excel records dates as integers, and (shockingly!) the origin
  date differs between Excel files created in Windows and Macintosh.
- While we might tease about this, this appears to be a cataclysmic problem
- linked to leap years, which for some reason mean a Macintosh must use the
- origin 1904-01-01, while in MS Windows Excel dates begin at 1900-01-01.
-\end_layout
-
-\begin_layout Standard
-The program SPSS uses integers for dates as well, but the origin for SPSS
+ Mac designers were perplexed by the problem of leap years, which caused
+ them to use the origin 1904-01-01, while in MS Windows Excel dates begin
+ at 1900-01-01.
+ The program SPSS uses integers for dates as well, but the origin for SPSS
  is 1582-10-14 (we guess most readers already knew that one, we apologize
  for being surprised).
  
@@ -4991,19 +5413,27 @@ Dates are, to a certain extent, arbitrary without time zone information.
 e.
  Furthermore, when scholars try to put time zone information onto existing
  data that was collected without it, they sometimes accidentally create
- accidental dates and times (February 29, 1999, for example).
+ impossible dates and times (February 29, 1999, for example).
+ When R functions like 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+as.Date
+\end_layout
+
+\end_inset
+
+ encounter impossible dates, they return NA.
 \end_layout
 
 \begin_layout Enumerate
 Even when programs seem to have absorbed dates and saved the information,
  even in casual testing we have found that the saved information is not
  retrieved in a consistent way.
- Some spreadsheet programs, on some computers, return values that are marked
- as dates (so they should be integers) but they appear within R as characters.
- In a random sample of 10 Microsoft Excel files created by team members
- in a research project in Indiana, the integer-calculated date variables
- could be correctly imported in 9 cases, while in 1 case the so-called date
- column turned up as characters.
+ Some spreadsheet programs, on some computers, return values dates as integers,
+ while the same program with a different user returns a character string.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -5011,7 +5441,7 @@ All of this complaining is just our way of saying,
 \begin_inset Quotes eld
 \end_inset
 
-we left the recode box open, why not use it to recode your date information.?
+we left the recode box open, why not use it to recode your date information?
 \begin_inset Quotes erd
 \end_inset
 
@@ -5030,15 +5460,7 @@ integer,
 status open
 
 \begin_layout Plain Layout
-as.Date(x, origin = 
-\begin_inset Quotes eld
-\end_inset
-
-1970-01-01
-\begin_inset Quotes erd
-\end_inset
-
-)
+as.Date(x, origin = "1970-01-01")
 \end_layout
 
 \end_inset
@@ -5059,15 +5481,7 @@ as.Date(x, origin =
 status open
 
 \begin_layout Plain Layout
-as.Date(x, format = 
-\begin_inset Quotes eld
-\end_inset
-
-%Y-%m-%d
-\begin_inset Quotes erd
-\end_inset
-
-)
+as.Date(x, format = "%Y-%m-%d")
 \end_layout
 
 \end_inset
@@ -5112,40 +5526,59 @@ keyApply
 \end_layout
 
 \begin_layout Subsection
-Where we have more work to do
+Where more work should be done
 \end_layout
 
 \begin_layout Standard
-We need more comprehensive error-checking for imported variable keys and
- the data sets that result from keyApply.
- The variable key system works very well with the data sets for which it
- was designed.
- If a data frame is made up of variables that are drawn form the six safe
- classes, the problem is mostly solved.
- We have no trouble importing the National Longitudinal Transitional Study
- of American Youth, for example.
- It appears that data sets created with SPSS or Stata are more-or-less tamed.
- Except when they aren't.
- Data sets with unexpected values in factor variables, including the 18
- different missing value codes in SPSS, present challenges.
+For the most part, our work now lies in development of better diagnostics
+ and error-checking routines.
  
 \end_layout
 
 \begin_layout Standard
-User error in the variable key.
-\end_layout
-
-\begin_layout Standard
-The idea that we would allow the wide and long key formats to co-exist,
- and be interchangeable, came along fairly late in the development of this
- code.
- To ease the conversion back-and-forth between the formats, we developed
- the functions named 
+First, we need better filtering of user-created key entries.
+ User typographical errors occur in key preparation and more comprehensive
+ filtering should be done.
+ At the current time, the 
 \begin_inset Flex Code
 status open
 
 \begin_layout Plain Layout
-wide2long
+keyImport
+\end_layout
+
+\end_inset
+
+ function does not include many subroutines for the validation of the key.
+ We'd like to filter the values requested in 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+class_new
+\end_layout
+
+\end_inset
+
+, for example, but it is difficult to see how that can be done.
+ We want to leave open the possibility that users may specify values of
+ 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+class_new
+\end_layout
+
+\end_inset
+
+ that are unfamiliar to us.
+ Another problem may arise if the number of elements in 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+value_old
 \end_layout
 
 \end_inset
@@ -5155,12 +5588,94 @@ wide2long
 status open
 
 \begin_layout Plain Layout
-long2wide
+value_new
+\end_layout
+
+\end_inset
+
+ are not aligned one-to-one.
+ There will be an error when the key is put to use by 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+keyApply
+\end_layout
+
+\end_inset
+
+, but we should have a stop message in 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+keyImport
 \end_layout
 
 \end_inset
 
 .
+\end_layout
+
+\begin_layout Standard
+Second, we need to better understand the problems that result when users
+ enter variable keys in programs like MS Excel or Libre Office.
+ Between programs, or versions of programs, or programs on various platforms,
+ we notice disappointing inconsistencies.
+ If keys are kept in 
+\begin_inset Quotes eld
+\end_inset
+
+flat text
+\begin_inset Quotes erd
+\end_inset
+
+ csv files, there is less danger, but there can still be some trouble because
+ spread sheets change the way they export to csv from time to time.
+ During the testing process, we have found that version updates Excel cause
+ unexpected changes in the way character vectors and dates are stored.
+ Until now, we have relied on the very popular package 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+openxlsx
+\end_layout
+
+\end_inset
+
+ (
+\begin_inset CommandInset citation
+LatexCommand citealp
+key "Walker2015"
+
+\end_inset
+
+).
+ This does well most of the time, but we still find some inexplicable variations
+ in imported Excel files.
+ Sometimes, empty cells in the variable key appear as imported empty strings
+ 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+, while sometimes they are imported as R NA symbols.
+ While it is probably safe to treat an entirely empty value as a missing
+ value in most projects, we'd rather not do so.
+ To deal with this problem, we need to develop a standard framework for
+ testing the quality of imported variable keys.
+ 
+\end_layout
+
+\begin_layout Standard
+Third, we need more comprehensive error-checking for the accuracy of the
+ imported data and compliance with the variable key.
+ The variable key system works well with the data sets for which it was
+ created, but we need more formal criteria for verifying that claim.
  
 \end_layout
 
@@ -5234,7 +5749,7 @@ occupation
 \end_layout
 
 \begin_layout Standard
-It often happens that the raw data to be imported is provided by one of
+It often happens that the raw data to be imported are provided by one of
  the national data centers.
  The variables are given exciting, meaningful column names like V34342a.
  It appears to be almost certain that research assistants will conclude
@@ -5280,11 +5795,23 @@ what's the coding on education?
 \end_layout
 
 \begin_layout Standard
-Although some bright people don't know R, it appears they are all fluent
- in spread sheet.
+The variable key is intended to create neutral territory between principal
+ investigators and project supervisors on one side and the research assistants
+ on the other.
+ The numbers are more likely to come out correctly if the names, values,
+ and classes can be specified in one document that is accessible in numerous
+ formats on which many eyes can be laid.
+ The distance between a re-design of the imported values is minimized and
+ the production cycle of the projects is accelerated.
+ As we are frequently reminded, there are many some bright people who don't
+ know R, it appears they are all fluent in spread sheet.
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
 \begin_inset Box Frameless
 position "t"
 hor_pos "c"
@@ -5320,11 +5847,7 @@ class_new
 \begin_inset Quotes erd
 \end_inset
 
- value must be one of the following
-\begin_inset Separator latexpar
-\end_inset
-
-
+ value
 \end_layout
 
 \begin_deeper
@@ -5337,6 +5860,10 @@ discrete variable types:
 \end_layout
 
 \begin_deeper
+\begin_layout Description
+logical
+\end_layout
+
 \begin_layout Description
 integer
 \end_layout
@@ -5555,6 +6082,11 @@ numeric variables
 \end_layout
 
 \end_deeper
+\end_inset
+
+
+\end_layout
+
 \end_inset
 
 
