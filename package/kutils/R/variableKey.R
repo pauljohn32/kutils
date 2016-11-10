@@ -1129,7 +1129,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
                 ## R coercion and hope there's no error, but only for legalClasses.
                 ## If class_new is some other, and xnew is not one of those, STOP!
                 if ((class(xnew) != class_new.key)){
-                    if (!class_new.key %in% legalClasses) {
+                    if (class_new.key %in% legalClasses) {
                         ## class is not correct, so try coercion
                         xnew <- as(xnew, class_new.key)
                     } else {
