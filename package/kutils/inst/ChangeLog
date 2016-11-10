@@ -1,3 +1,7 @@
+2016-11-10  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (keyApply): fix error B&B found in !class
+
 2016-11-08  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (keyApply): create new  if/then for factor ->
