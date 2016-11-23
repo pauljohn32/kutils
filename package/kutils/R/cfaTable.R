@@ -93,7 +93,8 @@
 cfaTable <-
     function(object, caption, outfile, params = c("loadings", "intercepts"),
              fit = c("chi-square", "cfi", "tli", "rmsea"),
-             names_fit = fit, standardized= FALSE,
+             names_fit
+             = fit, standardized= FALSE,
              names_upper = TRUE, single_spaced = TRUE, preamble = TRUE)
 {
     if(class(object)[1] != "lavaan"){
@@ -420,7 +421,7 @@ ROWINFORMATION
     }else{
         fitinfotmpchi <- NULL
     }
-    if(length(grep("[0-9]*", template)) > 0){
+    if(length(grep("[0-9]\\* ", template))){
         template <- gsub("IDENTNOTE", "* Indicates parameters fixed for model identification.\\\\", template)
     }else{
         template <- gsub("IDENTNOTE", "", template)
