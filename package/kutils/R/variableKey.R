@@ -280,7 +280,7 @@ cleanDataFrame <- function(dframe, safeNumericToInteger = TRUE){
         messg <- paste("keyUpdate: The dframe object must be a data frame")
         stop(messg)
     }
-  
+
     if (!(res <- is.data.frame.simple(dframe))) {
         messg <- paste(paste("cleanDataFrame checked if dframe elements are not single columns.",
                        "This frame has some elements that are not single columns.",
@@ -309,7 +309,7 @@ cleanDataFrame <- function(dframe, safeNumericToInteger = TRUE){
 ##' value.
 ##'
 ##' See: http://stackoverflow.com/questions/38902880/data-frame-in-which-elements-are-not-single-columns
-##'  
+##'
 ##' @param dframe A data frame
 ##' @return Boolean, TRUE or FALSE. An attribute "not_a_simple_column"
 ##'     is created, indicating which of the elements in the dframe
@@ -338,7 +338,7 @@ is.data.frame.simple <- function(dframe){
 }
 
 
-    
+
 ##' Compare observed values with the values listed
 ##' (presumably from a variable key).
 ##'
@@ -791,7 +791,7 @@ keyImport <- function(file, ignoreCase = TRUE,
                       keynames = NULL)
 {
     key <- smartRead(file)
-    
+
     legalClasses = c("integer", "numeric", "double", "factor",
                      "ordered", "character", "logical")
     if(!is.null(keynames)){
@@ -826,20 +826,20 @@ keyImport <- function(file, ignoreCase = TRUE,
     key$value_old <- n2NA(zapspace(key$value_old))
     key$value_new <- n2NA(zapspace(key$value_new))
     key$value_new[key$value_new %in% na.strings] <- NA
-   
+
     ## Delete repeated rows:
     dups <- duplicated(key)
     if (any(dups, na.rm = TRUE))key <- key[!(dups), ]
 
     if (any(!unique(key$class_new) %in% legalClasses)){
-        messg <- paste("Unfamiliar class_new values observed!\n", 
+        messg <- paste("Unfamiliar class_new values observed!\n",
                        "No pre-set converters are available for the classes: ",
                        paste(unique(key$class_new)[!unique(key$class_new) %in% legalClasses], collapse = ", "),
                        "Suitable recode statements in the key should generate variables from those classes."
                        )
         warning(messg)
     }
-    
+
     attr(key, "ignoreCase") <- ignoreCase
     if (long){
         class(key) <- c("keylong", "data.frame")
@@ -1014,7 +1014,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
                      debug = FALSE){
     legalClasses = c("integer", "numeric", "double", "factor",
                      "ordered", "character", "logical")
-    
+
     dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
     if (diagnostic) dforig <- dframe
 
@@ -1087,8 +1087,8 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew")
             eval(parse(text = mytext))
         } else if(class_new.key %in% c("ordered", "factor")) {
-            ## There was no recode, so apply special fixup for ordered and factor variables. 
-            ## TODO: If $v$value_old is "" (character empty), what to do? 
+            ## There was no recode, so apply special fixup for ordered and factor variables.
+            ## TODO: If $v$value_old is "" (character empty), what to do?
             if (sum(!is.na(v$value_old) > 0)){
                 if (length(v$value_old) == length(v$value_old)){
                     ## TODO: keep only differences between value_old and value_new?
@@ -1123,7 +1123,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
                 ## but this applies them all.
                 if (any(!is.na(v$value_old)) && (!identical(v$value_old, v$value_new))){
                     xnew <- plyr::mapvalues(xnew, v$value_old, v$value_new, warn_missing = FALSE)
-                } 
+                }
                 ## 20161107: Plan implemented now:
                 ## Arrive here with no guidance except class_new value. Use
                 ## R coercion and hope there's no error, but only for legalClasses.
@@ -1265,7 +1265,7 @@ wide2long <- function(key, sep = c(character = "\\|", logical = "\\|",
         missings <- c(missings, rep("", NROW(values) - length(missings)))
         recodes <- na.omit(unlist(strsplit(x$recodes, ";")))
         recodes <- c(recodes, rep("", NROW(values) - length(recodes)))
-        
+
         zz <- data.frame(name_old = x$name_old,
                          name_new = x$name_new,
                          class_old = x$class_old,
@@ -1278,7 +1278,7 @@ wide2long <- function(key, sep = c(character = "\\|", logical = "\\|",
         zz
     }
 
-    
+
     ## keysplit
     name_old.new <- paste0(key[ , "name_old"], ".", key[ , "name_new"])
     name_old.new <- factor(name_old.new, levels = unique(name_old.new))
@@ -1339,7 +1339,7 @@ long2wide <- function(keylong){
             x <- ifelse(is.na(x), "", x)
             paste(x, collapse = collapse)
         }
-        
+
         list(name_old = unique(x$name_old),
              name_new = unique(x$name_new),
              class_old = unique(x$class_old),
@@ -1491,7 +1491,7 @@ keyUpdate <- function(key, dframe, append = TRUE,
         messg <- paste("The key object is neither a longkey or key object")
         stop(messg)
     }
-        
+
     dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
     if(!long){
         key <- wide2long(key)
@@ -1508,7 +1508,7 @@ keyUpdate <- function(key, dframe, append = TRUE,
     ## 2. New values for previous variables must be added to key
     ## 3. name_new and class_new have to be copied over to key
     ## rows that are added.
-   
+
     ## CHECK: what does "long2wide" do when rows in a long key are
     ## "shuffled" or if the new values all exist at end of long key.
 
@@ -1533,17 +1533,17 @@ keyUpdate <- function(key, dframe, append = TRUE,
     keynew2$name_new <- ifelse(keynew2$name_old %in% name.old.new[ , "name_old"],
                                name.old.new[keynew2$name_old, "name_new"],
                                keynew2$name_new)
-   
+
     class.old.new <- unique(key[ , c("name_old", "class_old", "class_new")])
     rownames(class.old.new)<- class.old.new[ , "name_old"]
     ## for same-name_old cases, copy in class
     keynew2$class_new <- ifelse(keynew2$name_old %in% name.old.new[ , "name_old"],
                                 class.old.new[keynew2$name_old, "class_new"],
                                 keynew2$class_new)
-    
 
-    
-    
+
+
+
     output <- rbind(key, keynew2)
     ## User expects key returned in same format, keylong or key
     if(!long) {
@@ -1561,3 +1561,29 @@ keyUpdate <- function(key, dframe, append = TRUE,
 }
 
 
+##' Compares a key provided to keyUpdate with the return of keyUpdate
+##'
+##' @title keyDiff
+##' @param oldkey key that was provided to keyUpdate function
+##' @param newkey updated key returned by keyUpdate function
+##' @return summary of differences between the two keys
+##' @author Ben Kite <bakite@@ku.edu>
+keyDiff <- function(oldkey, newkey){
+    rownames(oldkey) <- paste0(rownames(oldkey), ".old")
+    rownames(newkey) <- paste0(rownames(newkey), ".new")
+    xx <- rbind(newkey, oldkey)
+    top <- duplicated(xx[,-ncol(xx)])
+    bot <- duplicated(xx[,-ncol(xx)], fromLast = TRUE)
+    yy <- ifelse(top + bot == 0, TRUE, FALSE)
+    changes <- xx[yy,]
+    if(nrow(changes) == 0) return("There are no differences between these keys!")
+    changes <- changes[order(changes[,"name_old"]),]
+    updated <- changes[,"name_old"][duplicated(changes[,"name_old"])]
+    new <- names(table(changes[,"name_old"]))[which(table(changes[,"name_old"]) == 1)]
+    messag <- paste0("The following variables are updated in the new key: ", paste0(updated, collapse = ", "), ".", ifelse(length(new) > 0, paste0(" The following variables were added to the new key: ", paste0(new, collapse = ", ")), ""))
+    output <- list("changes" = messag, "updatedRows" = data.frame(changes))
+    class(output) <- "keyDiagnostic"
+    output
+}
+
+print.keyDiagnostic <- function(x) print(x[["changes"]])
