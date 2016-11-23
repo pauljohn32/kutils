@@ -1568,6 +1568,21 @@ keyUpdate <- function(key, dframe, append = TRUE,
 ##' @param newkey updated key returned by keyUpdate function
 ##' @return summary of differences between the two keys
 ##' @author Ben Kite <bakite@@ku.edu>
+##' @examples
+##' library(rockchalk)
+##' dat1 <- data.frame("Score" = c(1, 2, 3, 42, 4, 2),
+##'                    "Gender" = c("M", "M", "M", "F", "F", "F"))
+##' ## First try with a long key
+##' key1 <- keyTemplate(dat1, long = TRUE)
+##' key1[5, "value_new"] <- 10
+##' key1[6, "value_new"] <- "female"
+##' key1[7, "value_new"] <- "male"
+##' key1[key1$name_old == "Score", "name_new"] <- "NewScore"
+##' dat2 <- data.frame("Score" = 7, "Gender" = "other", "Weight" = rnorm(3))
+##' dat2 <- plyr::rbind.fill(dat1, dat2)
+##' dat2 <- dat2[-1,]
+##' key2 <- keyUpdate(key1, dat2, append = TRUE)
+##' keyDiff(key1, key2)
 keyDiff <- function(oldkey, newkey){
     rownames(oldkey) <- paste0(rownames(oldkey), ".old")
     rownames(newkey) <- paste0(rownames(newkey), ".new")
@@ -1580,7 +1595,7 @@ keyDiff <- function(oldkey, newkey){
     changes <- changes[order(changes[,"name_old"]),]
     updated <- changes[,"name_old"][duplicated(changes[,"name_old"])]
     new <- names(table(changes[,"name_old"]))[which(table(changes[,"name_old"]) == 1)]
-    messag <- paste0("The following variables are updated in the new key: ", paste0(updated, collapse = ", "), ".", ifelse(length(new) > 0, paste0(" The following variables were added to the new key: ", paste0(new, collapse = ", ")), ""))
+    messag <- paste0("The following variables are updated/added in the new key: ", paste0(paste0(updated, collapse = ", "), paste0(new, collapse = ", ")), "")
     output <- list("changes" = messag, "updatedRows" = data.frame(changes))
     class(output) <- "keyDiagnostic"
     output
