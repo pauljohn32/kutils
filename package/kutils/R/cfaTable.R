@@ -1,5 +1,5 @@
 ##' Creates Confirmatory Factor Analysis Tables
-##' 
+##'
 ##' Creates LaTeX markup for confirmatory
 ##' factor analysis output tables in the style of the American
 ##' Psychological Association(APA). Input objects should
@@ -17,7 +17,7 @@
 ##' \item "thresholds" arise in latent
 ##' response variates (non-numeric indicator data).
 ##' }
-##' 
+##'
 ##' The stantardized parameter regulates the number of columns to be
 ##' included.  standardized=FALE implies there will be four columns:
 ##' \enumerate{
@@ -26,7 +26,7 @@
 ##' \item the z-value, and
 ##' \item the p-value.
 ##' }
-##' 
+##'
 ##' When standardized = TRUE, the columns are:
 ##' \enumerate{
 ##' \item the parameter estimates,
@@ -34,7 +34,7 @@
 ##' \item standardized parameter estimates, and
 ##' \item standardized standard errors.
 ##' }
-##' 
+##'
 ##' The standardized parameters are obtained by updating the output
 ##' with the options std.lv = TRUE and std.ov = TRUE.  If these
 ##' options were used when originally creating output, setting
@@ -42,7 +42,7 @@
 ##'
 ##' @param object A cfa object from lavaan
 ##' @param caption The LaTeX caption to be used in the table header
-##' @param outfile Name of .tex file. May include the path 
+##' @param outfile Name of .tex file. May include the path
 ##' @param params Measurement parameters to be included. Valid values
 ##' are "loadings", "intercepts", "residuals", "latentvariances",
 ##' and "thresholds". See Details.
@@ -63,7 +63,7 @@
 ##'     needed, set single_spaced = FALSE.
 ##' @param preamble Default = TRUE. Should the .tex file contain a
 ##'     complete LaTeX document, or just the table markup? premable
-##'     and the begin and end document lines. 
+##'     and the begin and end document lines.
 ##' @importFrom stats pnorm
 ##' @return File saved as outfile.
 ##' @export
@@ -73,10 +73,10 @@
 ##' HS.model <- ' visual  =~ x1 + x2 + x3
 ##' textual =~ x4 + x5 + x6
 ##' speed   =~ x7 + x8 + x9 '
-##' fit <- cfa(HS.model, data = HolzingerSwineford1939)
-##' cfaTable(fit, "Example of cfaTable", "exampleTable.tex", params = "loadings")
+##' output1 <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE)
+##' cfaTable(output1, "Example of cfaTable", "exampleTable.tex", fit = "rmsea", params = c("loadings", "latentvariances"))
 ##'
-##' 
+##'
 ##' model <- "factor =~ .7*y1 + .7*y2 + .7*y3 + .7*y4
 ##' y1 | -1*t1 + 1*t2
 ##' y2 | -.5*t1 + 1*t2
@@ -172,7 +172,7 @@ LATENTVARS
 \\hline
 \\end{tabular}
 
-\\textit{Note. }* Indicates parameters fixed for model identification.\\\\
+\\textit{Note. }IDENTNOTE
 FITINFORMATION.
 \\end{table}
 \\end{document}
@@ -196,7 +196,7 @@ LATENTVARS
 \\hline
 \\end{tabular}
 
-\\textit{Note. }* Indicates parameters fixed for model identification.\\\\
+\\textit{Note. }IDENTNOTE
 FITINFORMATION.
 \\end{table}
 "
@@ -420,6 +420,11 @@ ROWINFORMATION
     }else{
         fitinfotmpchi <- NULL
     }
+    if(length(grep("[0-9]*", template)) > 0){
+        template <- gsub("IDENTNOTE", "* Indicates parameters fixed for model identification.\\\\", template)
+    }else{
+        template <- gsub("IDENTNOTE", "", template)
+    }
 
     xxx <- list()
     for(i in fit[fit != "chi-square"]){
@@ -435,10 +440,14 @@ ROWINFORMATION
     fitinfoothers <- paste0(unlist(xxx), collapse = "; ")
 
     measures <- c(fitinfotmpchi, fitinfoothers)
-
-    fitinfo <- paste0(measures, collapse = "; ")
+    if(length(xxx) > 0){
+        fitinfo <- paste0(measures, collapse = "; ")
+    }else{
+        fitinfo <- fitinfotmpchi
+    }
     template <- gsub("FITINFORMATION", fitinfo, template)
     write(template, paste0(outfile))
+    cat(template)
 }
 
 
