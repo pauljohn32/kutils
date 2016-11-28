@@ -41,8 +41,8 @@
 ##' standardized = TRUE will yield two identical sets of two columns.
 ##'
 ##' @param object A cfa object from lavaan
-##' @param caption The LaTeX caption to be used in the table header
-##' @param outfile Name of .tex file. May include the path
+##' @param caption The LaTeX caption to be used in the table header.
+##' @param outfile Name of output file. May include the path, but not the extension.
 ##' @param params Measurement parameters to be included. Valid values
 ##' are "loadings", "intercepts", "residuals", "latentvariances",
 ##' and "thresholds". See Details.
@@ -61,9 +61,6 @@
 ##'     will also affect whatever is specified in names_fit.
 ##' @param single_spaced Default = TRUE. If a double-spaced table is
 ##'     needed, set single_spaced = FALSE.
-##' @param preamble Default = TRUE. Should the .tex file contain a
-##'     complete LaTeX document, or just the table markup? premable
-##'     and the begin and end document lines.
 ##' @importFrom stats pnorm
 ##' @return File saved as outfile.
 ##' @export
@@ -74,7 +71,7 @@
 ##' textual =~ x4 + x5 + x6
 ##' speed   =~ x7 + x8 + x9 '
 ##' output1 <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE)
-##' cfaTable(output1, "Example of cfaTable", "exampleTable.tex", fit = "rmsea", params = c("loadings", "latentvariances"))
+##' cfaTable(output1, "Example of cfaTable", "exampleTable", fit = "rmsea", standardized = TRUE, params = c("loadings", "latentvariances"), type = "html")
 ##'
 ##'
 ##' model <- "factor =~ .7*y1 + .7*y2 + .7*y3 + .7*y4
@@ -84,18 +81,18 @@
 ##' y4 | -1*t1 + 1*t2
 ##' "
 ##' dat <- simulateData(model, sample.nobs = 300)
-##' testmodel <- "Factor =~ y1 + y2 + y3 + y4"
-##' output <- cfa(testmodel, data = dat, ordered = colnames(dat), std.lv = TRUE)
-##' cfaTable(output, caption = "Example with Categorical Data", outfile = "catTable.tex",
+##' testmodel <- "ExampleFactor =~ y1 + y2 + y3 + y4"
+##' output <- cfa(testmodel, data = dat, ordered = colnames(dat), std.lv = FALSE)
+##' cfaTable(output, caption = "Example with Categorical Data", outfile = "catTable",
 ##' params = c("loadings", "thresholds", "residuals"), fit = c("tli", "chi-square"),
-##' names_fit = c("TLI", "chi-square"))
+##' names_fit = c("TLI", "chi-square"), type = "html")
 
 cfaTable <-
     function(object, caption, outfile, params = c("loadings", "intercepts"),
              fit = c("chi-square", "cfi", "tli", "rmsea"),
              names_fit
              = fit, standardized= FALSE,
-             names_upper = TRUE, single_spaced = TRUE, preamble = TRUE)
+             names_upper = TRUE, single_spaced = TRUE, type = "latex")
 {
     if(class(object)[1] != "lavaan"){
         stop(paste("The object that does not appear to be",
@@ -132,92 +129,39 @@ cfaTable <-
     variables <- unlist(object@Data@ov.names)
     latents <- unlist(object@pta$vnames$lv)
 
-    if(preamble == TRUE){
     template <- "
-\\documentclass[english, man]{apa}
-\\usepackage[T1]{fontenc}
-\\usepackage[latin9]{inputenc}
-\\usepackage{array}
-\\usepackage{multirow}
-\\usepackage{amsmath}
-\\usepackage{amsthm}
-\\PassOptionsToPackage{normalem}{ulem}
-\\usepackage{ulem}
-\\providecommand{\\tabularnewline}{\\\\}
-\\author{Author} % hack around some bugs in apa.cls
-\\affiliation{Affiliation} % hack around some bugs in apa.cls
-\\numberwithin{equation}{section}
-\\numberwithin{figure}{section}
-\\makeatother
-\\usepackage{babel}
-\\usepackage{dcolumn}
-\\newcolumntype{d}[1]{D{.}{.}{-1}}
-\\makeatletter
-SINGLESPACE
-
-\\begin{document}
-\\begin{table}
-
-\\caption{TITLE}
-
-\\begin{tabular}{m{4cm} d{0} d{2} d{2} d{2}}
-\\hline
+_BT_
+_HL_
 STANDARDIZED
-Parameter & REPORT\\tabularnewline
-\\hline
+_BR_Parameter_EOC_ REPORT
+_HL_
 FACTORLOADINGS
 INTERCEPTS
 THRESHOLDS
 RESIDUALS
 LATENTVARS
-\\hline
-\\end{tabular}
+_HL_
+_EOT_
 
-\\textit{Note. }IDENTNOTE
-FITINFORMATION.
-\\end{table}
-\\end{document}
+Note. IDENTNOTE
+FITINFORMATION
 "
-    }else{
-        template <- "
-\\begin{table}
-
-\\caption{TITLE}
-
-\\begin{tabular}{m{4cm} d{0} d{2} d{2} d{2}}
-\\hline
-STANDARDIZED
-Parameter & REPORT\\tabularnewline
-\\hline
-FACTORLOADINGS
-INTERCEPTS
-THRESHOLDS
-RESIDUALS
-LATENTVARS
-\\hline
-\\end{tabular}
-
-\\textit{Note. }IDENTNOTE
-FITINFORMATION.
-\\end{table}
-"
-    }
 
     if(standardized == TRUE){
         report <- c("est", "se", "stdest", "stdse")
         std <- update(object, std.lv = TRUE, std.ov = TRUE)
         parameters$stdest <- std@Fit@est
         parameters$stdse <- std@Fit@se
-        holder <-  "& \\\\multicolumn{2}{c}{\\\\uline{Unstandarized}} & \\\\multicolumn{2}{c}{\\\\uline{Standardized}}\\\\tabularnewline"
+        holder <-  "_BR__EOC__BOMC2__UL_Unstandarized_EOUL__EOMC_ _BOMC2__UL_Standardized_EOUL__EOMC__EOR_"
         template <- gsub("STANDARDIZED", holder, template)
-        holder <- "\\\\multicolumn{1}{c}{NAME}"
+        holder <- "_BOMC1_NAME_EOMC_"
         reportx <- list()
         columnNames <- c("Estimate", "SE", "Estimate", "SE")
         for(i in 1:length(columnNames)){
             reportx[i] <- gsub("NAME", columnNames[i], holder)
 
         }
-        columnnames <- paste0(reportx, collapse = " & ")
+        columnnames <- paste0(paste0(reportx, collapse = " "), "_EOR_")
 
     }else{
         report <- c("est", "se", "z", "p")
@@ -226,7 +170,7 @@ FITINFORMATION.
 
         template <- gsub("STANDARDIZED", "", template)
 
-        holder <- "\\\\multicolumn{1}{c}{NAME}"
+        holder <- "_BOC_NAME_EOC_"
         reportx <- list()
         columnNames <- c("Estimate", "SE", "z", "p")
         for(i in 1:length(columnNames)){
@@ -234,7 +178,7 @@ FITINFORMATION.
 
         }
 
-        columnnames <- paste0(reportx, collapse = " & ")
+        columnnames <- paste0(paste0(reportx, collapse = " "), "_EOR_")
     }
 
     template <- gsub("REPORT", columnnames, template)
@@ -261,13 +205,13 @@ FITINFORMATION.
         trows$z <- ifelse(trows$free == 0, "", trows$z)
         trows$p <- ifelse(trows$free == 0, "", trows$p)
         tmpx <- "
-\\\\multirow{1}{*}{\\\\uline{FACTOR}} &  & \\\\multirow{1}{*}{} & \\\\tabularnewline\n
+_BR__UL_FACTOR_EOUL__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _EOR_\n
 ROWINFORMATION
 "
         tmpx <- gsub("FACTOR", lvname, tmpx)
-        rowinfo <- paste0(paste0(trows[1,c("rhs", report)], collapse = " & "), "\\\\\\\\tabularnewline\n")
+        rowinfo <- paste0("_BR_", paste0(trows[1,c("rhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
         for (i in 2:nrow(trows)){
-            rowinfo <- paste0(rowinfo, paste0(paste0(trows[i,c("rhs", report)], collapse = " & "), "\\\\\\\\tabularnewline\n"))
+            rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("rhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
         }
         tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
         tmpx
@@ -290,12 +234,12 @@ ROWINFORMATION
         trows$z <- ifelse(trows$free == 0, "", trows$z)
         trows$p <- ifelse(trows$free == 0, "", trows$p)
         tmpx <- "
- & \\\\multicolumn{4}{c}{\\\\uline{Intercepts}}\\\\tabularnewline
+ _BR__EOC_ _BOMC4__UL_Intercepts_EOUL__EOMC_ _EOR_
 ROWINFORMATION
 "
-        rowinfo <- paste0(paste0(trows[1,c("lhs", report)], collapse = " & "), "\\\\\\\\tabularnewline\n")
+        rowinfo <- paste0(paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
         for (i in 2:nrow(trows)){
-            rowinfo <- paste0(rowinfo, paste0(paste0(trows[i,c("lhs", report)], collapse = " & "), "\\\\\\\\tabularnewline\n"))
+            rowinfo <- paste0(rowinfo, paste0(paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
         }
         tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
         tmpx
@@ -320,12 +264,12 @@ ROWINFORMATION
         trows$z <- ifelse(trows$free == 0, "", trows$z)
         trows$p <- ifelse(trows$free == 0, "", trows$p)
         tmpx <- "
- & \\\\multicolumn{4}{c}{\\\\uline{Thresholds}}\\\\tabularnewline
+ _BR__EOC_ _BOMC4__UL_Thresholds_EOUL__EOMC_ _EOR_
 ROWINFORMATION
 "
-        rowinfo <- paste0(paste0(trows[1,c("lhs", report)], collapse = " & "), "\\\\\\\\tabularnewline\n")
+        rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
         for (i in 2:nrow(trows)){
-            rowinfo <- paste0(rowinfo, paste0(paste0(trows[i, c("lhs", report)], collapse = " & "), "\\\\\\\\tabularnewline\n"))
+            rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i, c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
         }
         tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
         tmpx
@@ -344,12 +288,12 @@ ROWINFORMATION
         trows$p <- ifelse(trows$free == 0, "", trows$p)
         trows$p <- gsub("0\\.", "\\.", trows$p)
         tmpx <- "
- & \\\\multicolumn{4}{c}{\\\\uline{Residual Variances}}\\\\tabularnewline
+_BR__EOC_ _BOMC4__UL_Residual Variances_EOUL__EOMC__EOR_
 ROWINFORMATION
 "
-        rowinfo <- paste0(paste0(trows[1,c("lhs", report)], collapse = " & "), "\\\\\\\\tabularnewline\n")
+        rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
         for (i in 2:nrow(trows)){
-            rowinfo <- paste0(rowinfo, paste0(paste0(trows[i,c("lhs", report)], collapse = " & "), "\\\\\\\\tabularnewline\n"))
+            rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
         }
         tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
         tmpx
@@ -368,12 +312,12 @@ ROWINFORMATION
         trows$z <- ifelse(trows$free == 0, "", trows$z)
         trows$p <- ifelse(trows$free == 0, "", trows$p)
         tmpx <- "
- & \\\\multicolumn{4}{c}{\\\\uline{Latent Variances/Covariances}}\\\\tabularnewline
+ _BR__EOC__BOMC4__UL_Latent Variances/Covariances_EOUL__EOMC__EOR_
 ROWINFORMATION
 "
-        rowinfo <- paste0(trows[1,1], " with ", trows[1,2], " & ", paste0(trows[1,report], collapse = " & "), "\\\\\\\\tabularnewline\n")
+        rowinfo <- paste0("_BR_", trows[1,1], " with ", trows[1,2], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
         for (i in 2:nrow(trows)){
-            rowinfo <- paste0(rowinfo, paste0(trows[i,1], " with ", trows[i,2], " & ", paste0(trows[i,report], collapse = " & "), "\\\\\\\\tabularnewline\n"))
+            rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,1], " with ", trows[i,2], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
         }
         tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
         tmpx
@@ -382,7 +326,7 @@ ROWINFORMATION
     if("loadings" %in% params){
         loadingInfo <- lapply(loads, loadingMaker, report)
         loadingInfo <- paste0(unlist(loadingInfo), collapse = "")
-        loadingInfo <- paste0(" & \\\\multicolumn{4}{c}{\\\\uline{Factor Loadings}}\\\\tabularnewline", loadingInfo)
+        loadingInfo <- paste0("_BR__EOC__BOMC4__UL_Factor Loadings_EOUL__EOMC__EOR_", loadingInfo)
         template <- gsub("FACTORLOADINGS", loadingInfo, template)
     }else{
         template <- gsub("FACTORLOADINGS", "", template)
@@ -422,7 +366,7 @@ ROWINFORMATION
         fitinfotmpchi <- NULL
     }
     if(length(grep("[0-9]\\* ", template))){
-        template <- gsub("IDENTNOTE", "* Indicates parameters fixed for model identification.\\\\", template)
+       template <- gsub("IDENTNOTE", "* Indicates parameters fixed for model identification.", template)
     }else{
         template <- gsub("IDENTNOTE", "", template)
     }
@@ -446,10 +390,52 @@ ROWINFORMATION
     }else{
         fitinfo <- fitinfotmpchi
     }
-    template <- gsub("FITINFORMATION", fitinfo, template)
-    write(template, paste0(outfile))
+    template <- gsub("FITINFORMATION", "", template) ## Ignoring this for now
+    markup <- function(x, type) {
+        if (type == "latex")
+            LATEX <- TRUE
+        else LATEX <- FALSE
+        x <- gsub("_EOC_", ifelse(LATEX, "", "</td>"), x)
+        x <- gsub("_BOC_", ifelse(LATEX, "& ", "<td>"), x)
+        x <- gsub("_EOMC_", ifelse(LATEX, "}", "</td>"), x)
+        x <- gsub("_EOR_", ifelse(LATEX, "\\\\tabularnewline",
+            "</tr>"), x)
+        x <- gsub("_BRU_", ifelse(LATEX, "", paste("<tr><td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;")),
+            x)
+        x <- gsub("_BR_", ifelse(LATEX, "", "<tr><td>"), x)
+        x <- gsub("_BT_", ifelse(LATEX, "\\\\begin{tabular}{lrrrr}", "<table>\n"),
+            x)
+        x <- gsub("_EOL_", "\n", x)
+        x <- gsub("_HL_", ifelse(LATEX, "\\\\hline", ""), x)
+        x <- gsub("_UL_", ifelse(LATEX, "", ""), x) ## Remove underlining for now.
+        x <- gsub("_EOUL_", ifelse(LATEX, "", ""), x)
+        x <- gsub("_SEPU_", ifelse(LATEX, " &", paste("</td><td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;")),
+            x)
+        x <- gsub("_SEP_", ifelse(LATEX, " &", "</td><td>"),
+            x)
+        x <- gsub("_EOT_", ifelse(LATEX, "\\\\end{tabular}",
+                                  "</table>"), x)
+        x <- gsub("_BOMR1_", ifelse(LATEX, "& \\\\multirow{1}{c}{",
+            "<td rowspan = '1'>"), x)
+        x <- gsub("_BOMR2_", ifelse(LATEX, "& \\\\multirow{2}{c}{",
+            "<td rowspan = '2'>"), x)
+        x <- gsub("_BOMC1_", ifelse(LATEX, "& \\\\multicolumn{1}{c}{",
+            "<td colspan = '1'>"), x)
+        x <- gsub("_BOMC2_", ifelse(LATEX, "& \\\\multicolumn{2}{c}{",
+                                    "<td colspan = '2'>"), x)
+        x <- gsub("_BOMC4_", ifelse(LATEX, "& \\\\multicolumn{4}{c}{",
+            "<td colspan = '4'; align = 'center'>"), x)
+        x <- gsub("_X2_", ifelse(LATEX, "$-2LLR (Model \\chi^2)$",
+            "&chi;<sup>2</sup>"), x)
+        x <- gsub("_R2_", ifelse(LATEX, "$R^2$", "R<sup>2</sup>"),
+            x)
+        x <- gsub("_SIGMA_", ifelse(LATEX, "$\\\\sigma$", "&sigma;"),
+            x)
+        x <- gsub("_NBSP_", ifelse(LATEX, " ", "&nbsp;"), x)
+    }
+    template <- markup(template, type)
+    if(type == "latex") exten <- ".tex" else exten <- ".html"
+    write(template, paste0(outfile, exten))
     cat(template)
 }
-
-
 
