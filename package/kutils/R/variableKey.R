@@ -1568,6 +1568,7 @@ keyUpdate <- function(key, dframe, append = TRUE,
 ##' @param newkey updated key returned by keyUpdate function
 ##' @return summary of differences between the two keys
 ##' @author Ben Kite <bakite@@ku.edu>
+##' @export
 ##' @examples
 ##' library(rockchalk)
 ##' dat1 <- data.frame("Score" = c(1, 2, 3, 42, 4, 2),
@@ -1601,4 +1602,9 @@ keyDiff <- function(oldkey, newkey){
     output
 }
 
-print.keyDiagnostic <- function(x) print(x[["changes"]])
+
+##' @method print keyDiagnostic
+##' @export
+##' @param x A keyDiagnostic object
+##' @param ... Other arguments passed through to print
+print.keyDiagnostic <- function(x, ...) print(x[["changes"]], ...)
