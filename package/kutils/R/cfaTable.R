@@ -41,8 +41,9 @@
 ##' standardized = TRUE will yield two identical sets of two columns.
 ##'
 ##' @param object A cfa object from lavaan
-##' @param caption The LaTeX caption to be used in the table header.
-##' @param outfile Name of output file. May include the path, but not the extension.
+##' @param file Name of output file. May include the path, but not the extension
+##' (which is determined by the type argument).
+##' Defaults to NULL which saves no file.
 ##' @param params Measurement parameters to be included. Valid values
 ##' are "loadings", "intercepts", "residuals", "latentvariances",
 ##' and "thresholds". See Details.
@@ -61,8 +62,9 @@
 ##'     will also affect whatever is specified in names_fit.
 ##' @param single_spaced Default = TRUE. If a double-spaced table is
 ##'     needed, set single_spaced = FALSE.
+##' @param type Type of output table ("latex" or "html"). Defaults to "latex".
 ##' @importFrom stats pnorm
-##' @return File saved as outfile.
+##' @return CFA table of desired type.
 ##' @export
 ##' @author Ben Kite <bakite@@ku.edu>
 ##' @examples
@@ -71,7 +73,7 @@
 ##' textual =~ x4 + x5 + x6
 ##' speed   =~ x7 + x8 + x9 '
 ##' output1 <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE)
-##' cfaTable(output1, "Example of cfaTable", "exampleTable", fit = "rmsea", standardized = TRUE, params = c("loadings", "latentvariances"), type = "html")
+##' cfaTable(output1, file = "exampleTable", fit = "rmsea", standardized = TRUE, params = c("loadings", "latentvariances"), type = "latex")
 ##'
 ##'
 ##' model <- "factor =~ .7*y1 + .7*y2 + .7*y3 + .7*y4
@@ -83,15 +85,14 @@
 ##' dat <- simulateData(model, sample.nobs = 300)
 ##' testmodel <- "ExampleFactor =~ y1 + y2 + y3 + y4"
 ##' output <- cfa(testmodel, data = dat, ordered = colnames(dat), std.lv = FALSE)
-##' cfaTable(output, caption = "Example with Categorical Data", outfile = "catTable",
+##' cfaTable(output, file = "catTable",
 ##' params = c("loadings", "thresholds", "residuals"), fit = c("tli", "chi-square"),
-##' names_fit = c("TLI", "chi-square"), type = "html")
+##' names_fit = c("TLI", "chi-square"), type = "latex")
 
 cfaTable <-
-    function(object, caption, outfile, params = c("loadings", "intercepts"),
+    function(object, file = NULL, params = c("loadings", "intercepts"),
              fit = c("chi-square", "cfi", "tli", "rmsea"),
-             names_fit
-             = fit, standardized= FALSE,
+             names_fit = fit, standardized= FALSE,
              names_upper = TRUE, single_spaced = TRUE, type = "latex")
 {
     if(class(object)[1] != "lavaan"){
@@ -133,7 +134,7 @@ cfaTable <-
 _BT_
 _HL_
 STANDARDIZED
-_BR_Parameter_EOC_ REPORT
+_BRU_Parameter_EOC_ REPORT
 _HL_
 FACTORLOADINGS
 INTERCEPTS
@@ -141,6 +142,7 @@ THRESHOLDS
 RESIDUALS
 LATENTVARS
 _HL_
+_HTMLHL_
 _EOT_
 
 Note. IDENTNOTE
@@ -152,9 +154,9 @@ FITINFORMATION
         std <- update(object, std.lv = TRUE, std.ov = TRUE)
         parameters$stdest <- std@Fit@est
         parameters$stdse <- std@Fit@se
-        holder <-  "_BR__EOC__BOMC2__UL_Unstandarized_EOUL__EOMC_ _BOMC2__UL_Standardized_EOUL__EOMC__EOR_"
+        holder <-  "_BRT__EOC__BOMCT2__UL_Unstandarized_EOUL__EOMC_ _BOMCT2__UL_Standardized_EOUL__EOMC__EOR_"
         template <- gsub("STANDARDIZED", holder, template)
-        holder <- "_BOMC1_NAME_EOMC_"
+        holder <- "_BOCU_NAME_EOC_"
         reportx <- list()
         columnNames <- c("Estimate", "SE", "Estimate", "SE")
         for(i in 1:length(columnNames)){
@@ -170,7 +172,7 @@ FITINFORMATION
 
         template <- gsub("STANDARDIZED", "", template)
 
-        holder <- "_BOC_NAME_EOC_"
+        holder <- "_BOCU_NAME_EOC_"
         reportx <- list()
         columnNames <- c("Estimate", "SE", "z", "p")
         for(i in 1:length(columnNames)){
@@ -355,7 +357,7 @@ ROWINFORMATION
     }else{
         template <- gsub("LATENTVARS", "", template)
     }
-    template <- gsub("TITLE", caption, template)
+    #template <- gsub("TITLE", caption, template)
     fitinfotmpchi <- "$\\\\chi^{2}$(DF)= CHI, \\\\textit{p} = PVAL"
 
     if("chi-square" %in% fit){
@@ -401,14 +403,18 @@ ROWINFORMATION
         x <- gsub("_EOR_", ifelse(LATEX, "\\\\tabularnewline",
             "</tr>"), x)
         x <- gsub("_BRU_", ifelse(LATEX, "", paste("<tr><td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;")),
-            x)
+                  x)
+        x <- gsub("_BRT_", ifelse(LATEX, "", paste("<tr><td style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;")),
+                  x)
+        x <- gsub("_BOCU_", ifelse(LATEX, "& ", paste("<td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;")),
+                  x)
         x <- gsub("_BR_", ifelse(LATEX, "", "<tr><td>"), x)
         x <- gsub("_BT_", ifelse(LATEX, "\\\\begin{tabular}{lrrrr}", "<table>\n"),
             x)
         x <- gsub("_EOL_", "\n", x)
         x <- gsub("_HL_", ifelse(LATEX, "\\\\hline", ""), x)
-        x <- gsub("_UL_", ifelse(LATEX, "", ""), x) ## Remove underlining for now.
-        x <- gsub("_EOUL_", ifelse(LATEX, "", ""), x)
+        x <- gsub("_UL_", ifelse(LATEX, "\\\\underline{", "<span style=\"text-decoration: underline;\">"), x)
+        x <- gsub("_EOUL_", ifelse(LATEX, "}", "</span>"), x)
         x <- gsub("_SEPU_", ifelse(LATEX, " &", paste("</td><td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;")),
             x)
         x <- gsub("_SEP_", ifelse(LATEX, " &", "</td><td>"),
@@ -424,7 +430,15 @@ ROWINFORMATION
         x <- gsub("_BOMC2_", ifelse(LATEX, "& \\\\multicolumn{2}{c}{",
                                     "<td colspan = '2'>"), x)
         x <- gsub("_BOMC4_", ifelse(LATEX, "& \\\\multicolumn{4}{c}{",
-            "<td colspan = '4'; align = 'center'>"), x)
+                                    "<td colspan = '4'; align = 'center'>"), x)
+        x <- gsub("_BOMCT1_", ifelse(LATEX, "& \\\\multicolumn{1}{c}{",
+            "<td colspan = '1'; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;"), x)
+        x <- gsub("_BOMCT2_", ifelse(LATEX, "& \\\\multicolumn{2}{c}{",
+                                    "<td colspan = '2'; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;"), x)
+        x <- gsub("_BOMCT4_", ifelse(LATEX, "& \\\\multicolumn{4}{c}{",
+                                     "<td colspan = '4'; align = 'center'; ; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;"), x)
+        x <- gsub("_HTMLHL_", ifelse(LATEX, "",
+            "<tr><td colspan = '5'; align = 'center'; ; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;</tr>"), x)
         x <- gsub("_X2_", ifelse(LATEX, "$-2LLR (Model \\chi^2)$",
             "&chi;<sup>2</sup>"), x)
         x <- gsub("_R2_", ifelse(LATEX, "$R^2$", "R<sup>2</sup>"),
@@ -434,8 +448,10 @@ ROWINFORMATION
         x <- gsub("_NBSP_", ifelse(LATEX, " ", "&nbsp;"), x)
     }
     template <- markup(template, type)
-    if(type == "latex") exten <- ".tex" else exten <- ".html"
-    write(template, paste0(outfile, exten))
+    if(!is.null(file)){
+        if(type == "latex") exten <- ".tex" else exten <- ".html"
+        write(template, paste0(file, exten))
+    }
     cat(template)
 }
 
