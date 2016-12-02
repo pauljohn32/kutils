@@ -1,8 +1,8 @@
 Package: kutils
 Type: Package
 Title: Project Management Tools 
-Version: 0.42
-Date: 2016-11-29
+Version: 0.45
+Date: 2016-12-02
 Authors@R: c(person("Paul","Johnson",email="pauljohn@ku.edu",role = c("aut", "cre")),
 		   person("Benjamin","Kite",,email="bakite@ku.edu",role="aut"),
   		   person("Kenna","Whitley",role="ctb"),
@@ -10,9 +10,11 @@ Authors@R: c(person("Paul","Johnson",email="pauljohn@ku.edu",role = c("aut", "cr
 Maintainer: Paul Johnson <pauljohn@ku.edu>
 Description: Tools for data importation, recoding, and inspection
     that are used at the University of Kansas Center for Research
-	Methods and Data Analysis. There are functions for recoding and
-	displaying factors, fixing string variables, and implementing
-	structured recoding (the "variable key").
+    Methods and Data Analysis. The main feature here is the 
+    systematic implementation of the "variable key" framework
+    for data importation and recoding.  We are eager to have
+    community feedback about the variable key and the vignette
+    about it. 
 License: GPL-2
 Imports: stats, utils, methods, xtable, lavaan, plyr, openxlsx 
 Suggests: rockchalk

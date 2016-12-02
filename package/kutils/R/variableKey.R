@@ -1563,7 +1563,6 @@ keyUpdate <- function(key, dframe, append = TRUE,
 
 ##' Compares a key provided to keyUpdate with the return of keyUpdate
 ##'
-##' @title keyDiff
 ##' @param oldkey key that was provided to keyUpdate function
 ##' @param newkey updated key returned by keyUpdate function
 ##' @return summary of differences between the two keys
@@ -1602,9 +1601,11 @@ keyDiff <- function(oldkey, newkey){
     output
 }
 
-
+##' Print the "changes" component of a keyDiagnostic object
+##' 
 ##' @method print keyDiagnostic
 ##' @export
 ##' @param x A keyDiagnostic object
 ##' @param ... Other arguments passed through to print
+##' @author Ben Kite <bakite@@ku.edu>
 print.keyDiagnostic <- function(x, ...) print(x[["changes"]], ...)

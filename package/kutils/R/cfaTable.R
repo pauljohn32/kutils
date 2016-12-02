@@ -73,7 +73,8 @@
 ##' textual =~ x4 + x5 + x6
 ##' speed   =~ x7 + x8 + x9 '
 ##' output1 <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE)
-##' cfaTable(output1, file = "exampleTable", fit = "rmsea", standardized = TRUE, params = c("loadings", "latentvariances"), type = "latex")
+##' cfaTable(output1, file = "exampleTable", fit = "rmsea", standardized = TRUE, 
+##'          params = c("loadings", "latentvariances"), type = "latex")
 ##'
 ##'
 ##' model <- "factor =~ .7*y1 + .7*y2 + .7*y3 + .7*y4
@@ -452,6 +453,6 @@ ROWINFORMATION
         if(type == "latex") exten <- ".tex" else exten <- ".html"
         write(template, paste0(file, exten))
     }
-    cat(template)
+    template
 }
 

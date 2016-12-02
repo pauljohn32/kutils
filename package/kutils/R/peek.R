@@ -126,7 +126,7 @@
 ##' peek(cars, xlabstub = "R cars data: ")
 ##' dev.off()
 ##' peek(EuStockMarkets, xlabstub = "Euro Market Data: ")
-##' devloff()
+##' dev.off()
 ##' peek(EuStockMarkets, xlabstub = "Euro Market Data: ", breaks = 50,
 ##'      freq = TRUE)
 ##' dev.off()
