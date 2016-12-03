@@ -1,3 +1,9 @@
+2016-12-02  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/dir.create.unique.R (dts): imported basics from rockchalk
+	package, fixed directory naming error if date = TRUE, clarified
+	error handling.
+
 2016-11-10  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (keyApply): fix error B&B found in !class

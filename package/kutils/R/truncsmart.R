@@ -34,6 +34,7 @@
 ##' @return shorter string truncated at acceptable separators when
 ##'     found
 ##' @author Paul Johnson <pauljohn@@ku.edu>
+##' @export
 ##' @examples
 ##' x <- "Aasdf asdIasdf fW_asd asd aasjdf_as fasdasdfasdfasd"
 ##' truncsmart(x, target = 10, tol = c(5, 2))
