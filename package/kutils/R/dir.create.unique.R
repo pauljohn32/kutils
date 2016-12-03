@@ -28,23 +28,30 @@ dir.create.unique <- function(path, usedate = TRUE,
 {
     dts <- function(name) gsub("/$", "", name)
     if (!file.exists(dts(path))){
-        dir.create(path, recursive = recursive, showWarnings = showWarnings,
-                   mode = mode)
-        return(paste0(dts(path)), "/")
+        res <- dir.create(path, recursive = recursive, showWarnings = showWarnings,
+                          mode = mode)
+        if (!isTRUE(res)) {
+            messg <- paste("dir.create.unique: directory", path, "could not be created")
+            stop(messg)
+        } 
     } else {
         today <- format(Sys.time(), "%Y%m%d")
         j <- 1
         ocandidate <- paste0(dts(path),
-                             ifelse(usedate, paste0("/", today), ""), "-",  j, "/")
+                             if(usedate) paste0("/", today), "-",  j)
         while (file.exists(dts(ocandidate))) {
             j <- j + 1
             ocandidate <- paste0(dts(path),
-                                 ifelse(usedate, paste0("/", today), ""), "-",  j, "/")
+                                 if (usedate) paste0("/", today), "-",  j)
         }
         path <- ocandidate
-        dir.create(path, recursive = recursive, showWarnings = showWarnings,
-                   mode = mode)
-        return(path)
+        res <- dir.create(path, recursive = recursive, showWarnings = showWarnings,
+                          mode = mode)
+        if (!isTRUE(res)) {
+            messg <- paste("dir.create.unique: directory", path, "could not be created")
+            stop(messg)
+        } 
     }
+    return(paste0(dts(path), "/"))
 }
 
