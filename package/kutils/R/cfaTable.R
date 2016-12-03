@@ -19,7 +19,7 @@
 ##' }
 ##'
 ##' The stantardized parameter regulates the number of columns to be
-##' included.  standardized=FALE implies there will be four columns:
+##' included.  standardized=FALSE implies there will be four columns:
 ##' \enumerate{
 ##' \item the estimate
 ##' \item the standard error
@@ -41,7 +41,8 @@
 ##' standardized = TRUE will yield two identical sets of two columns.
 ##'
 ##' @param object A cfa object from lavaan
-##' @param file Name of output file. May include the path, but not the extension
+##' @param file Name of output file. May include the path,
+##' but not the extension
 ##' (which is determined by the type argument).
 ##' Defaults to NULL which saves no file.
 ##' @param params Measurement parameters to be included. Valid values
@@ -73,9 +74,9 @@
 ##' textual =~ x4 + x5 + x6
 ##' speed   =~ x7 + x8 + x9 '
 ##' output1 <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE)
-##' cfaTable(output1, file = "exampleTable", fit = "rmsea", standardized = TRUE, 
-##'          params = c("loadings", "latentvariances"), type = "latex")
-##'
+##' cfaTable(output1, file = "exampleTable", fit = "rmsea",
+##' standardized = TRUE, params = c("loadings", "latentvariances"),
+##' type = "latex")
 ##'
 ##' model <- "factor =~ .7*y1 + .7*y2 + .7*y3 + .7*y4
 ##' y1 | -1*t1 + 1*t2
@@ -85,10 +86,12 @@
 ##' "
 ##' dat <- simulateData(model, sample.nobs = 300)
 ##' testmodel <- "ExampleFactor =~ y1 + y2 + y3 + y4"
-##' output <- cfa(testmodel, data = dat, ordered = colnames(dat), std.lv = FALSE)
+##' output <- cfa(testmodel, data = dat, ordered = colnames(dat),
+##'     std.lv = FALSE)
 ##' cfaTable(output, file = "catTable",
-##' params = c("loadings", "thresholds", "residuals"), fit = c("tli", "chi-square"),
-##' names_fit = c("TLI", "chi-square"), type = "latex")
+##'     params = c("loadings", "thresholds", "residuals"),
+##'     fit = c("tli", "chi-square"),
+##'     names_fit = c("TLI", "chi-square"), type = "latex")
 
 cfaTable <-
     function(object, file = NULL, params = c("loadings", "intercepts"),
@@ -111,7 +114,8 @@ cfaTable <-
         names(fit) <- names_fit
     }
     fitmeas <- lavaan::fitMeasures(object)[]
-    fitmeas <- sapply(fitmeas, function(x) formatC(round(x, 3), format = 'f', digits = 2))
+    fitmeas <- sapply(fitmeas, function(x) formatC(round(x, 3),
+                                   format = 'f', digits = 2))
     chimeas <- object@Fit@test[[1]]
     chimeas$stat <- formatC(round(chimeas$stat, 3), format = 'f', digits = 2)
     chimeas$pvalue <- formatC(round(chimeas$pvalue, 3), format = 'f', digits = 3)
