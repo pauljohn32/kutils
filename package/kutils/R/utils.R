@@ -1,6 +1,15 @@
 ##' Delete trailing slash
 ##'
-##' Windows file.exists fails if "/" is on end of file name
+##' This function cleans up a path string by removing the trailing
+##' slash.  This is necessary on MS Windows, \code{file.exists(fn)} fails
+##' if "/" is on end of file name. Deleting the trailing slash is thus
+##' required on Windows and it is not harmful on other platforms.
+##'
+##' All usages of \code{file.exists(fn)} in R should be revised
+##' to be multi-platform safe by writing \code{file.exists(dts(fn))}.
+##'
+##' This version also removes repeated adjacent slashes, so that
+##' \code{"/tmp///paul//test/"} becomes \code{"/tmp/paul/test"}.
 ##' @param name A path
 ##' @return Same path with trailing "/" removed.
 ##' @export

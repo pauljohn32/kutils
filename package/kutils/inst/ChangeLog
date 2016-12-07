@@ -1,3 +1,12 @@
+2016-12-07  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/utils.R: dts had no documentation, so it was inserted.
+
+	* ../R/project.R (initProject): Remove hard coded directory names,
+	rely on arguments to set them. Insert new argument gitArgs for git
+	init customization. Clear up documentation, revise examples
+	to be more informative.
+
 2016-12-02  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/dir.create.unique.R (dts): imported basics from rockchalk
