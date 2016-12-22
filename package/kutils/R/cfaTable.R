@@ -156,7 +156,7 @@ FITINFORMATION
 
     if(standardized == TRUE){
         report <- c("est", "se", "stdest", "stdse")
-        std <- update(object, std.lv = TRUE, std.ov = TRUE)
+        std <- update(object, model = object@Options$model, std.lv = TRUE, std.ov = TRUE)
         parameters$stdest <- std@Fit@est
         parameters$stdse <- std@Fit@se
         holder <-  "_BRT__EOC__BOMCT2__UL_Unstandarized_EOUL__EOMC_ _BOMCT2__UL_Standardized_EOUL__EOMC__EOR_"

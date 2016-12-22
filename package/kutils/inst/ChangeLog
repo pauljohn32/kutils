@@ -1,3 +1,10 @@
+2016-12-15  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (keyDiagnostic): clean up message in
+	diagnostic for variables with too many values.
+	(long2wide): insert comment
+	(keyDiagnostic): clarify comment to user about wide editor display
+
 2016-12-07  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/utils.R: dts had no documentation, so it was inserted.

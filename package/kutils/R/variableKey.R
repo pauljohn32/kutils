@@ -854,8 +854,8 @@ keyImport <- function(file, ignoreCase = TRUE,
 
 
 
-##' Convert the variable key into a keylist structure for
-##' use in keyApply
+##' Convert the variable key into a keylist structure for use in
+##' keyApply
 ##'
 ##' The return value is a list, with one element per "name_old" to
 ##' "name_new" variable combination.  If the key has one old variable
@@ -1186,16 +1186,16 @@ NULL
 ##'     departments.
 ##' @return NULL
 ##' @author Paul Johnson <pauljohn@@ku.edu>
-keyDiagnostic <-
-    function(dfold, dfnew, keylist, max.values = 20,
-             nametrunc = 8, wide = 200, confidential = FALSE)
+keyDiagnostic <- function(dfold, dfnew, keylist, max.values = 20,
+                          nametrunc = 8, wide = 200, confidential = FALSE)
 {
 
     ## TODO if class in dfnew does not match keylist specification, fail
 
     ## TODO think more deeply on warning signs of bad recoding.
     ## other summary of match and mismatch.
-    print("Make your display wide")
+    print(paste("We are going to run \"options(width=", wide, ")\"",
+          "Please make your output display window wide", "so you can see the tables"))
     width.orig <- options("width")
     options(width = wide)
     if (confidential) {
@@ -1214,7 +1214,9 @@ keyDiagnostic <-
             print(round(table(dfnew[ , v$name_new], dfold[ , v$name_old],
                               exclude = NULL, dnn = c(name_new.trunc, name_old.trunc)), roundAt))
         } else {
-            print("many values were observed than we can put in a table. What to do?")
+            messg <- paste("Variable", v$name_new, "has more than", max.values,
+                           "unique values.", "That is too large for a diagnostic table.")
+            print(messg)
         }
     }
     options(width = unlist(width.orig))
@@ -1320,7 +1322,8 @@ wide2long <- function(key, sep = c(character = "\\|", logical = "\\|",
 long2wide <- function(keylong){
     name_old.new <- paste0(keylong[ , "name_old"], ".", keylong[ , "name_new"])
     name_old.new <- factor(name_old.new, levels = unique(name_old.new))
-    ##kls = keylong split
+    ##kls = keylong split.
+    ## 20161215: why didn't I use keylist maker here?
     kls <- split(keylong, name_old.new, drop = TRUE)
 
     makeOneWide <- function(x){
