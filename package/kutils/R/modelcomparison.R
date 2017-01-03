@@ -70,8 +70,8 @@ detectNested <- function(models){
 ##'     comparison on to another lavaan function.  The results are
 ##'     added to the last three columns of the comparison table. The
 ##'     default value is TRUE.
-##' @param tex path and name of .tex file created for the table. If
-##'     NULL, no file is created.  The default value is NULL.
+##' @param file Default is NULL, no file created. If output file is desired,
+##'     provide a character string for the file name. 
 ##' @author Benjamin Arthur Kite
 ##' @export
 ##' @importFrom stats anova update
@@ -132,12 +132,17 @@ detectNested <- function(models){
 ##'
 ##' models <- list("Configural" = cc1, "Metric" = cc2, "PartialMetric" = cc21, "Scalar" = cc3)
 ##' compareCFA(models, nesting = "Configural > Metric + PartialMetric > Scalar")
+##'
 ##' compareCFA(models, fitmeas = c("chisq", "df", "cfi", "rmsea", "tli"),
-##' nesting = "Configural > Metric + PartialMetric > Scalar", tex = "table.tex")
-
+##' nesting = "Configural > Metric + PartialMetric > Scalar")
+##' \donttest{
+##' ## Creates output file
+##' ## compareCFA(models, fitmeas = c("chisq", "df", "cfi", "rmsea", "tli"),
+##' ## nesting = "Configural > Metric + PartialMetric > Scalar", file = "table.tex")
+##' }
 compareCFA <- function(models,
                        fitmeas = c("chisq", "df",  "pvalue", "rmsea", "cfi", "tli", "srmr", "aic", "bic"),
-                       nesting = NULL, scaled = TRUE, chidif = TRUE, tex = NULL){
+                       nesting = NULL, scaled = TRUE, chidif = TRUE, file = NULL){
     if (is.null(names(models))){
         names(models) <- paste0("Model", seq(1, length(models)))
     }
@@ -205,7 +210,7 @@ compareCFA <- function(models,
     }else{
         output <- list(sumtable)
     }
-    if(!is.null(tex)){
+    if(!is.null(file)){
         tableinfo <- output[[1]]
         names(tableinfo) <- gsub(".scaled", "", names(tableinfo))
         texcode <- print(xtable(tableinfo))
@@ -217,7 +222,7 @@ compareCFA <- function(models,
         if(length(output) > 1){
             texcode <- paste0(texcode, "\n", paste0(output[[2]], collapse = ", "))
         }
-        write(texcode, file = tex)
+        write(texcode, file = file)
     }
     output
 }

@@ -1,8 +1,8 @@
 Package: kutils
 Type: Package
 Title: Project Management Tools 
-Version: 0.90
-Date: 2016-12-15
+Version: 0.92
+Date: 2017-01-03
 Authors@R: c(person("Paul","Johnson",email="pauljohn@ku.edu",role = c("aut", "cre")),
 		   person("Benjamin","Kite",,email="bakite@ku.edu",role="aut"),
   		   person("Kenna","Whitley",role="ctb"),
@@ -18,6 +18,7 @@ Description: Tools for data importation, recoding, and inspection that
     importation and recoding.  We are eager to have community feedback
     about the variable key and the vignette about it.
 License: GPL-2
+Depends: R (>= 3.3.0)
 Imports: stats, utils, methods, xtable, lavaan, plyr, openxlsx 
 Suggests: rockchalk
 RoxygenNote: 5.0.1

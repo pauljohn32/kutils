@@ -130,7 +130,7 @@
 ##' peek(EuStockMarkets, xlabstub = "Euro Market Data: ", breaks = 50,
 ##'      freq = TRUE)
 ##' dev.off()
-##' ## Not run
+##' ## Not run: file output
 ##' ## peek(EuStockMarkets, breaks = 50, file = "myeuro.pdf",
 ##' ##      height = 4, width=3, family = "Times")
 ##' ## peek(EuStockMarkets, breaks = 50, file = "myeuro-%d3.pdf",

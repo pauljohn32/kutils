@@ -50,25 +50,26 @@
 ##' @importFrom utils available.packages install.packages
 ##'     installed.packages packageDescription update.packages
 ##' @examples
-##' ## options(repos = c("http://rweb.crmda.ku.edu/kran", "http://rweb.crmda.ku.edu/cran"))
-##' ## not run
-##' ## updatePackages()
-##' ## New packages will go to user directory
-##' ## updatePackages(ask = FALSE, libnew = NULL)
-##' ## otherwise must have write privileges in libnew.
+##' \dontrun{
+##' myrepos <- c("http://rweb.crmda.ku.edu/cran",
+##'              "http://www.bioconductor.org/packages/3.3/bioc")
+##' updatePackages(repos = myrepos)
+##' ## libnew defaults to "/usr/share/R/library". Specify NULL
+##' ## so that new packages will go to user's directory
+##' updatePackages(libnew = NULL)
+##' }
 updatePackages <- function(ask = FALSE, checkBuilt = TRUE,
                            dependencies = c("Depends", "Imports", "LinkingTo"),
                            libnew = "/usr/share/R/library/",
-                           repos = c("http://rweb.crmda.ku.edu/cran",
-                                     "http://rweb.crmda.ku.edu/kran",
-                                     "http://www.bioconductor.org/packages/3.3/bioc"),
+                           repos = options("repos"),
                            ...)
 {
     ## See if package asks for dependencies not currently installed
     installedPackages <- rownames(installed.packages())
     update.packages(ask = ask, checkBuilt = checkBuilt, repos = repos, ...)
     avail <- available.packages(repos = repos)
-    alldeps <- unique(unlist(tools::package_dependencies(installedPackages, which = dependencies,
+    alldeps <- unique(unlist(tools::package_dependencies(installedPackages,
+                                                         which = dependencies,
                                                          db = avail,
                                                          recursive = TRUE)))
     

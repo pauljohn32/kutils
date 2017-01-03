@@ -9,7 +9,7 @@
 ##' @param data A data frame
 ##' @param labels A vector of values to replace existing levels
 ##' @param outdir Output directory
-##' @param fn file name for output: not used yet
+##' @param fn file name for output: not used yet. See example for one way to save result.
 ##' @param rows Currently unused indicator for whether output should
 ##'     be transposed.
 ##' @return character vector
@@ -32,6 +32,10 @@
 ##' (mySummary2 <- likert(c("Vegas", "NewYork", "Paris"), scales,
 ##'                     labels = c("SD", "D", "N", "A", "SA")))
 ##'
+##'  ## Example of how one might write this in a file. The fn argument is not currently
+##'  ## enabled, but the following will work.
+##'  ## print(xtable::xtable(mySummary1, digits = 0), type = "html", file = "varCount-1.html")       
+##'   
 likert <-  function(vlist, data, labels, outdir, fn, rows = TRUE){
     ## xxx <- lapply(data[ , vlist], table)
     ## t(sapply(data[, vlist], table))
@@ -62,14 +66,10 @@ likert <-  function(vlist, data, labels, outdir, fn, rows = TRUE){
     for (i in 1:NROW(varColPct)){
         freqTab[i, ] <- paste0(varColPct[i, ], "% (", varCount[i, ], ")")
     }
-    
     freqTab <- rbind( rep(paste0("Pct (Count)")), freqTab)
     colnames(freqTab) <- colnames(varColPct)
     freqTab <- rbind(freqTab, varCountSums)
     rownames(freqTab)[NROW(freqTab)] <- "Sum"
-        
-##    print(xtable(freqTab, digits = 0), type = "html", file = paste0(outdir, "varCount-1.html"))
-
     freqTab
 }
     

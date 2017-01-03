@@ -299,7 +299,7 @@ topsep}{0em}}}
 
 
 \backslash
-SweaveOpts{prefix.string=plots/t,split=T,ae=F,height=4,width=5.5}
+SweaveOpts{prefix.string=plots/t,split=F,ae=F,height=4,width=5.5}
 \end_layout
 
 \end_inset
