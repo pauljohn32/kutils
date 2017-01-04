@@ -41,7 +41,7 @@
 ##' standardized = TRUE will yield two identical sets of two columns.
 ##'
 ##' @param object A cfa object from lavaan
-##' @param file Default is NULL, meaning no output file. If 
+##' @param file Default is NULL, meaning no output file. If
 ##' a character string is provided, it will be used as the
 ##' name of the output file. This function will add suffix ".tex"
 ##' or ".html", depending on the \code{type} argument
@@ -74,39 +74,16 @@
 ##' textual =~ x4 + x5 + x6
 ##' speed   =~ x7 + x8 + x9 '
 ##' output1 <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE)
-##' cfaTable(output1, fit = "rmsea",
-##' standardized = TRUE, params = c("loadings", "latentvariances"),
+##' cfaTable(output1, fit = "rmsea", params = c("loadings", "latentvariances"),
 ##' type = "latex")
 ##'
 ##' \donttest{
 ##' ## Example with file output
 ##' ## cfaTable(output1, file = "exampleTable", fit = "rmsea",
-##' ## standardized = TRUE, params = c("loadings", "latentvariances"),
+##' ## params = c("loadings", "latentvariances"),
 ##' ## type = "latex")
 ##' }
-##' 
-##' model <- "factor =~ .7*y1 + .7*y2 + .7*y3 + .7*y4
-##' y1 | -1*t1 + 1*t2
-##' y2 | -.5*t1 + 1*t2
-##' y3 | -.2*t1 + 1*t2
-##' y4 | -1*t1 + 1*t2
-##' "
-##' dat <- simulateData(model, sample.nobs = 300)
-##' testmodel <- "ExampleFactor =~ y1 + y2 + y3 + y4"
-##' output <- cfa(testmodel, data = dat, ordered = colnames(dat),
-##'     std.lv = FALSE)
-##' cfaTable(output, 
-##'     params = c("loadings", "thresholds", "residuals"),
-##'     fit = c("tli", "chi-square"),
-##'     names_fit = c("TLI", "chi-square"), type = "latex")
-##'
-##' \donttest{
-##' ## Example with file output
-##' ## cfaTable(output, file = "catTable",
-##' ##    params = c("loadings", "thresholds", "residuals"),
-##' ##    fit = c("tli", "chi-square"),
-##' ##    names_fit = c("TLI", "chi-square"), type = "latex")
-##' }
+
 
 cfaTable <-
     function(object, file = NULL, params = c("loadings", "intercepts"),
