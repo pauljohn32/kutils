@@ -147,7 +147,7 @@ if(!dir.exists("plots")) dir.create("plots")
 \selectlanguage{english}%
 % In document Latex options:
 \fvset{listparameters={\setlength{\topsep}{0em}}}
-\SweaveOpts{prefix.string=plots/t,split=T,ae=F,height=4,width=5.5}
+\SweaveOpts{prefix.string=plots/t,split=F,ae=F,height=4,width=5.5}
 
 <<Roptions, echo=F>>=
 options(device = pdf)

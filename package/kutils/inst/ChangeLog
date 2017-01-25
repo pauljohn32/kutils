@@ -1,3 +1,18 @@
+2017-01-25  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/cfaTable.R (cfaTable): clean up example so that no file
+	is created. Output is tex code.
+
+2017-01-09  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/modelcomparison.R (compareCFA): replace for loop with
+	mgsub, before that tighten up "name_old" to be always full string
+	"^chisq$", not just "chisq". This eliminates accidental
+	matches. Wish I could limit that to only the header row, but it
+	happens after xtable has done its work.
+
+	* ../R/cfaTable.R (markup): cat(template) then return invisible(template)
+
 2017-01-03  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/updatePkgDepends.R: do not specify default repos as

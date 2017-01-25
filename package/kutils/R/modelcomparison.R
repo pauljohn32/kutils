@@ -139,8 +139,8 @@ detectNested <- function(models){
 ##' nesting = "Configural > Metric + PartialMetric > Scalar")
 ##'
 ##' ## Creates output file
-##' compareCFA(models, fitmeas = c("chisq", "df", "cfi", "rmsea", "tli"),
-##' nesting = "Configural > Metric + PartialMetric > Scalar", file = "table.tex")
+##' ## compareCFA(models, fitmeas = c("chisq", "df", "cfi", "rmsea", "tli"),
+##' ## nesting = "Configural > Metric + PartialMetric > Scalar", file = "table.tex")
 ##' }
 compareCFA <- function(models,
                        fitmeas = c("chisq", "df",  "pvalue", "rmsea", "cfi", "tli", "srmr", "aic", "bic"),
@@ -215,12 +215,11 @@ compareCFA <- function(models,
     if(!is.null(file)){
         tableinfo <- output[[1]]
         names(tableinfo) <- gsub(".scaled", "", names(tableinfo))
-        texcode <- print(xtable(tableinfo))
-        name_old <- c("chisq", "pvalue", "dchi", "ddf", "npval")
+        texcode <- print(xtable(tableinfo), print.results = FALSE)
+        name_old <- c("^chisq$", "^pvalue$", "^dchi$", "^ddf$", "^npval$")
         name_new <- c("$\\\\chi^{2}$", "\\\\textit{p}-value", "$\\\\Delta\\\\chi^{2}$", "$\\\\Delta df$", "\\\\textit{p}")
-        for (i in 1:length(name_old)){
-            texcode <- gsub(name_old[i], name_new[i], texcode)
-        }
+        texcode <- mgsub(name_old, name_new, texcode)
+        
         if(length(output) > 1){
             texcode <- paste0(texcode, "\n", paste0(output[[2]], collapse = ", "))
         }
