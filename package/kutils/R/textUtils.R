@@ -25,7 +25,7 @@
 ##' @param type "tex" is default, could be "filename" or "html"
 ##' @return corrected character vector
 ##' @export
-##' @author Paul Johnson
+##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @examples
 ##' x1 <- c("_asdf&_&$", "asd adf asd_", "^ % & $asdf_")
 ##' escape(x1)
@@ -109,7 +109,7 @@ escape <- function (x, type = "tex"){
 ##'     and plus signs with nothing.
 ##' @export
 ##' @return cleaned text string
-##' @author Paul Johnson
+##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @examples
 ##' x <- c("[]kansas(city) Missouri", "percent%slash/",
 ##'        "\back{squiggle}_under(paren)", "*star-minus+plus")

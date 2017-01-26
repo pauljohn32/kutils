@@ -62,7 +62,7 @@ NULL
 ##' starsig(0.04, alpha = alpha.ex, symbols = symb.ex)
 ##' starsig(0.009, alpha = alpha.ex, symbols = symb.ex)
 ##' starsig(0.0009, alpha = alpha.ex, symbols = symb.ex)
-##' 
+##'
 starsig <-
     function(pval, alpha = c(0.05, 0.01, 0.001),
              symbols = c("*", "**", "***"))
@@ -74,7 +74,7 @@ starsig <-
     nstars <- sapply(pval, function(x) sum(abs(x) < alpha))
     sapply(nstars, function(y) symbols[y])
 }
-NULL 
+NULL
 
 
 ##' Remove elements if they are in a target vector, possibly replacing with NA
@@ -84,13 +84,13 @@ NULL
 ##' "c" with the NA symbol.
 ##'
 ##' If elements in y are not members of x, they are silently ignored.
-##' 
+##'
 ##' The code for this is not complicated, but it is
 ##' difficult to remember.  Here's the recipe to remove
 ##' elements y from x: \code{x <- x[!x \%in\% y[y \%in\% x]]}. It is
 ##' easy to get that wrong when in a hurry, so we use this function
 ##' instead.  The \code{padNA} was an afterthought, but it helps sometimes.
-##' 
+##'
 ##' @param x vector from which elements are to be removed
 ##' @param y shorter vector of elements to be removed
 ##' @param padNA Default FALSE, Should removed items be replaced with NA values?
@@ -117,7 +117,7 @@ removeMatches <- function(x, y, padNA = FALSE){
 ##'
 ##' This is multi-gsub.  Use it when it is necessary to process
 ##' many patterns and replacements in a given order on a vector.
-##' 
+##'
 ##' @param pattern vector of values to be replaced. A vector filled
 ##'     with patterns as documented in the \code{gsub} pattern
 ##'     argument
@@ -153,7 +153,7 @@ mgsub <- function(pattern, replacement, x, ... ){
     }
     x
 }
-    
+
 
 
 ##' Reduce each in a vector of strings to a given length
@@ -167,7 +167,7 @@ mgsub <- function(pattern, replacement, x, ... ){
 ##' @param k integer limit on length of string. Default is 20
 ##' @param unique Default FALSE
 ##' @return vector of character variables no longer than k
-##' @author Paul Johnson
+##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @export
 ##' @examples
 ##' x <- c("Washington", "Washingham", "Washmylaundry")
@@ -191,7 +191,7 @@ shorten <- function(x, k = 20, unique = FALSE){
 ##' @param x Character string.
 ##' @param k Number of characters after which to insert "\\n". Default is 20
 ##' @return Character with "\\n" inserted
-##' @author Paul Johnson
+##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @export
 ##' @examples
 ##' x <- "abcdef ghijkl mnopqrs tuvwxyz abc def ghi jkl mno pqr stv"
@@ -205,9 +205,9 @@ stringbreak <- function(x, k = 20){
     breakOneString <- function(y, k){
         ylength <- nchar(y)
         if (ylength <= k) return (y)
-        
+
         yseq <- seq(1, ylength, by = k)
-        
+
         ## iterate on successive pairs of yseq, but exclude last one
         res <- ""
         for(i in seq_along(yseq[-length(yseq)])){
@@ -228,13 +228,13 @@ stringbreak <- function(x, k = 20){
 ##' entered as integers with leading 0's as in 000001 or 034554.  R's
 ##' default coercion of integers will throw away the preceding 0's,
 ##' and reduce that to 1 or 34554. The user might want to re-insert
-##' the 0's, thereby creating a character vector with values "000001" 
+##' the 0's, thereby creating a character vector with values "000001"
 ##' and "045665".
 ##'
 ##' If x is an integer or a character vector, the result is the
 ##' more-or-less expected outcome (see examples). If x is numeric,
 ##' but not an integer, then x will be rounded to the lowest integer.
-##' 
+##'
 ##' The previous versions of this function failed when there were
 ##' missing values (NA) in the vector x.  This version returns NA for
 ##' those values.
@@ -292,4 +292,4 @@ padW0 <- function (x, n = 0) {
     res[xismiss] <- NA
     res
 }
- 
+
