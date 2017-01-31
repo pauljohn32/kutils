@@ -79,10 +79,10 @@
 ##' standardized = TRUE, params = c("loadings", "latentvariances"),
 ##' type = "latex")
 ##'
-##' ## Example with file output
-##' ## cfaTable(output1, file = "exampleTable.tex", fit = "rmsea",
-##' ## standardized = TRUE, params = c("loadings", "latentvariances"),
-##' ## type = "latex")
+##' #### Example with file output
+##' ##cfaTable(output1, file = "exampleTable.tex", fit = "rmsea",
+##' ##standardized = TRUE, params = c("loadings", "latentvariances"),
+##' ##type = "latex")
 ##'
 ##' model <- "factor =~ .7*y1 + .7*y2 + .7*y3 + .7*y4
 ##' y1 | -1*t1 + 1*t2
@@ -113,7 +113,7 @@ cfaTable <-
              names_upper = TRUE, single_spaced = TRUE, type = "latex")
 {
     if(class(object)[1] != "lavaan"){
-        stop(paste("The object that does not appear to be",
+        stop(paste("The object does not appear to be",
                    "a lavaan object.  Only lavaan cfa object can be",
                    "used with the CFATable function."))
     }
@@ -154,13 +154,7 @@ _HL_
 STANDARDIZED
 _BRU_Parameter_EOC_ REPORT
 _HL_
-FACTORLOADINGS
-INTERCEPTS
-THRESHOLDS
-RESIDUALS
-LATENTVARS
-_HL_
-_HTMLHL_
+_FACTORLOADINGS__INTERCEPTS__THRESHOLDS__RESIDUALS__LATENTVARS__HL__HTMLHL_
 _EOT_
 
 Note. IDENTNOTE
@@ -224,10 +218,8 @@ FITINFORMATION
         trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
         trows$z <- ifelse(trows$free == 0, "", trows$z)
         trows$p <- ifelse(trows$free == 0, "", trows$p)
-        tmpx <- "
-_BR__UL_FACTOR_EOUL__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _EOR_\n
-ROWINFORMATION
-"
+        tmpx <- "_BR__UL_FACTOR_EOUL__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _EOR_
+ROWINFORMATION"
         tmpx <- gsub("FACTOR", lvname, tmpx)
         rowinfo <- paste0("_BR_", paste0(trows[1,c("rhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
         for (i in 2:nrow(trows)){
@@ -253,10 +245,8 @@ ROWINFORMATION
         trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
         trows$z <- ifelse(trows$free == 0, "", trows$z)
         trows$p <- ifelse(trows$free == 0, "", trows$p)
-        tmpx <- "
- _BR__EOC_ _BOMC4__UL_Intercepts_EOUL__EOMC_ _EOR_
-ROWINFORMATION
-"
+        tmpx <- "_BR__EOC_ _BOMC4__UL_Intercepts_EOUL__EOMC_ _EOR_
+ROWINFORMATION"
         rowinfo <- paste0(paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
         for (i in 2:nrow(trows)){
             rowinfo <- paste0(rowinfo, paste0(paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
@@ -283,10 +273,8 @@ ROWINFORMATION
         trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
         trows$z <- ifelse(trows$free == 0, "", trows$z)
         trows$p <- ifelse(trows$free == 0, "", trows$p)
-        tmpx <- "
- _BR__EOC_ _BOMC4__UL_Thresholds_EOUL__EOMC_ _EOR_
-ROWINFORMATION
-"
+        tmpx <- "_BR__EOC_ _BOMC4__UL_Thresholds_EOUL__EOMC_ _EOR_
+ROWINFORMATION"
         rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
         for (i in 2:nrow(trows)){
             rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i, c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
@@ -307,10 +295,8 @@ ROWINFORMATION
         trows$z <- ifelse(trows$free == 0, "", trows$z)
         trows$p <- ifelse(trows$free == 0, "", trows$p)
         trows$p <- gsub("0\\.", "\\.", trows$p)
-        tmpx <- "
-_BR__EOC_ _BOMC4__UL_Residual Variances_EOUL__EOMC__EOR_
-ROWINFORMATION
-"
+        tmpx <- "_BR__EOC_ _BOMC4__UL_Residual Variances_EOUL__EOMC__EOR_
+ROWINFORMATION"
         rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
         for (i in 2:nrow(trows)){
             rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
@@ -331,10 +317,8 @@ ROWINFORMATION
         trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
         trows$z <- ifelse(trows$free == 0, "", trows$z)
         trows$p <- ifelse(trows$free == 0, "", trows$p)
-        tmpx <- "
- _BR__EOC__BOMC4__UL_Latent Variances/Covariances_EOUL__EOMC__EOR_
-ROWINFORMATION
-"
+        tmpx <- "_BR__EOC__BOMC4__UL_Latent Variances/Covariances_EOUL__EOMC__EOR_
+ROWINFORMATION"
         rowinfo <- paste0("_BR_", trows[1,1], " with ", trows[1,2], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
         for (i in 2:nrow(trows)){
             rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,1], " with ", trows[i,2], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
@@ -347,33 +331,33 @@ ROWINFORMATION
         loadingInfo <- lapply(loads, loadingMaker, report)
         loadingInfo <- paste0(unlist(loadingInfo), collapse = "")
         loadingInfo <- paste0("_BR__EOC__BOMC4__UL_Factor Loadings_EOUL__EOMC__EOR_", loadingInfo)
-        template <- gsub("FACTORLOADINGS", loadingInfo, template)
+        template <- gsub("_FACTORLOADINGS_", loadingInfo, template)
     }else{
-        template <- gsub("FACTORLOADINGS", "", template)
+        template <- gsub("_FACTORLOADINGS_", "", template)
     }
     if("intercepts" %in% params){
         interceptInfo <- interceptMaker(variables, report)
-        template <- gsub("INTERCEPTS", interceptInfo, template)
+        template <- gsub("_INTERCEPTS_", interceptInfo, template)
     }else{
-        template <- gsub("INTERCEPTS", "", template)
+        template <- gsub("_INTERCEPTS_", "", template)
     }
     if("thresholds" %in% params){
         thresholdInfo <- thresholdMaker(variables, report)
-        template <- gsub("THRESHOLDS", thresholdInfo, template)
+        template <- gsub("_THRESHOLDS_", thresholdInfo, template)
     }else{
-        template <- gsub("THRESHOLDS", "", template)
+        template <- gsub("_THRESHOLDS_", "", template)
     }
     if("residuals" %in% params){
         residualInfo <- residualMaker(variables, report)
-        template <- gsub("RESIDUALS", residualInfo, template)
+        template <- gsub("_RESIDUALS_", residualInfo, template)
     }else{
-        template <- gsub("RESIDUALS", "", template)
+        template <- gsub("_RESIDUALS_", "", template)
     }
     if("latentvariances" %in% params){
         latentInfo <- latentMaker(latents, report)
-        template <- gsub("LATENTVARS", latentInfo, template)
+        template <- gsub("_LATENTVARS_", latentInfo, template)
     }else{
-        template <- gsub("LATENTVARS", "", template)
+        template <- gsub("_LATENTVARS_", "", template)
     }
     #template <- gsub("TITLE", caption, template)
     fitinfotmpchi <- "$\\\\chi^{2}$(DF)= CHI, \\\\textit{p} = PVAL"

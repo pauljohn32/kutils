@@ -112,7 +112,7 @@ NULL
 ##'     that should be missing
 ##' @export
 ##' @importFrom utils head
-##' @author Paul Johnson
+##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @examples
 ##' ## 1.  Integers.
 ##' ## must be very sure these are truly integers, or else fails
@@ -439,7 +439,7 @@ checkValues <- function(x, value_old, xname){
 ##' @export
 ##' @importFrom utils write.csv
 ##' @importFrom methods as
-##' @author Paul Johnson
+##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @examples
 ##' set.seed(234234)
 ##' N <- 200
@@ -584,7 +584,7 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
 ##' @param outdir directory path
 ##' @return NULL
 ##' @keywords internal
-##' @author Paul Johnson
+##' @author Paul Johnson <pauljohn@@ku.edu>
 smartSave <- function(obj, file, outdir){
     fp <- file
     if (!is.null(outdir) && missing(outdir))
@@ -874,7 +874,7 @@ keyImport <- function(file, ignoreCase = TRUE,
 ##' @return A list with one element per variable name, along with some
 ##'     attributes like class_old and class_new. The class is set as
 ##'     well, "keylist".
-##' @author Paul Johnson
+##' @author Paul Johnson <pauljohn@@ku.edu>
 makeKeylist <- function(key,
                         sep = c(character = "\\|", logical = "\\|",
                               integer = "\\|", factor = "[\\|<]",
@@ -999,6 +999,7 @@ NULL
 ##'     will be ignored.
 ##' @param debug Default FALSE. If TRUE, emit some warnings.
 ##' @return A recoded version of dframe
+##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @export
 ##' @importFrom plyr mapvalues
 ##' @examples
@@ -1242,7 +1243,7 @@ keyDiagnostic <- function(dfold, dfnew, keylist, max.values = 20,
 ##'     specified for each variable class.
 ##' @return A long format variable key
 ##' @export
-##' @author Paul Johnson
+##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @examples
 ##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
 ##' mydf <- read.csv(mydf.path, stringsAsFactors=FALSE)
@@ -1616,7 +1617,7 @@ keyDiff <- function(oldkey, newkey){
 }
 
 ##' Print the "changes" component of a keyDiagnostic object
-##' 
+##'
 ##' @method print keyDiagnostic
 ##' @export
 ##' @param x A keyDiagnostic object

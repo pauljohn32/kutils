@@ -4,7 +4,7 @@
 ##' @param models A List of lavaan-fitted SEM models
 ##' @export
 ##' @return matrix indicating nesting relationships
-##' @author Ben Kite
+##' @author Ben Kite <bakite@@ku.edu>
 detectNested <- function(models){
     dfval <- ifelse("df.scaled" %in% lavaan::fitMeasures(models[[1]]), "df.scaled", "df")
     dfs <- lapply(models, lavaan::fitMeasures, dfval)
@@ -219,7 +219,7 @@ compareCFA <- function(models,
         name_old <- c("^chisq$", "^pvalue$", "^dchi$", "^ddf$", "^npval$")
         name_new <- c("$\\\\chi^{2}$", "\\\\textit{p}-value", "$\\\\Delta\\\\chi^{2}$", "$\\\\Delta df$", "\\\\textit{p}")
         texcode <- mgsub(name_old, name_new, texcode)
-        
+
         if(length(output) > 1){
             texcode <- paste0(texcode, "\n", paste0(output[[2]], collapse = ", "))
         }
