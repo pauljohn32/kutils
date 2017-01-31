@@ -1,3 +1,13 @@
+2017-01-31  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (smartRead): insert for loop to check column
+	classes of key import via read.xlsx. Any column that is not
+	characters is re-set as character.
+	(long2wide): printvals function was inadvertently changing all
+	missing values in value_new to "". We should instead have either
+	NA for missings, but preserve "NA" as a valid string if it is not
+	marked in the na.strings variable of keyImport.
+
 2017-01-25  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/cfaTable.R (cfaTable): clean up example so that no file
