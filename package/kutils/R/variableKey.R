@@ -171,6 +171,7 @@ assignMissing <- function(x, missings = NULL){
     }
     if (is.integer(x)){
         if(substr(missings, 1, 1) %in% c(">", "<")){
+            missings <- gsub("-", " -", missings, fixed = TRUE)
             conditional <- paste(quote(x), missings)
             xcheck <- eval(parse(text = conditional))
             x[xcheck] <- NA
@@ -181,7 +182,7 @@ assignMissing <- function(x, missings = NULL){
             misvec <- sort(misvec)
             x[x >= misvec[1] & x <= misvec[2]] <- NA
         } else {
-            messg("Error in assignMissings")
+            messg <- "Error in assignMissings"
             print(messg)
             messg <- "Here are the first 20 values of the variable being recoded"
             print(messg)
@@ -823,6 +824,8 @@ keyImport <- function(file, ignoreCase = TRUE,
     key.orig <- key
     attr(key, "na.strings") <- na.strings
     if (!long) key <- wide2long(key, sep)
+    key$missings <- gsub("<-", "< -", key$missings, fixed = TRUE)
+   
     ## protect against user-inserted spaces (leading or trailing)
     key$name_old <- zapspace(key$name_old)
     key$name_new <- zapspace(key$name_new)
@@ -921,8 +924,8 @@ makeKeylist <- function(key,
             val_old <- unlist(strsplit2(keyds$value_old.orig, sep[keyds$class_old]))
             val_new <- unlist(strsplit2(keyds$value_new.orig, sep[keyds$class_new]))
             val_new[val_new %in% c(".", na.strings)] <- NA
-            recodes <- unlist(strsplit2(keyds$recodes, ";", fixed = TRUE))
-            missings <- unlist(strsplit2(keyds$missings, ";", fixed = TRUE))
+            recodes <- zapspace(unlist(strsplit2(keyds$recodes, ";", fixed = TRUE)))
+            missings <- zapspace(unlist(strsplit2(keyds$missings, ";", fixed = TRUE)))
             list(name_old = keyds$name_old, name_new = keyds$name_new,
                  class_old = keyds$class_old, class_new = keyds$class_new,
                  value_old = val_old, value_new = val_new,
@@ -1276,10 +1279,10 @@ wide2long <- function(key, sep = c(character = "\\|", logical = "\\|",
         if (length(value_new) == 0) value_new <- as.character("")
         values <- cbind(value_old, value_new)
         values <- unique(values)
-        missings <- na.omit(unlist(strsplit(x$missings, ";")))
-        missings <- c(missings, rep("", NROW(values) - length(missings)))
-        recodes <- na.omit(unlist(strsplit(x$recodes, ";")))
-        recodes <- c(recodes, rep("", NROW(values) - length(recodes)))
+        ## missings <- na.omit(unlist(strsplit(x$missings, ";")))
+        missings <- c(x$missings, rep("", NROW(values) - length(x$missings)))
+        ## recodes <- na.omit(unlist(strsplit(x$recodes, ";")))
+        recodes <- c(x$recodes, rep("", NROW(values) - length(x$recodes)))
 
         zz <- data.frame(name_old = x$name_old,
                          name_new = x$name_new,
