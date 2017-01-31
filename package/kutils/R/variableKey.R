@@ -821,6 +821,7 @@ keyImport <- function(file, ignoreCase = TRUE,
     }
 
     key.orig <- key
+    attr(key, "na.strings") <- na.strings
     if (!long) key <- wide2long(key, sep)
     ## protect against user-inserted spaces (leading or trailing)
     key$name_old <- zapspace(key$name_old)
@@ -829,7 +830,8 @@ keyImport <- function(file, ignoreCase = TRUE,
     ## if this is long key, following is safe. How about wide key?
     key$value_old <- n2NA(zapspace(key$value_old))
     key$value_new <- n2NA(zapspace(key$value_new))
-    key$value_new[key$value_new %in% na.strings] <- NA
+    MISSSymbol <- "."
+    key[key$value_new %in% na.strings, "value_new"] <- MISSSymbol
 
     ## Delete repeated rows:
     dups <- duplicated(key)
@@ -844,14 +846,18 @@ keyImport <- function(file, ignoreCase = TRUE,
         warning(messg)
     }
 
-    attr(key, "ignoreCase") <- ignoreCase
-    attr(key, "na.strings") <- na.strings
+    na.strings <- MISSSymbol
     if (long){
         class(key) <- c("keylong", "data.frame")
+        attr(key, "ignoreCase") <- ignoreCase
+        attr(key, "na.strings") <- na.strings
+        key[key$value_new %in% MISSSymbol, "value_new"] <- NA
         return(key)
     } else {
         keywide <- long2wide(key)
         class(keywide) <- c("key", "data.frame")
+        attr(keywide, "ignoreCase") <- ignoreCase
+        attr(keywide, "na.strings") <- na.strings
         return(keywide)
     }
     stop("keyImport should not reach this point")
@@ -873,7 +879,7 @@ keyImport <- function(file, ignoreCase = TRUE,
 ##' @keywords internal
 ##' @return A list with one element per variable name, along with some
 ##'     attributes like class_old and class_new. The class is set as
-##'     well, "keylist".
+##'     well, "keylist"
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 makeKeylist <- function(key,
                         sep = c(character = "\\|", logical = "\\|",
@@ -897,7 +903,7 @@ makeKeylist <- function(key,
     } else if (inherits(key, "keylong")){
         long <- TRUE
     }
-
+    na.strings <- attr(key, "na.strings")
     ## TODO: if name_new is missing or empty, remove that from key
     name_old.new <- paste0(key[ , "name_old"], ".", key[ , "name_new"])
 
@@ -914,6 +920,7 @@ makeKeylist <- function(key,
             keyds$value_new.orig <- keyds$value_new
             val_old <- unlist(strsplit2(keyds$value_old.orig, sep[keyds$class_old]))
             val_new <- unlist(strsplit2(keyds$value_new.orig, sep[keyds$class_new]))
+            val_new[val_new %in% c(".", na.strings)] <- NA
             recodes <- unlist(strsplit2(keyds$recodes, ";", fixed = TRUE))
             missings <- unlist(strsplit2(keyds$missings, ";", fixed = TRUE))
             list(name_old = keyds$name_old, name_new = keyds$name_new,
@@ -1296,7 +1303,7 @@ wide2long <- function(key, sep = c(character = "\\|", logical = "\\|",
     ksl <- lapply(ks, makeOneVar)
 
     keylong <- do.call(rbind, lapply(ksl, as.data.frame, stringsAsFactors = FALSE))
-
+    attr(keylong, "na.strings") <- attr(key, "na.strings")
     class(keylong) <- c("keylong", "data.frame")
     keylong
 }
@@ -1344,13 +1351,10 @@ long2wide <- function(keylong){
         values <- unique(values)
 
         ## 20170130: Was worried that NA and "NA" become indistinguisable
-        ## The following caused errors
-        ## printvals <- function(x, collapse){
-        ##     x <- ifelse(is.na(x), "__MISING__", x)
-        ##     paste(x, collapse = collapse)
-        ## }
-        ## Lets step back from that, see if a key can "round trip"
+        ## All values marked as R missing NA will be re-set as "." in the
+        ## short key
         printvals <- function(x, collapse){
+            x <- ifelse(is.na(x), ".", x)
             paste(x, collapse = collapse)
         }
         
@@ -1369,6 +1373,7 @@ long2wide <- function(keylong){
 
     key <- do.call("rbind", lapply(keywide, data.frame, stringsAsFactors = FALSE))
     class(key) <- c("key", "data.frame")
+    attr(key, "na.strings") <- attr(keylong, "na.strings")
     key
 }
 
@@ -1572,6 +1577,7 @@ keyUpdate <- function(key, dframe, append = TRUE,
         row.names(output) <- seq(1, nrow(output), 1)
         return(output)
     }
+    attr(output, "na.strings") <- attr(key, "na.strings")
     output
 }
 

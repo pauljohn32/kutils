@@ -7,6 +7,9 @@
 	missing values in value_new to "". We should instead have either
 	NA for missings, but preserve "NA" as a valid string if it is not
 	marked in the na.strings variable of keyImport.
+	(makeKeylist): replace "." with NA values in value_new
+	(printvals): long2wide: All missing values in character variables
+	become "." symbols.
 
 2017-01-25  Paul Johnson  <pauljohn@delllap-16>
 
