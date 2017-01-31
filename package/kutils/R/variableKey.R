@@ -632,6 +632,10 @@ smartRead <- function(file, ...){
             xlsxargz <- modifyList(xlsxargs, dotsforxlsx)
             names(xlsxargz)[which(names(xlsxargz) == "file")] <- "xlsxFile"
             key <- do.call("read.xlsx", xlsxargz)
+            ## Force columns to be of type "character"
+            for(i in colnames(key)){
+                if (class(key[ , i]) != "character") key[ , i] <- as.character(key[ , i])
+            }
         } else if (length(grep("csv$", tolower(file))) > 0){
             csvargs <- list(file = file, stringsAsFactors = FALSE, colClasses = "character")
             csvargz <- modifyList(csvargs, dotsforcsv)
@@ -841,6 +845,7 @@ keyImport <- function(file, ignoreCase = TRUE,
     }
 
     attr(key, "ignoreCase") <- ignoreCase
+    attr(key, "na.strings") <- na.strings
     if (long){
         class(key) <- c("keylong", "data.frame")
         return(key)
@@ -1337,12 +1342,18 @@ long2wide <- function(keylong){
         values <- cbind(value_old = x$value_old, value_new = x$value_new)
         values <- unique(values)
 
-        ## Cleans up fact that NA -> "NA" in paste statement.
+        ## 20170130: Was worried that NA and "NA" become indistinguisable
+        ## The following caused errors
+        ## printvals <- function(x, collapse){
+        ##     x <- ifelse(is.na(x), "__MISING__", x)
+        ##     paste(x, collapse = collapse)
+        ## }
+        ## Lets step back from that, see if a key can "round trip"
         printvals <- function(x, collapse){
-            x <- ifelse(is.na(x), "", x)
             paste(x, collapse = collapse)
         }
-
+        
+        
         list(name_old = unique(x$name_old),
              name_new = unique(x$name_new),
              class_old = unique(x$class_old),
