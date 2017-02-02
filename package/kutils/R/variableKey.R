@@ -923,7 +923,7 @@ makeKeylist <- function(key,
             val_new <- unlist(strsplit2(keyds$value_new.orig, sep[keyds$class_new]))
             val_new[val_new %in% c(".", na.strings)] <- NA
             recodes <- zapspace(unlist(strsplit2(keyds$recodes, ";", fixed = TRUE)))
-            missings <- zapspace(unlist(strsplit2(keyds$missings, ";", fixed = TRUE)))
+            missings <- zapspace(keyds$missings)
             list(name_old = keyds$name_old, name_new = keyds$name_new,
                  class_old = keyds$class_old, class_new = keyds$class_new,
                  value_old = val_old, value_new = val_new,
@@ -963,8 +963,9 @@ makeKeylist <- function(key,
             class_new <- unique2(keyds$class_new)
             recodes <- unique(na.omit(n2NA(zapspace(keyds$recodes))))
             recodes <- if(length(recodes) > 0) unlist(strsplit(recodes, split=";", fixed = TRUE))
-            missings <- unlist(na.omit(n2NA(zapspace(keyds$missings))))
-            missings <- if(length(missings) > 0) unlist(strsplit(missings, split= ";", fixed = TRUE))
+            ##missings <- unlist(na.omit(n2NA(zapspace(keyds$missings))))
+            ##missings <- if(length(missings) > 0) unlist(strsplit(missings, split= ";", fixed = TRUE))
+            missings <- paste(zapspace(keyds$missings), collapse = ";")
             value_new <- keyds$value_new
             ## value_new[value_new %in% na.strings] <- NA
             list(name_old = name_old, name_new = name_new,
@@ -1084,9 +1085,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         xnew <- dframe[ , v$name_old]
 
         if (length(v$missings) > 0){
-            for(m in v$missings){
-                xnew <- assignMissing(xnew, m)
-            }
+            xnew <- assignMissing(xnew, v$missings)
         }
 
         ## Be simple. If they have "recodes" in key, apply them.
@@ -1293,13 +1292,10 @@ wide2long <- function(key, sep = c(character = "\\|", logical = "\\|",
         ##zz <- lapply(zz, function(obj) if (length(obj) == 0) "" else x)
         zz
     }
-
-
     ## keysplit
     name_old.new <- paste0(key[ , "name_old"], ".", key[ , "name_new"])
     name_old.new <- factor(name_old.new, levels = unique(name_old.new))
     ks <- split(key, name_old.new, drop = TRUE)
-
     ## build a "long stanza" for each variable
     ksl <- lapply(ks, makeOneVar)
 
@@ -1325,10 +1321,10 @@ wide2long <- function(key, sep = c(character = "\\|", logical = "\\|",
 ##' mydf <- read.csv(mydf.path, stringsAsFactors=FALSE)
 ##' ## A wide key we are trying to match:
 ##' mydf.key <- keyTemplate(mydf, long = FALSE, sort = TRUE)
-##' mydf.key["x4", "missings"] <- "c(999)"
-##' ## A long ke we will convert next
+##' mydf.key["x4", "missings"] <- "999"
+##' ## A long key we will convert next
 ##' mydf.keylong <- keyTemplate(mydf, long = TRUE, sort = TRUE)
-##' mydf.keylong["11", "missings"] <- "c(999)"
+##' mydf.keylong["11", "missings"] <- "999"
 ##' mydf.long2wide <- long2wide(mydf.keylong)
 ##' ## Tune the rownames to match style of long key
 ##' rownames(mydf.key) <- paste0(mydf.key$name_old, ".", mydf.key$name_new)
