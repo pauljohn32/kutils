@@ -1633,18 +1633,8 @@ print.keyDiagnostic <- function(x, ...) print(x[["changes"]], ...)
 ##' Checks a variable key for possible errors.
 ##'
 ##' @param key variable key object or a file path to a key
+##' @keywords internal
 ##' @author Ben Kite <bakite@@ku.edu
-##' @export
-##' @examples
-##' ## Checking a correct key file before running keyImport
-##' mydf.key.path <- system.file("extdata", "mydf.key.csv", package = "kutils")
-##' keyChecker(mydf.key.path)
-##'
-##' ## Check an imported key that has an error
-##' ## Not run to avoid error
-##' ## mydf.key <-  keyImport(mydf.key.path)
-##' ## mydf.key["x2.x2", "value_new"] <- "f<d<c<b"
-##' ## keyChecker(mydf.key)
 keyChecker <- function(key){
     if (is.character(key)){
         key <- smartRead(key)
