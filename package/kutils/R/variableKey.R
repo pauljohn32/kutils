@@ -80,10 +80,10 @@ NULL
 ##'
 ##' The missings values have to be carefully written, depending on the
 ##' type of variable that is being processed.
-##' 
+##'
 ##' Version 0.95 of kutils introduced a new style for specification of
 ##' missing values.
-##' 
+##'
 ##' @param x A variable
 ##' @param missings A string vector of semi-colon separated values,
 ##'     ranges, and/or inequalities.  For strings and factors, only an
@@ -134,7 +134,7 @@ NULL
 ##' assignMissing(x, "> 11")
 ##' assignMissing(x, "< -1;2;4;(7, 9);> 20")
 ##'
-##' 
+##'
 ##' ## 2. strings
 ##' x <- c("low", "low", "med", "high")
 ##' missings <- "low;high"
@@ -151,7 +151,7 @@ NULL
 ##' ## Previous same as
 ##' missings <- c("low", "high")
 ##' assignMissing(x, missings)
-##' 
+##'
 ##' missings <- c("med", "doesnot exist")
 ##' assignMissing(x, missings)
 ##' ## ordered factor:
@@ -176,12 +176,12 @@ NULL
 ##' assignMissing(x, "-0.4879708;0.1435791")
 ##' ## Can mark a range, however
 ##' assignMissing(x, "(-0.487971,-0.487970);(0.14357, 0.14358)")
-##' x 
+##' x
 assignMissing <- function(x, missings = NULL, sep = ";"){
     if (is.character(missings)) missings <- zapspace(missings)
     missings <- unlist(strsplit(missings, split = sep, fixed = TRUE))
     missings <-  na.omit(missings)
-    missings <- gsub("-", " -", missings,  fixed = TRUE) 
+    missings <- gsub("-", " -", missings,  fixed = TRUE)
     ## If no NA  missings to remove, then return
     if (is.null(missings) | length(missings) == 0) return(x)
 
@@ -200,16 +200,16 @@ assignMissing <- function(x, missings = NULL, sep = ";"){
         hasineq <- missings[substr(missings, 1, 1) %in% c(">", "<", "(", "[")]
         hasnoineq <- setdiff(missings, hasineq)
         hasnoineq <- if (length(hasnoineq) > 0) paste("x == ", hasnoineq)
-        
+
         ## (9 ->   x > 9
         ## [9 ->   x >= 9
         ins <- c(">", "<" , "(",     "[",     ")",     "]",  ",")
         outs <- c("x >", "x <", "x >", "x >= ", " > x", " >= x", " & ")
         ranges <- mgsub(ins, outs, hasineq, fixed = TRUE)
-        
+
         for(rr in c(ranges, hasnoineq)){
             eval(parse(text = paste0("x[", rr, "] <- NA")))
-        }  
+        }
         return(x)
     }
 
@@ -824,7 +824,7 @@ keyImport <- function(file, ignoreCase = TRUE,
     attr(key, "na.strings") <- na.strings
     if (!long) key <- wide2long(key, sep)
     key$missings <- gsub("<-", "< -", key$missings, fixed = TRUE)
-   
+
     ## protect against user-inserted spaces (leading or trailing)
     key$name_old <- zapspace(key$name_old)
     key$name_new <- zapspace(key$name_new)
@@ -1355,8 +1355,8 @@ long2wide <- function(keylong){
             x <- ifelse(is.na(x), ".", x)
             paste(x, collapse = collapse)
         }
-        
-        
+
+
         list(name_old = unique(x$name_old),
              name_new = unique(x$name_new),
              class_old = unique(x$class_old),
@@ -1628,3 +1628,56 @@ keyDiff <- function(oldkey, newkey){
 ##' @param ... Other arguments passed through to print
 ##' @author Ben Kite <bakite@@ku.edu>
 print.keyDiagnostic <- function(x, ...) print(x[["changes"]], ...)
+
+
+##' Checks a variable key for possible errors.
+##'
+##' @param key variable key object or a file path to a key
+##' @author Ben Kite <bakite@@ku.edu
+##' @export
+##' @examples
+##' ## Checking a correct key file before running keyImport
+##' mydf.key.path <- system.file("extdata", "mydf.key.csv", package = "kutils")
+##' keyChecker(mydf.key.path)
+##'
+##' ## Check an imported key that has an error
+##' ## Not run to avoid error
+##' ## mydf.key <-  keyImport(mydf.key.path)
+##' ## mydf.key["x2.x2", "value_new"] <- "f<d<c<b"
+##' ## keyChecker(mydf.key)
+keyChecker <- function(key){
+    if (is.character(key)){
+        key <- smartRead(key)
+    }
+    if (prod(c("name_old", "name_new", "class_old", "class_new", "value_old", "value_new") %in% names(key)) != 1L){
+        stop ("At a minimum a variable key needs to have the following columns: name_old, name_new, class_old, class_new, value_old, value_new")
+    }
+    ## Deduce if this is a long key
+    name_old.new <- paste0(key[ , "name_old"], ".", key[ , "name_new"])
+    if (max(table(name_old.new)) > 1){
+        long <- TRUE
+    } else {
+        long <- FALSE
+    }
+    if (long){
+        if (identical(key, wide2long(long2wide(key)))){
+            stop ("There is an error with this key. The structure changes when being transformed from long to wide, and then back to long.")
+        }
+    } else {
+        if (identical(key, long2wide(wide2long(key)))){
+            stop ("There is an error with this key. The structure changes when being transformed from wide to long, and then back to wide.")
+        }
+    }
+    if (!long){
+        xx <- strsplit(key$value_old, split = "[|<]", fixed = FALSE)
+        xx.l <- sapply(xx, length)
+        yy <- strsplit(key$value_new, "[|<]", fixed = FALSE)
+        yy.l <- sapply(yy, length)
+        inconsistent <- xx.l != yy.l
+        issues <- key[inconsistent, "name_old"]
+        if (length(issues) > 0){
+            stop (paste0("The following variables have inconsistencies in the number of values listed between the value_old and value_new columns: ", issues))
+        }
+    }
+    print("No errors with this key were detected.")
+}
