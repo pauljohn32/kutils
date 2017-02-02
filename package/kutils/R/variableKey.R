@@ -11,15 +11,15 @@
 ##' an integer, and then coerces as integer. Otherwise, it returns
 ##' NULL. And issues a warning.
 ##'
-##' First, calculate absolute value of differences between
-##' \code{x} and \code{as.integer(x)}. Second, compare the sum of those
-##' differences is smaller than \code{tol}, then x can reasonably
-##' be coerced to an integer.
+##' First, calculate absolute value of differences between \code{x}
+##' and \code{as.integer(x)}. Second, find out if the sum of those
+##' differences is smaller than \code{tol}. If so, then x can
+##' reasonably be coerced to an integer.
 ##'
-##' Be careful with the return. The correct return value for variables that
-##' should not be coerced as integer is uncertain at this point. We've tested
-##' various strategies, sometimes returning FALSE, NULL, or just the original
-##' variable.
+##' Be careful with the return. The correct return value for variables
+##' that should not be coerced as integer is uncertain at this
+##' point. We've tested various strategies, sometimes returning FALSE,
+##' NULL, or just the original variable.
 ##' @param x a numeric variable
 ##' @param tol Tolerance value. Defaults to Machine$double.eps. See
 ##'     details.
@@ -76,38 +76,43 @@ safeInteger <- function(x, tol = .Machine$double.eps, digits = 7, verbose = FALS
 NULL
 
 
-##' Scrub a variable's missings away
+##' Set missing values
 ##'
 ##' The missings values have to be carefully written, depending on the
 ##' type of variable that is being processed.
+##' 
+##' Version 0.95 of kutils introduced a new style for specification of
+##' missing values.
+##' 
 ##' @param x A variable
-##' @param missings A string with a vector of values or R expressions.
-##'     These are done differently for integer, numeric, factor, and
-##'     character variables.  \enumerate{ \item For integer variables,
-##'     use a character string representing part of an R expression
-##'     such "> 8", ">= 8", "< 7", or "<= 7", or a character string
-##'     enclosing a range, a two valued vector, as in "c(8,9)". Any
-##'     strings that do not begin with ">", "<", or "c" will be
-##'     ignored. To reset particular values as missing one-by-one, use
-##'     the variable key.
+##' @param missings A string vector of semi-colon separated values,
+##'     ranges, and/or inequalities.  For strings and factors, only an
+##'     enumeration of values (or factor levels) to be excluded is
+##'     allowed. For numeric variables (integers or floating point
+##'     variables), one can specify open and double-sided intervals as
+##'     well as particular values to be marked as missing. One can
+##'     append particular values and ranges by
+##'     "1;2;3;(8,10);[22,24];> 99;< 2". The double-sided interval is
+##'     represented in the usual mathematical way, where hard
+##'     bracketes indicate "closed" intervals and parentheses indicate
+##'     open intervals.\enumerate{
 ##'
-##' \item For numerics, use an inequality such as "> 99". The only
-##'    other alternative we have allowed is a character string that
-##'    represents a range such as "c(99, 101)", to mean that values
-##'    greater than OR equal to 99 and less than OR equal to 101 will
-##'    be set as missing.
+##' \item "(a,b)" means values of x greater than a and smaller than b
+##'     will be set as missing.
 ##'
-##' \item For factors, include a vector of levels to be
-##'         marked as missing and removed from the list of levels.
+##' \item "[a,b]" is a closed interval, one which includes the
+##'     endpoints, so a <= x <= b will be set as NA
 ##'
-##' \item For character variables, a character vector of
-##'         values to be marked as missing.
-##' }
-##'
-##' One of the concerns is that comparison of real-valued numerics is
-##' not dependable.  Exact comparisons with == are
-##' unreliable, so don't ask for them.
-##'
+##' \item "(a,b]" and "[a,b)" are acceptable.
+##' \item "< a"  indicates all values smaller than a will be missing
+##' \item  "<= a" means values smaller than or equal to a will be
+##'     excluded
+##' \item "> a" and ">= a" have comparable
+##'     interpretations.
+##' \item "8;9;10" It is possible to mark off specific values by providing an enumeration. Be aware, however, that this is useful only for integer variables.  As demonstrated in the example, for floating point numbers, one must specify intervals.
+##' \item For factors and character variables, the argument missings can be written either as
+##' "lo;med;hi" or "c('lo','med','hi')" }
+##' @param sep A separator symbol, ";" (semicolon) by default
 ##' @return A cleaned column in which R's NA symbol replaces values
 ##'     that should be missing
 ##' @export
@@ -115,29 +120,38 @@ NULL
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @examples
 ##' ## 1.  Integers.
-##' ## must be very sure these are truly integers, or else fails
-##' x <- seq.int(2L, 22L, by = 2L)
+##' x <- seq.int(-2L, 22L, by = 2L)
+##' ## Exclude scores 8, 10, 18
+##' assignMissing(x, "8;10;18")
 ##' ## Specify range, 4 to 12 inclusive
-##' missings <- "c(4, 12)"
+##' missings <- "[4,12]"
 ##' assignMissing(x, missings)
+##' ## Not inclusive
+##' assignMissing(x,  "(4,12)")
+##' ## Set missing for any value smaller that 7
+##' assignMissing(x, "< 7")
+##' assignMissing(x, "<= 8")
+##' assignMissing(x, "> 11")
+##' assignMissing(x, "< -1;2;4;(7, 9);> 20")
 ##'
-##' missings <- " < 7"
-##' assignMissing(x, missings)
-##'
-##' missings <- " > 11"
-##' assignMissing(x, missings)
-##'
+##' 
 ##' ## 2. strings
 ##' x <- c("low", "low", "med", "high")
-##' missings <- "c(\"low\", \"high\")"
+##' missings <- "low;high"
 ##' assignMissing(x, missings)
-##' missings <- c("med", "doesnot exist")
+##' missings <- "med;doesnot exist"
 ##' assignMissing(x, missings)
+##' ## Test alternate separator
+##' assignMissing(x, "low|med", sep = "|")
 ##'
-##' ## 3. factors (same as strings inside assignMissing)
+##' ## 3. factors (same as strings, really)
 ##' x <- factor(c("low", "low", "med", "high"), levels = c("low", "med", "high"))
+##' missings <- "low;high"
+##' assignMissing(x, missings)
+##' ## Previous same as
 ##' missings <- c("low", "high")
 ##' assignMissing(x, missings)
+##' 
 ##' missings <- c("med", "doesnot exist")
 ##' assignMissing(x, missings)
 ##' ## ordered factor:
@@ -148,16 +162,26 @@ NULL
 ##' ## 4. Real-valued variable
 ##' set.seed(234234)
 ##' x <- rnorm(10)
+##' x
 ##' missings <- "< 0"
 ##' assignMissing(x, missings)
 ##' missings <- "> -0.2"
 ##' assignMissing(x, missings)
-##' missings <- "c(0.1, 0.7)"
+##' ## values above 0.1 and below 0.7 are missing
+##' missings <- "(0.1,0.7)"
 ##' assignMissing(x, missings)
-assignMissing <- function(x, missings = NULL){
-
+##' ## Note that in floating point numbers, it is probably
+##' ## futile to specify specific values for missings. Even if we
+##' ## type out values to 7 decimals, nothing gets excluded
+##' assignMissing(x, "-0.4879708;0.1435791")
+##' ## Can mark a range, however
+##' assignMissing(x, "(-0.487971,-0.487970);(0.14357, 0.14358)")
+##' x 
+assignMissing <- function(x, missings = NULL, sep = ";"){
     if (is.character(missings)) missings <- zapspace(missings)
+    missings <- unlist(strsplit(missings, split = sep, fixed = TRUE))
     missings <-  na.omit(missings)
+    missings <- gsub("-", " -", missings,  fixed = TRUE) 
     ## If no NA  missings to remove, then return
     if (is.null(missings) | length(missings) == 0) return(x)
 
@@ -169,48 +193,23 @@ assignMissing <- function(x, missings = NULL){
         levels(x)[which(levels(x) %in% missings)] <- NA
         return(x)
     }
-    if (is.integer(x)){
-        if(substr(missings, 1, 1) %in% c(">", "<")){
-            missings <- gsub("-", " -", missings, fixed = TRUE)
-            conditional <- paste(quote(x), missings)
-            xcheck <- eval(parse(text = conditional))
-            x[xcheck] <- NA
-        } else if (substr(missings, 1, 1) == "c"){
-            misvec <- as.integer(eval(parse(text = missings)))
-            if (length(misvec) != 2) stop("Missings interval should have 2 numeric values")
-            if (any(is.na(misvec))) stop("Missings interval should not have any NA values")
-            misvec <- sort(misvec)
-            x[x >= misvec[1] & x <= misvec[2]] <- NA
-        } else {
-            messg <- "Error in assignMissings"
-            print(messg)
-            messg <- "Here are the first 20 values of the variable being recoded"
-            print(messg)
-            print(head(x, 20))
-            messg <- "Here is the missing value string that was supplied"
-            print(messg)
-            print(missings)
-            messg <- paste0("The missing string was not understandable")
-            stop(messg)
-        }
-        return(x)
-    }
-    if (is.double(x)) {
-        if(substr(missings, 1, 1) %in% c(">", "<")){
-            conditional <- paste(quote(x), missings)
-            xcheck <- eval(parse(text = conditional))
-            x[xcheck] <- NA
-        } else if (substr(missings, 1, 1) == "c"){
-            misvec <- eval(parse(text = missings))
-            if (length(misvec) != 2) stop("Missings interval should have 2 numeric values")
-            if (!is.numeric(misvec)) stop("Missings vector must be numeric")
-            if (any(is.na(misvec))) stop("Missings interval should not have any NA values")
-            misvec <- sort(misvec)
-            x[x >= misvec[1] & x <= misvec[2]] <- NA
-        } else {
-            messg <- paste0("missings for variable ", deparse(substitute(x)), " not understandable")
-            stop(messg)
-        }
+
+    if (is.numeric(x)){
+        ## is  numeric includes integer and double and numeric
+        ## separate the elements that inequality signs
+        hasineq <- missings[substr(missings, 1, 1) %in% c(">", "<", "(", "[")]
+        hasnoineq <- setdiff(missings, hasineq)
+        hasnoineq <- if (length(hasnoineq) > 0) paste("x == ", hasnoineq)
+        
+        ## (9 ->   x > 9
+        ## [9 ->   x >= 9
+        ins <- c(">", "<" , "(",     "[",     ")",     "]",  ",")
+        outs <- c("x >", "x <", "x >", "x >= ", " > x", " >= x", " & ")
+        ranges <- mgsub(ins, outs, hasineq, fixed = TRUE)
+        
+        for(rr in c(ranges, hasnoineq)){
+            eval(parse(text = paste0("x[", rr, "] <- NA")))
+        }  
         return(x)
     }
 
@@ -925,7 +924,7 @@ makeKeylist <- function(key,
             val_new <- unlist(strsplit2(keyds$value_new.orig, sep[keyds$class_new]))
             val_new[val_new %in% c(".", na.strings)] <- NA
             recodes <- zapspace(unlist(strsplit2(keyds$recodes, ";", fixed = TRUE)))
-            missings <- zapspace(unlist(strsplit2(keyds$missings, ";", fixed = TRUE)))
+            missings <- zapspace(keyds$missings)
             list(name_old = keyds$name_old, name_new = keyds$name_new,
                  class_old = keyds$class_old, class_new = keyds$class_new,
                  value_old = val_old, value_new = val_new,
@@ -965,8 +964,9 @@ makeKeylist <- function(key,
             class_new <- unique2(keyds$class_new)
             recodes <- unique(na.omit(n2NA(zapspace(keyds$recodes))))
             recodes <- if(length(recodes) > 0) unlist(strsplit(recodes, split=";", fixed = TRUE))
-            missings <- unlist(na.omit(n2NA(zapspace(keyds$missings))))
-            missings <- if(length(missings) > 0) unlist(strsplit(missings, split= ";", fixed = TRUE))
+            ##missings <- unlist(na.omit(n2NA(zapspace(keyds$missings))))
+            ##missings <- if(length(missings) > 0) unlist(strsplit(missings, split= ";", fixed = TRUE))
+            missings <- paste(na.omit(n2NA(zapspace(keyds$missings))), collapse = ";")
             value_new <- keyds$value_new
             ## value_new[value_new %in% na.strings] <- NA
             list(name_old = name_old, name_new = name_new,
@@ -1086,9 +1086,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         xnew <- dframe[ , v$name_old]
 
         if (length(v$missings) > 0){
-            for(m in v$missings){
-                xnew <- assignMissing(xnew, m)
-            }
+            xnew <- assignMissing(xnew, v$missings)
         }
 
         ## Be simple. If they have "recodes" in key, apply them.
@@ -1295,13 +1293,10 @@ wide2long <- function(key, sep = c(character = "\\|", logical = "\\|",
         ##zz <- lapply(zz, function(obj) if (length(obj) == 0) "" else x)
         zz
     }
-
-
     ## keysplit
     name_old.new <- paste0(key[ , "name_old"], ".", key[ , "name_new"])
     name_old.new <- factor(name_old.new, levels = unique(name_old.new))
     ks <- split(key, name_old.new, drop = TRUE)
-
     ## build a "long stanza" for each variable
     ksl <- lapply(ks, makeOneVar)
 
@@ -1327,10 +1322,10 @@ wide2long <- function(key, sep = c(character = "\\|", logical = "\\|",
 ##' mydf <- read.csv(mydf.path, stringsAsFactors=FALSE)
 ##' ## A wide key we are trying to match:
 ##' mydf.key <- keyTemplate(mydf, long = FALSE, sort = TRUE)
-##' mydf.key["x4", "missings"] <- "c(999)"
-##' ## A long ke we will convert next
+##' mydf.key["x4", "missings"] <- "999"
+##' ## A long key we will convert next
 ##' mydf.keylong <- keyTemplate(mydf, long = TRUE, sort = TRUE)
-##' mydf.keylong["11", "missings"] <- "c(999)"
+##' mydf.keylong["11", "missings"] <- "999"
 ##' mydf.long2wide <- long2wide(mydf.keylong)
 ##' ## Tune the rownames to match style of long key
 ##' rownames(mydf.key) <- paste0(mydf.key$name_old, ".", mydf.key$name_new)

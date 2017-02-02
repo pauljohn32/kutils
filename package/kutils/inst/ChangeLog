@@ -1,3 +1,8 @@
+2017-02-01  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (assignMissing): significant revamp of
+	notation for missings "8;9;(30,40);>50"
+
 2017-01-31  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (smartRead): insert for loop to check column
@@ -10,6 +15,8 @@
 	(makeKeylist): replace "." with NA values in value_new
 	(printvals): long2wide: All missing values in character variables
 	become "." symbols.
+	(assignMissing): missings string needs to protect us against
+	">-999" "<-100" by insering space.
 
 2017-01-25  Paul Johnson  <pauljohn@delllap-16>
 
