@@ -1,3 +1,7 @@
+2017-02-03  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (assignMissing): zapspace for spaces
+
 2017-02-01  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (assignMissing): significant revamp of

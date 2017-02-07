@@ -180,8 +180,9 @@ NULL
 assignMissing <- function(x, missings = NULL, sep = ";"){
     if (is.character(missings)) missings <- zapspace(missings)
     missings <- unlist(strsplit(missings, split = sep, fixed = TRUE))
-    missings <-  na.omit(missings)
-    missings <- gsub("-", " -", missings,  fixed = TRUE)
+    missings <- na.omit(missings)
+    missings <- zapspace(missings)
+    missings <- gsub("-", " -", missings,  fixed = TRUE) 
     ## If no NA  missings to remove, then return
     if (is.null(missings) | length(missings) == 0) return(x)
 
@@ -194,6 +195,9 @@ assignMissing <- function(x, missings = NULL, sep = ";"){
         return(x)
     }
 
+    ## 20170203: TODO following is hard coded to look at first character,
+    ## if space first, fails, used zapspace to address above, but that's
+    ## stupid bandaid, better regex work would be solid.
     if (is.numeric(x)){
         ## is  numeric includes integer and double and numeric
         ## separate the elements that inequality signs
