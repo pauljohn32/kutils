@@ -1119,6 +1119,11 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
                     messg <- "keyApply: value_old and value_new are not equal in length"
                     stop(messg)
                 }
+            } else { ## This was added to handle blank value_old cell for factor variables
+                mytext <- paste0("xnew <- ", class_new.key, "(xnew)")
+                eval(parse(text = mytext))
+                mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew")
+                eval(parse(text = mytext))
             }
         } else if(class_new.key %in% c("integer", "numeric") && class_old.key %in% c("ordered", "factor")){
             mytext <- paste0("xvals <- as.", class_new.key, "(v$value_new)")
