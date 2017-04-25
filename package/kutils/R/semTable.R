@@ -10,9 +10,11 @@
 ##' \item "loadings" are the factor loadings in the model.
 ##' \item "slopes" are the regression slopes in the model.
 ##' \item "intercepts" are
-##' the indicator variable intercepts.
-##' \item "residuals" are the indicator
+##' the observed variable intercepts.
+##' \item "residuals" are the observed
 ##' variable residual variances.
+##' \item "covariances" are the observed
+##' variable covariances.
 ##' \item "latentvariances" are the latent
 ##' variable variances and covariances.
 ##' \item "thresholds" arise in latent
@@ -45,7 +47,7 @@
 ##' @param file Character string for file name.  Default is NULL,
 ##'     meaning no output file.
 ##' @param params Parameters to be included. Valid values are
-##'     "loadings", "slopes", "intercepts", "residuals",
+##'     "loadings", "slopes", "intercepts", "residuals", "covariances",
 ##'     "latentvariances", and "thresholds". Defaults to "all" which
 ##'     includes all available parameters. See Details.
 ##' @param fit A vector of fit measures that to be included in the
@@ -78,13 +80,13 @@
 ##' textual =~ x4 + x5 + x6
 ##' speed   =~ x7 + x8 + x9'
 ##' output1 <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE)
-##' semTable(output1, fit = "rmsea", params = "loadings",
+##' semTable(output1, fit = "rmsea",
 ##' standardized = TRUE, type = "html")
 ##' ## Basic SEM model
-##' regmodel <- "x1 ~ x2 + x3
+##' regmodel <- "x1 ~~ x2 + x3
 ##' x1 ~1"
 ##' output1a <- sem(regmodel, data = HolzingerSwineford1939, std.lv = TRUE)
-##' semTable(output1a, file = "semExample.html", fit = "rmsea",
+##' semTable(output1a, params = "covariances", fit = "rmsea",
 ##' standardized = TRUE, type = "html")
 ##' #### Example with file output
 ##' ##semTable(output1, file = "exampleTable.html", fit = "rmsea",
@@ -164,7 +166,10 @@ semTable <-
             if ("variances" %in% params){
                 params <- params[!params %in% "variances"]
                 if (length(which(parameters$rhs %in% variables & parameters$lhs %in% variables & parameters$op == "~~")) > 0){
-                    params <- c(params, "residualvariances")
+                    params <- c(params, "residuals")
+                }
+                if (length(which(parameters$lhs %in% variables & parameters$rhs %in% variables & parameters$lhs != parameters$rhs & parameters$op == "~~")) > 0){
+                    params <- c(params, "covariances")
                 }
                 if (length(which(parameters$rhs %in% latents & parameters$lhs %in% latents & parameters$op == "~~")) > 0){
                     params <- c(params, "latentvariances")
@@ -178,7 +183,7 @@ _HL_
 STANDARDIZED
 _BRU_Parameter_EOC_ REPORT
 _HL_
-_FACTORLOADINGS__SLOPES__INTERCEPTS__THRESHOLDS__RESIDUALS__LATENTVARS__HL__HTMLHL_
+_FACTORLOADINGS__SLOPES__INTERCEPTS__THRESHOLDS__RESIDUALS__COVARIANCES__LATENTVARS__HL__HTMLHL_
 _EOT_
 
 Note. IDENTNOTEFITINFORMATION.
@@ -307,32 +312,6 @@ ROWINFORMATION"
         tmpx
     }
 
-#    slopeMaker <- function(variables, report = c("est", "se", "z", "p")){
-#        trows <- parameters[which(parameters$lhs %in% variables & parameters$op == "~"), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
-#        if(dim(trows)[1] == 0){
-#            stop("Slope estimates are requested in the table, but I can't find them in the output!")
-#        }else{
-#        trows$est <- formatC(round(trows$est, 3), format = 'f', digits = 2)
-#        trows$se <- formatC(round(trows$se, 3), format = 'f', digits = 2)
-#        trows$stdest <- formatC(round(trows$stdest, 3), format = 'f', digits = 2)
-#        trows$stdse <- formatC(round(trows$stdse, 3), format = 'f', digits = 2)
-#        trows$z <- formatC(round(trows$z, 3), format = 'f', digits = 2)
-#        trows$p <- formatC(round(trows$p, 3), format = 'f', digits = 3)
-#        trows$p <- gsub("0\\.", "\\.", trows$p)
-#        trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
-#        trows$z <- ifelse(trows$free == 0, "", trows$z)
-#        trows$p <- ifelse(trows$free == 0, "", trows$p)
-#        tmpx <- "_BR__EOC_ _BOMC4__UL_Slopes_EOUL__EOMC_ _EOR_
-#ROWINFORMATION"
-#        rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
-#        for (i in 2:nrow(trows)){
-#            rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
-#        }
-#        tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
-#        tmpx
-#        }
-#    }
-
     thresholdMaker <- function(variables, report = c("est", "se", "z", "p")){
         trows <- parameters[which(parameters$op == "|" & parameters$lhs %in% variables), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
         if(dim(trows)[1] == 0){
@@ -361,8 +340,23 @@ ROWINFORMATION"
         }
     }
 
-    residualMaker <- function(variables, report = c("est", "se", "z", "p")){
+    residualMaker <- function(variables, covariance = FALSE, report = c("est", "se", "z", "p")){
         trows <- parameters[which(parameters$rhs %in% variables & parameters$lhs %in% variables & parameters$op == "~~"), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
+        if (isTRUE(covariance)){
+            trows <- trows[which(trows$rhs != trows$lhs),]
+            tmpx <- "_BR__EOC_ _BOMC4__UL_Covariances_EOUL__EOMC__EOR_
+ROWINFORMATION"
+            if(dim(trows)[1] == 0){
+                stop("Observed variable covariance estimates are requested in the table, but I can't find them in the output!")
+            }
+        } else {
+            trows <- trows[which(trows$rhs == trows$lhs),]
+            tmpx <- "_BR__EOC_ _BOMC4__UL_Residual Variances_EOUL__EOMC__EOR_
+ROWINFORMATION"
+            if(dim(trows)[1] == 0){
+                stop("Residual variance estimates are requested in the table, but I can't find them in the output!")
+            }
+        }
         trows$est <- formatC(round(trows$est, 3), format = 'f', digits = 2)
         trows$se <- formatC(round(trows$se, 3), format = 'f', digits = 2)
         trows$stdest <- formatC(round(trows$stdest, 3), format = 'f', digits = 2)
@@ -372,11 +366,16 @@ ROWINFORMATION"
         trows$z <- ifelse(trows$free == 0, "", trows$z)
         trows$p <- ifelse(trows$free == 0, "", trows$p)
         trows$p <- gsub("0\\.", "\\.", trows$p)
-        tmpx <- "_BR__EOC_ _BOMC4__UL_Residual Variances_EOUL__EOMC__EOR_
-ROWINFORMATION"
-        rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
-        for (i in 2:nrow(trows)){
-            rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+        if (isTRUE(covariance)){
+            rowinfo <- paste0("_BR_", trows[1,"lhs"], " with ", trows[1,"rhs"], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
+            for (i in 2:nrow(trows)){
+                rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,"lhs"], " with ", trows[i,"rhs"], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+            }
+        } else {
+            rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
+            for (i in 2:nrow(trows)){
+                rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+            }
         }
         tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
         tmpx
@@ -397,8 +396,10 @@ ROWINFORMATION"
         tmpx <- "_BR__EOC__BOMC4__UL_Latent Variances/Covariances_EOUL__EOMC__EOR_
 ROWINFORMATION"
         rowinfo <- paste0("_BR_", trows[1,1], " with ", trows[1,2], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
-        for (i in 2:nrow(trows)){
-            rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,1], " with ", trows[i,2], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+        if (nrow(trows) > 1){
+            for (i in 2:nrow(trows)){
+                rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,1], " with ", trows[i,2], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+            }
         }
         tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
         tmpx
@@ -440,6 +441,14 @@ ROWINFORMATION"
     }else{
         template <- gsub("_RESIDUALS_", "", template)
     }
+
+    if("covariances" %in% params){
+        residualInfo <- residualMaker(variables, covariance = TRUE, report)
+        template <- gsub("_COVARIANCES_", residualInfo, template)
+    }else{
+        template <- gsub("_COVARIANCES_", "", template)
+    }
+
     if("latentvariances" %in% params){
         latentInfo <- latentMaker(latents, report)
         template <- gsub("_LATENTVARS_", latentInfo, template)
