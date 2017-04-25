@@ -182,7 +182,7 @@ assignMissing <- function(x, missings = NULL, sep = ";"){
     missings <- unlist(strsplit(missings, split = sep, fixed = TRUE))
     missings <- na.omit(missings)
     missings <- zapspace(missings)
-    missings <- gsub("-", " -", missings,  fixed = TRUE) 
+    missings <- gsub("-", " -", missings,  fixed = TRUE)
     ## If no NA  missings to remove, then return
     if (is.null(missings) | length(missings) == 0) return(x)
 
@@ -832,6 +832,16 @@ keyImport <- function(file, ignoreCase = TRUE,
     ## protect against user-inserted spaces (leading or trailing)
     key$name_old <- zapspace(key$name_old)
     key$name_new <- zapspace(key$name_new)
+
+    ## if the name_new is "" or NA assign it a value of REMOVETHISVARIABLE
+    key$name_new <- ifelse(key$name_new %in% c("", NA), "REMOVETHISVARIABLE", key$name_new)
+
+    ## now remove those variables
+    remove <- key$name_old[which(key$name_new == "REMOVETHISVARIABLE")]
+    key <- key[which(key$name_new != "REMOVETHISVARIABLE"),]
+
+    print(paste0("The following variables were removed from the key (indicating they should be removed from the data) due to name_new being blank: ",
+          paste0(remove, collapse = ", ")))
 
     ## if this is long key, following is safe. How about wide key?
     key$value_old <- n2NA(zapspace(key$value_old))
