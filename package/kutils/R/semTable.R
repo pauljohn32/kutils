@@ -396,8 +396,10 @@ ROWINFORMATION"
         tmpx <- "_BR__EOC__BOMC4__UL_Latent Variances/Covariances_EOUL__EOMC__EOR_
 ROWINFORMATION"
         rowinfo <- paste0("_BR_", trows[1,1], " with ", trows[1,2], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
-        for (i in 2:nrow(trows)){
-            rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,1], " with ", trows[i,2], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+        if (nrow(trows) > 1){
+            for (i in 2:nrow(trows)){
+                rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,1], " with ", trows[i,2], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+            }
         }
         tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
         tmpx
