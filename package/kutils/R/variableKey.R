@@ -23,6 +23,8 @@
 ##' @param x a numeric variable
 ##' @param tol Tolerance value. Defaults to Machine$double.eps. See
 ##'     details.
+##' @param vmax Maximum value allowed for an integer. Defaults to
+##'     Machine$integer.max.
 ##' @param digits Digits value passed to the zapsmall
 ##'     function. Defaults to 7.
 ##' @param verbose Default FALSE: print warnings about x
@@ -45,7 +47,7 @@
 ##' x3 <- factor(x1, labels = c(LETTERS[1:6]))
 ##' x3int <- safeInteger(x3)
 ##'
-safeInteger <- function(x, tol = .Machine$double.eps, digits = 7, verbose = FALSE)
+safeInteger <- function(x, tol = .Machine$double.eps, digits = 7, vmax = .Machine$integer.max, verbose = FALSE)
 {
     if(!is.numeric(x)) {
         if (verbose) {
@@ -53,6 +55,12 @@ safeInteger <- function(x, tol = .Machine$double.eps, digits = 7, verbose = FALS
             warning(messg)
         }
         return(NULL)
+    }
+
+    if(max(x, na.rm = TRUE) > vmax){
+        messg <- paste0("Values in x exceed the maximum integer value of ", vmax, ". ", "safeInteger cannot be used safely for this variable, the original variable was returned by the function.")
+        warning(messg)
+        return(x)
     }
 
     if(is.integer(x)){
@@ -74,7 +82,6 @@ safeInteger <- function(x, tol = .Machine$double.eps, digits = 7, verbose = FALS
     stop(messg)
 }
 NULL
-
 
 ##' Set missing values
 ##'
