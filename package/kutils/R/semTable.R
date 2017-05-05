@@ -47,9 +47,9 @@
 ##' @param file Character string for file name.  Default is NULL,
 ##'     meaning no output file.
 ##' @param params Parameters to be included. Valid values are
-##'     "loadings", "slopes", "intercepts", "residuals", "covariances",
-##'     "latentvariances", and "thresholds". Defaults to "all" which
-##'     includes all available parameters. See Details.
+##'     "loadings", "slopes", "intercepts", "residuals",
+##'     "covariances", "latentvariances", and "thresholds". Defaults
+##'     to "all" which includes all available parameters. See Details.
 ##' @param fit A vector of fit measures that to be included in the
 ##'     note. Listing "chi-square" will do special formatting to the
 ##'     chi-square value in the note. Any other measures listed must
@@ -60,6 +60,10 @@
 ##'     c("CFI", "TLI").
 ##' @param standardized Should standarized results be presented along
 ##'     with unstandardized?  Default is FALSE. See Details.
+##' @param group Group for which parameters should be
+##'     reported. Provide the value in the data that indicates the
+##'     desired group. Only necessary for multiple group
+##'     models. Defaults to NULL.
 ##' @param names_upper Should the names of the model fit parameters be
 ##'     forced to be uppercase.  The default is TRUE.  This will also
 ##'     affect whatever is specified in names_fit.
@@ -119,7 +123,8 @@ semTable <-
     function(object, file = NULL, params = "all",
              fit = c("chi-square", "cfi", "tli", "rmsea"),
              names_fit = fit, standardized= FALSE,
-             names_upper = TRUE, single_spaced = TRUE, type = "latex")
+             names_upper = TRUE, single_spaced = TRUE, type = "latex",
+             group = NULL)
 {
     if(class(object)[1] != "lavaan"){
         stop(paste("The object does not appear to be",
@@ -142,7 +147,7 @@ semTable <-
     chimeas$stat <- formatC(round(chimeas$stat, 3), format = 'f', digits = 2)
     chimeas$pvalue <- formatC(round(chimeas$pvalue, 3), format = 'f', digits = 3)
     chimeas$pvalue <- gsub("0\\.", "\\.", chimeas$pvalue)
-    parameters <- data.frame(object@ParTable)[,c("lhs", "op", "rhs", "free")]
+    parameters <- data.frame(object@ParTable)[,c("lhs", "op", "rhs", "free", "group")[c("lhs", "op", "rhs", "free", "group") %in% names(object@ParTable)]]
     parameters$est <- object@Fit@est
     parameters$se <- object@Fit@se
     ##parameters <- parameters[which(parameters$free > 0),]
@@ -155,7 +160,7 @@ semTable <-
     parameters[,"rhs"] <- as.character(parameters[,"rhs"])
     parameters[,"lhs"] <- as.character(parameters[,"lhs"])
     variables <- unlist(object@Data@ov.names)
-    latents <- unlist(object@pta$vnames$lv)
+    latents <- unique(unlist(object@pta$vnames$lv))
     if (length(params) == 1){
         if (params == "all"){
             params <- unique(as.character(parameters$op))
@@ -177,6 +182,23 @@ semTable <-
             }
         }
     }
+
+    ## Handle which group to make the table for here
+    if (!is.null(group)){
+        if (!is.null(parameters$group)){
+            gval <- which(object@Data@group.label %in% as.character(group))
+            if (!gval%in% unique(parameters$group)){
+                stop(paste0("The value provided to the group argument is not valid."))
+            }
+            parameters <- parameters[parameters$group == gval,]
+        }
+    } else {
+        if (!is.null(parameters$group)){
+            stop(paste0("The semTable function can only produce tables for a single group.",
+                        "\nUse the \"group\" argument to specify which group."))
+        }
+    }
+
     template <- "
 _BT_
 _HL_
