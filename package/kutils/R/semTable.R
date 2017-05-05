@@ -192,11 +192,6 @@ semTable <-
             }
             parameters <- parameters[parameters$group == gval,]
         }
-    } else {
-        if (!is.null(parameters$group)){
-            stop(paste0("The semTable function can only produce tables for a single group.",
-                        "\nUse the \"group\" argument to specify which group."))
-        }
     }
 
     template <- "
