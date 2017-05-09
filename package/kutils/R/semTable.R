@@ -254,7 +254,7 @@ Note. IDENTNOTEFITINFORMATION.
 
     loadingMaker <- function(loads, report = c("est", "se", "z", "p")){
         lvname <- loads
-        trows <- parameters[which(parameters$rhs %in% variables & parameters$lhs %in% lvname), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
+        trows <- parameters[which(parameters$rhs %in% variables & parameters$lhs %in% lvname & parameters$op == "=~"), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
         trows$est <- formatC(round(trows$est, 3), format = 'f', digits = 2)
         trows$se <- formatC(round(trows$se, 3), format = 'f', digits = 2)
         trows$stdest <- formatC(round(trows$stdest, 3), format = 'f', digits = 2)
@@ -399,7 +399,7 @@ ROWINFORMATION"
     }
 
     latentMaker <- function(latents, report = c("est", "se", "z", "p")){
-        trows <- parameters[which(parameters$rhs %in% latents & parameters$lhs %in% latents), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
+        trows <- parameters[which(parameters$rhs %in% latents & parameters$lhs %in% latents & parameters$op == "~~"), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
         trows$est <- formatC(round(trows$est, 3), format = 'f', digits = 2)
         trows$se <- formatC(round(trows$se, 3), format = 'f', digits = 2)
         trows$stdest <- formatC(round(trows$stdest, 3), format = 'f', digits = 2)
