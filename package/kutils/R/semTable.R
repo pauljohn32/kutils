@@ -10,13 +10,15 @@
 ##' \item "loadings" are the factor loadings in the model.
 ##' \item "slopes" are the regression slopes in the model.
 ##' \item "intercepts" are
-##' the observed variable intercepts.
+##' the observed variable intercepts (or means).
 ##' \item "residuals" are the observed
 ##' variable residual variances.
 ##' \item "covariances" are the observed
 ##' variable covariances.
 ##' \item "latentvariances" are the latent
 ##' variable variances and covariances.
+##' \item "latentmeans" are the latent variable
+##' means (or intercepts).
 ##' \item "thresholds" arise in latent
 ##' response variates (non-numeric indicator data).
 ##' }
@@ -164,7 +166,7 @@ semTable <-
     if (length(params) == 1){
         if (params == "all"){
             params <- unique(as.character(parameters$op))
-            paramops <- c("=~" = "loadings", "~" = "slopes", "~1" = "intercepts",
+            paramops <- c("=~" = "loadings", "~" = "slopes", "~1" = "means",
                           "~~" = "variances", "|" = "thresholds")
             params <- paramops[params]
             names(params) <- NULL
@@ -178,6 +180,15 @@ semTable <-
                 }
                 if (length(which(parameters$rhs %in% latents & parameters$lhs %in% latents & parameters$op == "~~")) > 0){
                     params <- c(params, "latentvariances")
+                }
+            }
+            if ("means" %in% params){
+                params <- params[!params %in% "means"]
+                if(length(which(parameters$lhs %in% variables & parameters$op == "~1")) > 0){
+                    params <- c(params, "intercepts")
+                }
+                if(length(which(parameters$lhs %in% latents & parameters$op == "~1")) > 0){
+                    params <- c(params, "latentmeans")
                 }
             }
         }
@@ -200,7 +211,7 @@ _HL_
 STANDARDIZED
 _BRU_Parameter_EOC_ REPORT
 _HL_
-_FACTORLOADINGS__SLOPES__INTERCEPTS__THRESHOLDS__RESIDUALS__COVARIANCES__LATENTVARS__HL__HTMLHL_
+_FACTORLOADINGS__SLOPES__INTERCEPTS__THRESHOLDS__RESIDUALS__COVARIANCES__LATENTVARS__LATENTMEANS__HL__HTMLHL_
 _EOT_
 
 Note. IDENTNOTEFITINFORMATION.
@@ -400,26 +411,60 @@ ROWINFORMATION"
 
     latentMaker <- function(latents, report = c("est", "se", "z", "p")){
         trows <- parameters[which(parameters$rhs %in% latents & parameters$lhs %in% latents & parameters$op == "~~"), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
-        trows$est <- formatC(round(trows$est, 3), format = 'f', digits = 2)
-        trows$se <- formatC(round(trows$se, 3), format = 'f', digits = 2)
-        trows$stdest <- formatC(round(trows$stdest, 3), format = 'f', digits = 2)
-        trows$stdse <- formatC(round(trows$stdse, 3), format = 'f', digits = 2)
-        trows$z <- formatC(round(trows$z, 3), format = 'f', digits = 2)
-        trows$p <- formatC(round(trows$p, 3), format = 'f', digits = 3)
-        trows$p <- gsub("0\\.", "\\.", trows$p)
-        trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
-        trows$z <- ifelse(trows$free == 0, "", trows$z)
-        trows$p <- ifelse(trows$free == 0, "", trows$p)
-        tmpx <- "_BR__EOC__BOMC4__UL_Latent Variances/Covariances_EOUL__EOMC__EOR_
+        if(dim(trows)[1] == 0){
+            stop("Latent variance/covariance estimates are requested in the table, but I can't find them in the output!")
+            #return(print("It appears that no intercept estimates are present in the lavaan output"))
+        }else{
+            trows$est <- formatC(round(trows$est, 3), format = 'f', digits = 2)
+            trows$se <- formatC(round(trows$se, 3), format = 'f', digits = 2)
+            trows$stdest <- formatC(round(trows$stdest, 3), format = 'f', digits = 2)
+            trows$stdse <- formatC(round(trows$stdse, 3), format = 'f', digits = 2)
+            trows$z <- formatC(round(trows$z, 3), format = 'f', digits = 2)
+            trows$p <- formatC(round(trows$p, 3), format = 'f', digits = 3)
+            trows$p <- gsub("0\\.", "\\.", trows$p)
+            trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
+            trows$z <- ifelse(trows$free == 0, "", trows$z)
+            trows$p <- ifelse(trows$free == 0, "", trows$p)
+            tmpx <- "_BR__EOC__BOMC4__UL_Latent Variances/Covariances_EOUL__EOMC__EOR_
 ROWINFORMATION"
-        rowinfo <- paste0("_BR_", trows[1,1], " with ", trows[1,2], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
-        if (nrow(trows) > 1){
-            for (i in 2:nrow(trows)){
-                rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,1], " with ", trows[i,2], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+            rowinfo <- paste0("_BR_", trows[1,1], " with ", trows[1,2], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
+            if (nrow(trows) > 1){
+                for (i in 2:nrow(trows)){
+                    rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,1], " with ", trows[i,2], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+                }
             }
+            tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
+            tmpx
         }
-        tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
-        tmpx
+    }
+
+    latentMeanMaker <- function(latents, report = c("est", "se", "z", "p")){
+        trows <- parameters[which(parameters$lhs %in% latents & parameters$op == "~1"), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
+        if(dim(trows)[1] == 0){
+            stop("Latent mean estimates are requested in the table, but I can't find them in the output!")
+            #return(print("It appears that no intercept estimates are present in the lavaan output"))
+        }else{
+            trows$est <- formatC(round(trows$est, 3), format = 'f', digits = 2)
+            trows$se <- formatC(round(trows$se, 3), format = 'f', digits = 2)
+            trows$stdest <- formatC(round(trows$stdest, 3), format = 'f', digits = 2)
+            trows$stdse <- formatC(round(trows$stdse, 3), format = 'f', digits = 2)
+            trows$z <- formatC(round(trows$z, 3), format = 'f', digits = 2)
+            trows$p <- formatC(round(trows$p, 3), format = 'f', digits = 3)
+            trows$p <- gsub("0\\.", "\\.", trows$p)
+            trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
+            trows$z <- ifelse(trows$free == 0, "", trows$z)
+            trows$p <- ifelse(trows$free == 0, "", trows$p)
+            tmpx <- "_BR__EOC_ _BOMC4__UL_Latent Means_EOUL__EOMC_ _EOR_
+ROWINFORMATION"
+            rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
+            if (nrow(trows) > 1){
+                for (i in 2:nrow(trows)){
+                    rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+                }
+            }
+            tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
+            tmpx
+        }
     }
 
     if("loadings" %in% params){
@@ -472,6 +517,15 @@ ROWINFORMATION"
     }else{
         template <- gsub("_LATENTVARS_", "", template)
     }
+
+    if("latentmeans" %in% params){
+        latentMeans <- latentMeanMaker(latents, report)
+        template <- gsub("_LATENTMEANS_", latentMeans, template)
+    }else{
+        template <- gsub("_LATENTMEANS_", "", template)
+    }
+
+
     #template <- gsub("TITLE", caption, template)
     if("chi-square" %in% fit){
         if (type == "latex"){
