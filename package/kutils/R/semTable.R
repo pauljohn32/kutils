@@ -50,8 +50,9 @@
 ##'     meaning no output file.
 ##' @param params Parameters to be included. Valid values are
 ##'     "loadings", "slopes", "intercepts", "residuals",
-##'     "covariances", "latentvariances", and "thresholds". Defaults
-##'     to "all" which includes all available parameters. See Details.
+##'     "covariances", "latentvariances", "latentmeans" and
+##'     "thresholds". Defaults to "all" which includes all available
+##'     parameters. See Details.
 ##' @param fit A vector of fit measures that to be included in the
 ##'     note. Listing "chi-square" will do special formatting to the
 ##'     chi-square value in the note. Any other measures listed must
