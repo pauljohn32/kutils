@@ -840,15 +840,17 @@ keyImport <- function(file, ignoreCase = TRUE,
     key$name_old <- zapspace(key$name_old)
     key$name_new <- zapspace(key$name_new)
 
-    ## if the name_new is "" or NA assign it a value of REMOVETHISVARIABLE
-    key$name_new <- ifelse(key$name_new %in% c("", NA), "REMOVETHISVARIABLE", key$name_new)
+    ## Make a list of variables to remove based on name_new
+    remove <- key$name_old[key$name_new %in% c("", NA)]
+    key <- key[!key$name_old %in% remove,]
 
-    ## now remove those variables
-    remove <- key$name_old[which(key$name_new == "REMOVETHISVARIABLE")]
-    key <- key[which(key$name_new != "REMOVETHISVARIABLE"),]
+    if (length(unique(remove)) == 1){
+        warning(paste0("There was 1 variable removed from the key due to a missing value in the name_new column."))
+    }
+    if (length(unique(remove)) > 1){
+        warning(paste0("There were ", length(unique(remove)), " variables removed from the key due to a missing value in the name_new column."))
+    }
 
-    print(paste0("The following variables were removed from the key (indicating they should be removed from the data) due to name_new being blank: ",
-          paste0(remove, collapse = ", ")))
 
     ## if this is long key, following is safe. How about wide key?
     key$value_old <- n2NA(zapspace(key$value_old))
