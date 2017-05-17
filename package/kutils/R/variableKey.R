@@ -47,7 +47,9 @@
 ##' x3 <- factor(x1, labels = c(LETTERS[1:6]))
 ##' x3int <- safeInteger(x3)
 ##'
-safeInteger <- function(x, tol = .Machine$double.eps, digits = 7, vmax = .Machine$integer.max, verbose = FALSE)
+safeInteger <- function(x, tol = .Machine$double.eps,
+                        digits = 7, vmax = .Machine$integer.max,
+                        verbose = FALSE)
 {
     if(!is.numeric(x)) {
         if (verbose) {
@@ -58,7 +60,9 @@ safeInteger <- function(x, tol = .Machine$double.eps, digits = 7, vmax = .Machin
     }
 
     if(max(x, na.rm = TRUE) > vmax){
-        messg <- paste0("Values in x exceed the maximum integer value of ", vmax, ". ", "safeInteger cannot be used safely for this variable, the original variable was returned by the function.")
+        messg <- paste0("Values in x exceed the maximum integer value of ",
+                        vmax, ". ", "safeInteger cannot be used safely ",
+                        "for this variable. Original value is returned.")
         warning(messg)
         return(x)
     }
@@ -72,7 +76,8 @@ safeInteger <- function(x, tol = .Machine$double.eps, digits = 7, vmax = .Machin
             return(xnew)
         } else {
             if (verbose) {
-                messg <- paste("asInteger x:", paste(head(x), collapse=", "), "... is not close enough to an integer")
+                messg <- paste("asInteger x:", paste(head(x), collapse=", "),
+                               "... is not close enough to an integer")
                 warning(messg)
             }
             return(NULL)
@@ -361,17 +366,18 @@ is.data.frame.simple <- function(dframe){
 ##' @param x a variable, either character or factor
 ##' @param value_old a vector of old values for which we are checking
 ##' @param xname character string to use for x's name when printing output
+##' @param diagnostic prints messages about variables if TRUE
 ##' @keywords internal
 ##' @return NULL
 ##' @author Paul Johnson <pauljohn@@ku.edu>
-checkValues <- function(x, value_old, xname){
+checkValues <- function(x, value_old, xname, diagnostic = FALSE){
     if (!is.factor(x) && !is.character(x)) return(NULL)
     ## if value_old is length 1 and is equal to NA, don't bother
     if(all(value_old %in% c("NA", NA))) return(NULL)
     xobs <- unique(x)
     keynotinobs <- value_old[!value_old %in% xobs]
     keynotinobs <- na.omit(keynotinobs)
-    if (length(keynotinobs) > 0){
+    if (diagnostic && length(keynotinobs) > 0){
         messg <- paste("Data Check (variable", xname, ":)\n",
                      "Key values were not observed in the input data: ",
                      paste(keynotinobs, collapse = ", "), "\n")
@@ -379,7 +385,7 @@ checkValues <- function(x, value_old, xname){
     }
     tobsnotinkey <- xobs[!xobs %in% value_old]
     tobsnotinkey <- na.omit(tobsnotinkey)
-    if (length(tobsnotinkey) > 0) {
+    if (diagnostic && length(tobsnotinkey) > 0) {
         messg <- paste("Data Check (variable", xname, ":)\n",
                        "These values in the input data were not in value_old: ",
                        paste(tobsnotinkey, collapse = ", "), "\n")
@@ -1133,7 +1139,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
                     mytext <- paste0("xnew <- ", class_new.key, "(xnew, levels = v$value_old)")
                     eval(parse(text = mytext))
                     newlevels <- v$value_new
-                    checkValues(xnew, v$value_old, dfname_old.orig[v$name_old])
+                    checkValues(xnew, v$value_old, dfname_old.orig[v$name_old], diagnostic)
                     names(newlevels) <- v$value_old
                     levels(xnew) <- newlevels[levels(xnew)]
                     mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew")
@@ -1159,7 +1165,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             ## Then process value_old to value_new.  Relying heavily on plyr::mapvalues
             xnew <- zapspace(xnew)
             if (length(v$value_old) == length(v$value_new)){
-                checkValues(xnew, v$value_old, dfname_old.orig[v$name_old])
+                checkValues(xnew, v$value_old, dfname_old.orig[v$name_old], diagnostic)
                 ## Only change xnew if there are value_old and differences with value_new
                 ## 20161107: could eliminate same-value old, new pairs, to be efficient,
                 ## but this applies them all.
