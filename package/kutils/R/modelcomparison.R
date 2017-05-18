@@ -221,13 +221,17 @@ compareCFA <- function(models,
         texcode <- mgsub(name_old, name_new, texcode)
 
         if(length(output) > 1){
-            texcode <- paste0(texcode, "\n", paste0(output[[2]], collapse = ", "))
+            texcode <- paste0(texcode, "\n", paste0(output[[2]], collapse = ", "), "\n\n")
         }
         write(texcode, file = file)
-        return(texcode)
+        
     }
-    
-    output
+    if(!is.null(file)){
+        cat(texcode)
+        invisible(texcode)
+    } else {
+        return(output)
+    }
 }
 
 
