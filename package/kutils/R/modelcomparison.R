@@ -224,8 +224,9 @@ compareCFA <- function(models,
             texcode <- paste0(texcode, "\n", paste0(output[[2]], collapse = ", "))
         }
         write(texcode, file = file)
+        return(texcode)
     }
-    if(!is.null(file)) return(texcode)
+    
     output
 }
 
