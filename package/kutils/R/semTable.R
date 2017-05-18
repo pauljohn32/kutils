@@ -10,7 +10,9 @@
 ##' \item "loadings" are the factor loadings in the model.
 ##' \item "slopes" are the regression slopes in the model.
 ##' \item "intercepts" are
-##' the observed variable intercepts (or means).
+##' the observed variable intercepts.
+##' \item "means" are the observed
+##' variable means.
 ##' \item "residuals" are the observed
 ##' variable residual variances.
 ##' \item "covariances" are the observed
@@ -49,10 +51,10 @@
 ##' @param file Character string for file name.  Default is NULL,
 ##'     meaning no output file.
 ##' @param params Parameters to be included. Valid values are
-##'     "loadings", "slopes", "intercepts", "residuals",
+##'     "loadings", "slopes", "intercepts", "means", "residuals",
 ##'     "covariances", "latentvariances", "latentmeans" and
 ##'     "thresholds". Defaults to "all" which includes all available
-##'     parameters. See Details.
+##'     parameters (but excludes "means"). See Details.
 ##' @param fit A vector of fit measures that to be included in the
 ##'     note. Listing "chi-square" will do special formatting to the
 ##'     chi-square value in the note. Any other measures listed must
@@ -90,11 +92,10 @@
 ##' semTable(output1, fit = "rmsea",
 ##' standardized = TRUE, type = "html")
 ##' ## Basic SEM model
-##' regmodel <- "x1 ~~ x2 + x3
+##' regmodel <- "x1 ~ x2 + x3
 ##' x1 ~1"
 ##' output1a <- sem(regmodel, data = HolzingerSwineford1939, std.lv = TRUE)
-##' semTable(output1a, params = "covariances", fit = "rmsea",
-##' standardized = TRUE, type = "html")
+##' semTable(output1a, fit = "rmsea", type = "html")
 ##' #### Example with file output
 ##' ##semTable(output1, file = "exampleTable.html", fit = "rmsea",
 ##' ##standardized = TRUE, params = c("loadings", "latentvariances"),
@@ -134,18 +135,17 @@ semTable <-
                    "a lavaan object.  Only lavaan cfa object can be",
                    "used with the CFATable function."))
     }
-    #if(object@Options$model.type != "cfa"){
-    #    stop(paste("The output object is not cfa object.",
-    #               "Fit your model with the cfa function and try again."))
-    #}
-    if(names_upper == TRUE){
-        names(fit) <- toupper(names_fit)
-    }else{
-        names(fit) <- names_fit
+    if (!is.null(fit)){
+        if(names_upper == TRUE){
+            names(fit) <- toupper(names_fit)
+        }else{
+            names(fit) <- names_fit
+        }
+
+        fitmeas <- lavaan::fitMeasures(object)[]
+        fitmeas <- sapply(fitmeas, function(x) formatC(round(x, 3),
+                                                       format = 'f', digits = 2))
     }
-    fitmeas <- lavaan::fitMeasures(object)[]
-    fitmeas <- sapply(fitmeas, function(x) formatC(round(x, 3),
-                                   format = 'f', digits = 2))
     chimeas <- object@Fit@test[[1]]
     chimeas$stat <- formatC(round(chimeas$stat, 3), format = 'f', digits = 2)
     chimeas$pvalue <- formatC(round(chimeas$pvalue, 3), format = 'f', digits = 3)
@@ -212,10 +212,10 @@ _HL_
 STANDARDIZED
 _BRU_Parameter_EOC_ REPORT
 _HL_
-_FACTORLOADINGS__SLOPES__INTERCEPTS__THRESHOLDS__RESIDUALS__COVARIANCES__LATENTVARS__LATENTMEANS__HL__HTMLHL_
+_FACTORLOADINGS__SLOPES__INTERCEPTS__MEANS__THRESHOLDS__RESIDUALS__COVARIANCES__LATENTVARS__LATENTMEANS__HL__HTMLHL_
 _EOT_
 
-Note. IDENTNOTEFITINFORMATION.
+Note. IDENTNOTEFITINFORMATION
 "
 
     if(standardized == TRUE){
@@ -263,6 +263,7 @@ Note. IDENTNOTEFITINFORMATION.
     loads <- as.list(latents)
     regs <- parameters[which(parameters$op == "~"),]
     dvs <- unique(regs$lhs)
+    ivs <- unique(regs$rhs)
 
     loadingMaker <- function(loads, report = c("est", "se", "z", "p")){
         lvname <- loads
@@ -289,7 +290,7 @@ ROWINFORMATION"
     }
 
     interceptMaker <- function(variables, report = c("est", "se", "z", "p")){
-        trows <- parameters[which(parameters$lhs %in% variables & parameters$op == "~1"), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
+        trows <- parameters[which(parameters$lhs %in% dvs & parameters$op == "~1"), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
         if(dim(trows)[1] == 0){
             stop("Intercept estimates are requested in the table, but I can't find them in the output!")
             #return(print("It appears that no intercept estimates are present in the lavaan output"))
@@ -307,8 +308,39 @@ ROWINFORMATION"
         tmpx <- "_BR__EOC_ _BOMC4__UL_Intercepts_EOUL__EOMC_ _EOR_
 ROWINFORMATION"
         rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
-        for (i in 2:nrow(trows)){
-            rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+        if (nrow(trows) > 1){
+            for (i in 2:nrow(trows)){
+                rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+            }
+        }
+        tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
+        tmpx
+        }
+    }
+
+    observedMeanMaker <- function(variables, report = c("est", "se", "z", "p")){
+        trows <- parameters[which(parameters$lhs %in% ivs & parameters$op == "~1"), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
+        if(dim(trows)[1] == 0){
+            stop("Predictor variable mean estimates are requested in the table, but I can't find them in the output!")
+            #return(print("It appears that no intercept estimates are present in the lavaan output"))
+        }else{
+        trows$est <- formatC(round(trows$est, 3), format = 'f', digits = 2)
+        trows$se <- formatC(round(trows$se, 3), format = 'f', digits = 2)
+        trows$stdest <- formatC(round(trows$stdest, 3), format = 'f', digits = 2)
+        trows$stdse <- formatC(round(trows$stdse, 3), format = 'f', digits = 2)
+        trows$z <- formatC(round(trows$z, 3), format = 'f', digits = 2)
+        trows$p <- formatC(round(trows$p, 3), format = 'f', digits = 3)
+        trows$p <- gsub("0\\.", "\\.", trows$p)
+        trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
+        trows$z <- ifelse(trows$free == 0, "", trows$z)
+        trows$p <- ifelse(trows$free == 0, "", trows$p)
+        tmpx <- "_BR__EOC_ _BOMC4__UL_Means_EOUL__EOMC_ _EOR_
+ROWINFORMATION"
+        rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
+        if (nrow(trows) > 1){
+            for (i in 2:nrow(trows)){
+                rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+            }
         }
         tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
         tmpx
@@ -380,10 +412,10 @@ ROWINFORMATION"
             }
         } else {
             trows <- trows[which(trows$rhs == trows$lhs),]
-            tmpx <- "_BR__EOC_ _BOMC4__UL_Residual Variances_EOUL__EOMC__EOR_
+            tmpx <- "_BR__EOC_ _BOMC4__UL_Variances_EOUL__EOMC__EOR_
 ROWINFORMATION"
             if(dim(trows)[1] == 0){
-                stop("Residual variance estimates are requested in the table, but I can't find them in the output!")
+                stop("Variance estimates are requested in the table, but I can't find them in the output!")
             }
         }
         trows$est <- formatC(round(trows$est, 3), format = 'f', digits = 2)
@@ -397,14 +429,19 @@ ROWINFORMATION"
         trows$p <- gsub("0\\.", "\\.", trows$p)
         if (isTRUE(covariance)){
             rowinfo <- paste0("_BR_", trows[1,"lhs"], " with ", trows[1,"rhs"], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
-            for (i in 2:nrow(trows)){
-                rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,"lhs"], " with ", trows[i,"rhs"], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+            if (nrow(trows) > 1){
+                for (i in 2:nrow(trows)){
+                    rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,"lhs"], " with ", trows[i,"rhs"], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+                }
             }
         } else {
             rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
-            for (i in 2:nrow(trows)){
-                rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+            if (nrow(trows) > 1){
+                for (i in 2:nrow(trows)){
+                    rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+                }
             }
+
         }
         tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
         tmpx
@@ -455,7 +492,7 @@ ROWINFORMATION"
             trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
             trows$z <- ifelse(trows$free == 0, "", trows$z)
             trows$p <- ifelse(trows$free == 0, "", trows$p)
-            tmpx <- "_BR__EOC_ _BOMC4__UL_Latent Means_EOUL__EOMC_ _EOR_
+            tmpx <- "_BR__EOC_ _BOMC4__UL_Latent Means/Intercepts_EOUL__EOMC_ _EOR_
 ROWINFORMATION"
             rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
             if (nrow(trows) > 1){
@@ -492,6 +529,14 @@ ROWINFORMATION"
     }else{
         template <- gsub("_INTERCEPTS_", "", template)
     }
+
+    if("means" %in% params){
+        interceptInfo <- observedMeanMaker(variables, report)
+        template <- gsub("_MEANS_", interceptInfo, template)
+    }else{
+        template <- gsub("_MEANS_", "", template)
+    }
+
     if("thresholds" %in% params){
         thresholdInfo <- thresholdMaker(variables, report)
         template <- gsub("_THRESHOLDS_", thresholdInfo, template)
@@ -547,26 +592,30 @@ ROWINFORMATION"
     }
 
     xxx <- list()
-    for(i in names(fit)[fit != "chi-square"]){
-        tmp <- paste0(i, " = value")
-        if(fit[i] %in% names(fitmeas)){
-            fitmeastmp <- fitmeas[fit[i]]
-            xxx[i] <- gsub("value",  fitmeas[fit[i]], tmp)
-        }else{
-            stop(paste0("I can't find the model fit index \"", i, "\" in the lavaan output."))
+    if (!is.null(fit)){
+        for(i in names(fit)[fit != "chi-square"]){
+            tmp <- paste0(i, " = value")
+            if(fit[i] %in% names(fitmeas)){
+                fitmeastmp <- fitmeas[fit[i]]
+                xxx[i] <- gsub("value",  fitmeas[fit[i]], tmp)
+            }else{
+                stop(paste0("I can't find the model fit index \"", i, "\" in the lavaan output."))
+            }
         }
+
+        fitinfoothers <- paste0(unlist(xxx), collapse = "; ")
+
+        measures <- c(fitinfotmpchi, fitinfoothers)
+        if(length(xxx) > 0){
+            fitinfo <- paste0(measures, collapse = "; ")
+        }else{
+            fitinfo <- fitinfotmpchi
+        }
+        template <- gsub("FITINFORMATION", paste0(fitinfo, "."), template)
+    } else {
+        template <- gsub("FITINFORMATION", "", template)
     }
 
-
-    fitinfoothers <- paste0(unlist(xxx), collapse = "; ")
-
-    measures <- c(fitinfotmpchi, fitinfoothers)
-    if(length(xxx) > 0){
-        fitinfo <- paste0(measures, collapse = "; ")
-    }else{
-        fitinfo <- fitinfotmpchi
-    }
-    template <- gsub("FITINFORMATION", fitinfo, template)
     markup <- function(x, type) {
         if (type == "latex")
             LATEX <- TRUE
@@ -584,7 +633,7 @@ ROWINFORMATION"
         x <- gsub("_BOCU_", ifelse(LATEX, "& ", paste("<td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;")),
                   x)
         x <- gsub("_BR_", ifelse(LATEX, "", "<tr><td>"), x)
-        x <- gsub("_BT_", ifelse(LATEX, "\\\\begin{tabular}{lrrrr}", "<table>\n"),
+        x <- gsub("_BT_", ifelse(LATEX, "\\\\begin{longtable}{lrrrr}", "<table>\n"),
             x)
         x <- gsub("_EOL_", "\n", x)
         x <- gsub("_HL_", ifelse(LATEX, "\\\\hline", ""), x)
@@ -594,7 +643,7 @@ ROWINFORMATION"
             x)
         x <- gsub("_SEP_", ifelse(LATEX, " &", "</td><td>"),
             x)
-        x <- gsub("_EOT_", ifelse(LATEX, "\\\\end{tabular}",
+        x <- gsub("_EOT_", ifelse(LATEX, "\\\\end{longtable}",
                                   "</table>"), x)
         x <- gsub("_BOMR1_", ifelse(LATEX, "& \\\\multirow{1}{c}{",
             "<td rowspan = '1'>"), x)
