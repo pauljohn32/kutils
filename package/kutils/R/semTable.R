@@ -76,7 +76,7 @@
 ##'     reported. Provide the value in the data that indicates the
 ##'     desired group. Only necessary for multiple group
 ##'     models. Defaults to NULL.
-##' @param long_table Should a latex longtable be generated? Defaults
+##' @param longtable Should a latex longtable be generated? Defaults
 ##'     to FALSE, which makes the table tabular. Ignored if type =
 ##'     "html".
 ##' @importFrom stats pnorm
