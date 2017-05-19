@@ -65,10 +65,6 @@
 ##'     c("CFI", "TLI").
 ##' @param standardized Should standarized results be presented along
 ##'     with unstandardized?  Default is FALSE. See Details.
-##' @param group Group for which parameters should be
-##'     reported. Provide the value in the data that indicates the
-##'     desired group. Only necessary for multiple group
-##'     models. Defaults to NULL.
 ##' @param names_upper Should the names of the model fit parameters be
 ##'     forced to be uppercase.  The default is TRUE.  This will also
 ##'     affect whatever is specified in names_fit.
@@ -76,6 +72,13 @@
 ##'     needed, set single_spaced = FALSE.
 ##' @param type Type of output table ("latex" or "html"). Defaults to
 ##'     "latex".
+##' @param group Group for which parameters should be
+##'     reported. Provide the value in the data that indicates the
+##'     desired group. Only necessary for multiple group
+##'     models. Defaults to NULL.
+##' @param long_table Should a latex longtable be generated? Defaults
+##'     to FALSE, which makes the table tabular. Ignored if type =
+##'     "html".
 ##' @importFrom stats pnorm
 ##' @return SEM table of desired type.
 ##' @export
@@ -90,7 +93,7 @@
 ##' speed   =~ x7 + x8 + x9'
 ##' output1 <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE)
 ##' semTable(output1, fit = "rmsea",
-##' standardized = TRUE, type = "html")
+##' standardized = TRUE, type = "latex")
 ##' ## Basic SEM model
 ##' regmodel <- "x1 ~ x2 + x3
 ##' x1 ~1"
@@ -128,7 +131,7 @@ semTable <-
              fit = c("chi-square", "cfi", "tli", "rmsea"),
              names_fit = fit, standardized= FALSE,
              names_upper = TRUE, single_spaced = TRUE, type = "latex",
-             group = NULL)
+             group = NULL, longtable = FALSE)
 {
     if(class(object)[1] != "lavaan"){
         stop(paste("The object does not appear to be",
@@ -633,8 +636,11 @@ ROWINFORMATION"
         x <- gsub("_BOCU_", ifelse(LATEX, "& ", paste("<td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;")),
                   x)
         x <- gsub("_BR_", ifelse(LATEX, "", "<tr><td>"), x)
-        x <- gsub("_BT_", ifelse(LATEX, "\\\\begin{longtable}{lrrrr}", "<table>\n"),
-            x)
+        if (longtable){
+            x <- gsub("_BT_", ifelse(LATEX, "\\\\begin{longtable}{lrrrr}", "<table>\n"), x)
+        }else{
+            x <- gsub("_BT_", ifelse(LATEX, "\\\\begin{tabular}{lrrrr}", "<table>\n"), x)
+        }
         x <- gsub("_EOL_", "\n", x)
         x <- gsub("_HL_", ifelse(LATEX, "\\\\hline", ""), x)
         x <- gsub("_UL_", ifelse(LATEX, "\\\\underline{", "<span style=\"text-decoration: underline;\">"), x)
@@ -643,8 +649,11 @@ ROWINFORMATION"
             x)
         x <- gsub("_SEP_", ifelse(LATEX, " &", "</td><td>"),
             x)
-        x <- gsub("_EOT_", ifelse(LATEX, "\\\\end{longtable}",
-                                  "</table>"), x)
+        if (longtable){
+            x <- gsub("_EOT_", ifelse(LATEX, "\\\\end{longtable}", "</table>"), x)
+        }else{
+            x <- gsub("_EOT_", ifelse(LATEX, "\\\\end{tabular}", "</table>"), x)
+        }
         x <- gsub("_BOMR1_", ifelse(LATEX, "& \\\\multirow{1}{c}{",
             "<td rowspan = '1'>"), x)
         x <- gsub("_BOMR2_", ifelse(LATEX, "& \\\\multirow{2}{c}{",
