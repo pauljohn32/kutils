@@ -513,7 +513,7 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
 
         getUnique <- function(xname){
             if (df.class[[xname]] == "numeric") return ("")
-            if (df.class[[xname]] %in% c("integer", "character")){
+            if (df.class[[xname]] %in% c("integer", "character", "logical", "Date")){
                 xunique <- sort(unique(dframe[ , xname]))
                 if(length(xunique) <= max.levels) {
                     return (xunique[1:min(max.levels, length(xunique))])
