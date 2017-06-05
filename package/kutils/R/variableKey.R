@@ -1133,7 +1133,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             ## There was no recode, so apply special fixup for ordered and factor variables.
             ## TODO: If $v$value_old is "" (character empty), what to do?
             if (sum(!is.na(v$value_old) > 0)){
-                if (length(v$value_old) == length(v$value_old)){
+                if (length(v$value_old) == length(v$value_new)){
                     ## TODO: keep only differences between value_old and value_new?
                     ## Following to Work around the "deprecated duplicated levels" and "unused levels problem"
                     mytext <- paste0("xnew <- ", class_new.key, "(xnew, levels = v$value_old)")
