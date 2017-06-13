@@ -32,6 +32,7 @@
 ##' xr2
 ##' y <- ordered(x, levels = c("a", "b", "c", "C"))
 ##' yr1 <- reverse(y)
+##' class(yr1)[1] == "ordered"
 ##' yr1
 ##' ## Hmm. end of list amounts to being "maximal".
 ##' ## Unintended side-effect, but interesting.
@@ -39,6 +40,7 @@
 ##' yr2
 reverse <- function(x, eol = c("Skip", "DNP")){
     if (!is.factor(x)) stop("your variable is not a factor")
+    class_old <- class(x)
     rlevels <- rev(levels(x))
     if (length(eol) > 0){
         for (jj in eol){
@@ -47,5 +49,5 @@ reverse <- function(x, eol = c("Skip", "DNP")){
             }
         }
     }
-    factor(x, levels = rlevels)
+    factor(x, levels = rlevels, ordered = is.ordered(x))
 }
