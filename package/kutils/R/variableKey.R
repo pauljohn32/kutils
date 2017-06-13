@@ -1062,11 +1062,16 @@ NULL
 ##'     numeric, it might be safe to treat it as an integer.  In many
 ##'     csv data sets, the values coded c(1, 2, 3) are really
 ##'     integers, not floats c(1.0, 2.0, 3.0). See \code{safeInteger}.
-##' @param dropVars Default FALSE. Variables in drame that are not in key
-##'     will remain, unchanged, in output data frame. If TRUE, then
-##'     variables missing from key omitted from data frame.  Variables
-##'     can also be removed from dframe by setting "name_new" to missing
-##'     or empty.
+##' @param drop Default TRUE. True implies drop = c("vars",
+##'     "vals"). TRUE applies to both variables ("vars") and values
+##'     ("vals"). "vars" means that a column will be omitted from data
+##'     if it is not in the key "name_old". Similarly, "vals" means
+##'     omission from key "value_old" causes observations with those
+##'     values to become NA.  This is the original variable key
+##'     behavior.  The drop argument allows "partial keys", beginning
+##'     with kutils version 1.12. drop = FALSE means that neither
+##'     values nor variables are omitted.  Rather than TRUE, one can
+##'     specify either drop = "vars", or drop = "vals".
 ##' @param ignoreCase Default TRUE. If column name is capitalized
 ##'     differently than name_old in the key, but the two are
 ##'     otherwise identical, then the difference in capitalization
@@ -1091,26 +1096,18 @@ NULL
 ##'
 keyApply <- function(dframe, key, diagnostic = TRUE,
                      safeNumericToInteger = TRUE, ignoreCase = TRUE,
-                     drop = NA, debug = FALSE){
+                     drop = TRUE, debug = FALSE){
     legalClasses = c("integer", "numeric", "double", "factor",
                      "ordered", "character", "logical")
 
-    if(is.logical(drop) && is.na(drop)) drop <- FALSE else c("vars", "vals")
-    dropTF <- is.character(drop) || (is.logical(drop) && drop)
-    if (dropTF){
-        if (is.logical(drop)){
-            drop <- c("vars", "vals")
-        } else if (is.character(drop)){
-            if (any(!drop %in% c("vars", "vals"))){
-                MESSG <- paste0("drop must be TRUE, FALSE, vars, vals")
-                stop(MESSG)
-            }
-        } else {
-            MESSG <- paste0("drop must be logical or character")
-            stop(MESSG)
-        }
+    if(is.na(drop)) stop("drop is NA")
+    if (is.character(drop)){
+        stopifnot(drop %in%  c("vars","vals"))
+    } 
+    if (is.logical(drop)){
+        if(drop) drop <- c("vars","vals")
     }
-    
+     
     dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
     if (diagnostic) dforig <- dframe
 
@@ -1139,7 +1136,17 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
     ## a list for collecting new variables.
     xlist <- list()
 
-    ## Process variables inkeylist, put into "xlist"
+    names_in_key <- unique(key$name_old)
+    if (ignoreCase) names_in_key <- tolower(names_in_key)
+    names_not_in_key <- setdiff(colnames(dframe), names_in_key)
+    if(length(names_not_in_key) && (!"vars" %in% drop)){
+        for(jj in names_not_in_key){
+            mytext <- paste0("xlist[[\"", jj, "\"]] <- ", "dframe[ , jj]")
+            eval(parse(text = mytext))
+        }
+    }
+    
+    ## Process variables in keylist, put into "xlist"
     for (v in keylist) {
         if(debug){
             print(paste("\n debug"))
@@ -1177,7 +1184,6 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         ## if class from data frame is not same as class_old, then MUST cast
         ## as correct type, else all of the factor magic is a failure
         if(class(xnew) != v$class_old) {
-            browser()
             xnew.orig <- xnew
             if(v$class_old %in% c("ordered", "factor")){
                 ## creates factor with levels in value_old
@@ -1219,14 +1225,12 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         }
         
         if("vals" %in% drop){
-            browser()
             xnew.values <- unique(xnew)
             xnew.notinkey <- xnew.values[!unique(xnew) %in% values$value_old]
             if(length(xnew.notinkey)){
                 values <- rbind(values, data.frame(value_old = xnew.notinkey, value_new = NA))
             }
         } else {
-            browser()
             xnew.values <- unique(xnew)
             xnew.notinkey <- xnew.values[!unique(xnew) %in% values$value_old]
             if(length(xnew.notinkey)){
@@ -1260,7 +1264,6 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
 
         if (v$class_old %in% c("factor", "ordered") && v$class_new %in% c("integer"))
         {
-            browser()
             ## if value_new passes safeInteger, suppose they want the integers named value_new
             if (is.null(val_new_levels <- safeInteger(values$value_new))){
                 ## Value new cannot be coerced to an integer, user error, should stop
@@ -1299,83 +1302,8 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             eval(parse(text = mytext))
             next()  
         } 
-        
-        ## } else if(v$class_new %in% c("ordered", "factor")) {
-        ##     ## There was no recode, so apply special fixup for ordered and factor variables.
-        ##     ## TODO: If $v$value_old is "" (character empty), what to do?
-        ##     if (sum(!is.na(v$value_old) > 0)){
-        ##         if (length(v$value_old) == length(v$value_old)){
-        ##             ## TODO: keep only differences between value_old and value_new?
-        ##             ## Following to Work around the "deprecated duplicated levels" and "unused levels problem"
-        ##             mytext <- paste0("xnew <- ", v$class_new, "(xnew, levels = v$value_old)")
-        ##             eval(parse(text = mytext))
-        ##             newlevels <- v$value_new
-        ##             checkValue_old(xnew, v$value_old, dfname_old.orig[v$name_old], diagnostic)
-        ##             names(newlevels) <- v$value_old
-        ##             levels(xnew) <- newlevels[levels(xnew)]
-        ##             mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew")
-        ##             eval(parse(text = mytext))
-        ##         } else {
-        ##             messg <- "keyApply: value_old and value_new are not equal in length"
-        ##             stop(messg)
-        ##         }
-        ##     } else { ## This was added to handle blank value_old cell for factor variables
-        ##         mytext <- paste0("xnew <- ", v$class_new, "(xnew)")
-        ##         eval(parse(text = mytext))
-        ##         mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew")
-        ##         eval(parse(text = mytext))
-        ##     }
-        ## } else if(v$class_new %in% c("integer", "numeric") && v$class_old %in% c("ordered", "factor")){
-        ##     mytext <- paste0("xvals <- as.", v$class_new, "(v$value_new)")
-        ##     eval(parse(text = mytext))
-        ##     xnew <- as.numeric(levels(xnew))[xnew]
-        ##     mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew")
-        ##     eval(parse(text = mytext))
-        ## } else {
-        ##     ## There was no recode function, and this is not a factor or an ordered variable.
-        ##     ## Then process value_old to value_new.  Relying heavily on plyr::mapvalues
-        ##     xnew <- zapspace(xnew)
-        ##     if (length(v$value_old) == length(v$value_new)){
-        ##         checkValue_old(xnew, v$value_old, dfname_old.orig[v$name_old], diagnostic)
-        ##         ## Only change xnew if there are value_old and differences with value_new
-        ##         ## 20161107: could eliminate same-value old, new pairs, to be efficient,
-        ##         ## but this applies them all.
-        ##         if (any(!is.na(v$value_old)) && (!identical(v$value_old, v$value_new))){
-        ##             xnew <- plyr::mapvalues(xnew, v$value_old, v$value_new, warn_missing = FALSE)
-        ##         }
-        ##         ## 20161107: Plan implemented now:
-        ##         ## Arrive here with no guidance except class_new value. Use
-        ##         ## R coercion and hope there's no error, but only for legalClasses.
-        ##         ## If class_new is some other, and xnew is not one of those, STOP!
-        ##         if ((class(xnew) != v$class_new)){
-        ##             if (v$class_new %in% legalClasses) {
-        ##                 ## class is not correct, so try coercion
-        ##                 xnew <- as(xnew, v$class_new)
-        ##             } else {
-        ##                 messg <- paste("The class of the variable did not match",
-        ##                                "the class specified in the variable key.")
-        ##                 print(v)
-        ##                 stop(messg)
-        ##             }
-        ##         }
-        ##         mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew")
-        ##         eval(parse(text = mytext))
-        ##     } else {
-        ##         messg <- paste(dfname_old.orig[v$name_old], "is neither factor not ordered.",
-        ##                        "Why are new and old value vectors not same in length?")
-        ##         stop(messg)
-        ##     }
-        ## }
     }
 
-    ## Now keep other variables in dframe that are not in key, if drop != TRUE
-    if (!isTRUE(drop)){
-        for (jj in setdiff(colnames(dframe), names(keylist))) {
-            xnew <- dframe[ , jj]
-            mytext <- paste0("xlist[[\"", jj, "\"]] <- ", "xnew")
-            eval(parse(text = mytext))
-        }
-    }
     ## How to pass stringsAsFactors=FALSE as argument? Only way is
     ## run through environment?
     stringsAsFactors.orig <-  unname(unlist(options("stringsAsFactors")))
