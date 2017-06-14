@@ -763,7 +763,7 @@ NULL
 ## have character values.  Caution about "NA" no "N/A" is needed
 ## before rejecting value_new vectors.
 
-##' Import a file and clean up for use as variable key
+##' Import a file (or key object) and clean up for use as variable key
 ##'
 ##' After the researcher has updated the key by filling in new names
 ##' and values, we import that key file. This function imports the
@@ -777,7 +777,7 @@ NULL
 ##' spaces removed, and if they are empty or blank spaces, then new
 ##' values are set as NA.  3) if \code{value_old} and \code{value_new}
 ##' are identical, the values are removed from the key.
-##' @param file A file name, ending in csv, xlsx or rds.
+##' @param key A file name, ending in csv, xlsx or rds, or a key object.
 ##' @param ignoreCase In the use of this key, should we ignore
 ##'     differences in capitalization of the "name_old" variable?
 ##'     Sometimes there are inadvertent misspellings due to changes in
@@ -817,7 +817,7 @@ NULL
 ##'
 ##' mydf.keylong.path <- system.file("extdata", "mydf.key_long.csv", package = "kutils")
 ##' mydf.keylong <- keyImport(mydf.keylong.path)
-keyImport <- function(file, ignoreCase = TRUE,
+keyImport <- function(key, ignoreCase = TRUE,
                       sep = c(character = "\\|", logical = "\\|",
                               integer = "\\|", factor = "[\\|<]",
                               ordered = "[\\|<]", numeric = "\\|")
@@ -828,7 +828,7 @@ keyImport <- function(file, ignoreCase = TRUE,
                      ,
                       keynames = NULL)
 {
-    key <- smartRead(file)
+    if (is.character(key)) key <- smartRead(file) else key <- file
 
     legalClasses = c("integer", "numeric", "double", "factor",
                      "ordered", "character", "logical")
