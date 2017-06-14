@@ -828,7 +828,7 @@ keyImport <- function(key, ignoreCase = TRUE,
                      ,
                       keynames = NULL)
 {
-    if (is.character(key)) key <- smartRead(file) else key <- file
+    if (is.character(key)) key <- smartRead(key)
 
     legalClasses = c("integer", "numeric", "double", "factor",
                      "ordered", "character", "logical")
@@ -1497,7 +1497,6 @@ long2wide <- function(keylong){
             x <- ifelse(is.na(x), ".", x)
             paste(x, collapse = collapse)
         }
-
 
         list(name_old = unique(x$name_old),
              name_new = unique(x$name_new),
