@@ -1180,11 +1180,11 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
 
         ## Extract candidate variable to column, will recode xnew.
         xnew <- dframe[ , v$name_old]
-
         
         ## if class from data frame is not same as class_old, then MUST cast
         ## as correct type, else all of the factor magic is a failure
-        if(!inherits(xnew, v$class_old)) {
+        ## Also, all ordered or factor must be re-created with correct levels
+        if((class(xnew)[1] != v$class_old) || (v$class_old %in% c("ordered", "factor"))) {
             xnew.orig <- xnew
             if(v$class_old %in% c("ordered", "factor")){
                 ## creates factor with levels in value_old
