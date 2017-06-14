@@ -1206,9 +1206,8 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         ## Be simple. If they have "recodes" in key, apply them. Ignore value_new. next().
         if (length(v$recodes) > 0 && !all(is.na(v$recodes))) {
             for (cmd in v$recodes) xnew <- assignRecode(xnew, cmd)
-            if(class(xnew) != v$class_new){
-                messg <- paste("The return from the recode function was not of the correct class.",
-                               "The returned object should be from 'class_new' by the key.")
+            if(!inherits(xnew, v$class_new)) {
+                messg <- paste("Recode function did not match class_new.")
                 print(v)
                 stop(messg)
             }
