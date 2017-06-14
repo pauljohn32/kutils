@@ -1111,6 +1111,9 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
     dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
     if (diagnostic) dforig <- dframe
 
+    ## Need to snapshot class of input variables before changing anything
+    class_old.dframe <- sapply(dframe, function(x) class(x)[1])
+    
     ## implement ignoreCase by keeping vector dfname_old.orig that we
     ## can use later to put old names back onto data frame.
     ## If key has multiple entries that are identcal after tolower(), will use
@@ -1122,10 +1125,8 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
     }
     names(dfname_old.orig) <- colnames(dframe)
 
-    ## Need to snapshot class of input variables before changing anything
-    class_old.dframe <- sapply(dframe, function(x) class(x)[1])
+    ## Wait till now to assign names, so will be lower if needed
     names(class_old.dframe) <- colnames(dframe)
-
 
     na.strings <- attr(key, "na.strings")
     ## TODO: figure out what to do if class_old does not match input data
@@ -1183,7 +1184,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         
         ## if class from data frame is not same as class_old, then MUST cast
         ## as correct type, else all of the factor magic is a failure
-        if(class(xnew) != v$class_old) {
+        if(!inherits(xnew, v$class_old)) {
             xnew.orig <- xnew
             if(v$class_old %in% c("ordered", "factor")){
                 ## creates factor with levels in value_old
