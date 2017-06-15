@@ -1181,22 +1181,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         ## Extract candidate variable to column, will recode xnew.
         xnew <- dframe[ , v$name_old]
         
-        ## if class from data frame is not same as class_old, then MUST cast
-        ## as correct type, else all of the factor magic is a failure
-        ## Also, all ordered or factor must be re-created with correct levels
-        if((class(xnew)[1] != v$class_old) || (v$class_old %in% c("ordered", "factor"))) {
-            xnew.orig <- xnew
-            if(v$class_old %in% c("ordered", "factor")){
-                ## creates factor with levels in value_old
-                levels.key <- values$value_old
-                if(!"vals" %in% drop) levels.key <- c(levels.key, setdiff(unique(xnew), levels.key))
-                mytext1 <- paste0("xnew <- ", v$class_old, "(xnew, levels.key)")
-            } else {
-                ## coerce to class_old
-                mytext1 <- paste0("xnew <- as.", v$class_old, "(xnew)")
-            }
-            eval(parse(text = mytext1))
-        }
+ 
         
         ## Apply missing codes
         if (length(v$missings) > 0){
@@ -1225,18 +1210,42 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         }
         
         if("vals" %in% drop){
-            xnew.values <- unique(xnew)
-            xnew.notinkey <- xnew.values[!unique(xnew) %in% values$value_old]
+             xnew.notinkey <- setdiff(unique(xnew), values$value_old)
             if(length(xnew.notinkey)){
                 values <- rbind(values, data.frame(value_old = xnew.notinkey, value_new = NA))
             }
         } else {
-            xnew.values <- unique(xnew)
-            xnew.notinkey <- xnew.values[!unique(xnew) %in% values$value_old]
+            xnew.notinkey <- setdiff(unique(xnew), values$value_old)
             if(length(xnew.notinkey)){
             values <- rbind(values, data.frame(value_old = xnew.notinkey, value_new = xnew.notinkey))
             }
         }
+
+
+        ## If output is ordered or factor, must be dealt with specially
+        if(v$class_new %in% c("ordered", "factor")) {
+            xnew2 <- factor(xnew, levels = values$value_old, ordered = v$class_new == "ordered")
+            levels(xnew2) <- values$value_new
+            mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew2")
+            eval(parse(text = mytext))
+            next()
+        }
+        
+        ## if class from data frame is not same as class_old, then MUST cast
+        ## as correct type. Could cast as character.
+        if((class(xnew)[1] != v$class_old) || (v$class_old %in% c("ordered", "factor"))) {
+            xnew.orig <- xnew
+            if(v$class_old %in% c("ordered", "factor")){
+                ## creates factor with levels in value_old
+                mytext1 <- paste0("xnew <- ", v$class_old, "(xnew, values$value_old)")
+            } else {
+                ## coerce to class_old
+                mytext1 <- paste0("xnew <- as.", v$class_old, "(xnew)")
+            }
+            eval(parse(text = mytext1))
+        }
+
+
         
         ##Class stays same, so use mapvalues, only on values that differ:
         if (classsame <- v$class_new == v$class_old)
