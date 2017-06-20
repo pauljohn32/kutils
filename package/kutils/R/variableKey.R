@@ -1172,7 +1172,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
 
         ## DELETE VARIABLES from data frame
         ## name_new is empty, should appear here as NA, then ignore that variable
-        if (is.na(v$name_new) || v$name_new %in% na.strings){
+        if (length(v$name_new) == 0 || is.na(v$name_new) || v$name_new %in% na.strings){
             messg <- paste("keyApply: ", v$name_old, "dropped")
             warning(messg)
             next()
@@ -1223,7 +1223,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
 
 
         ## If output is ordered or factor, must be dealt with specially
-        if(v$class_new %in% c("ordered", "factor")) {
+        if(length(v$class_new) > 0 && v$class_new %in% c("ordered", "factor")) {
             xnew2 <- factor(xnew, levels = values$value_old, ordered = v$class_new == "ordered")
             levels(xnew2) <- values$value_new
             mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew2")
