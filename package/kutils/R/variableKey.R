@@ -1172,7 +1172,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
 
         ## DELETE VARIABLES from data frame
         ## name_new is empty, should appear here as NA, then ignore that variable
-        if (v$name_new %in% na.strings || is.na(v$name_new)){
+        if (is.na(v$name_new) || v$name_new %in% na.strings){
             messg <- paste("keyApply: ", v$name_old, "dropped")
             warning(messg)
             next()
