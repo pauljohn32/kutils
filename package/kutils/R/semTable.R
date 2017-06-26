@@ -264,7 +264,7 @@ Note. IDENTNOTEFITINFORMATION
     }
 
     loads <- as.list(latents)
-    ints <- parameters[which(parameters$op == "~1" & parameters$lhs %in% names(dat)), "lhs"]
+    ints <- parameters[which(parameters$op == "~1" & parameters$lhs %in% variables), "lhs"]
     regs <- parameters[which(parameters$op == "~"),]
     dvs <- unique(regs$lhs)
     ivs <- unique(regs$rhs)
