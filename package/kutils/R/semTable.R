@@ -264,6 +264,7 @@ Note. IDENTNOTEFITINFORMATION
     }
 
     loads <- as.list(latents)
+    ints <- parameters[which(parameters$op == "~1" & parameters$lhs %in% names(dat)), "lhs"]
     regs <- parameters[which(parameters$op == "~"),]
     dvs <- unique(regs$lhs)
     ivs <- unique(regs$rhs)
@@ -293,7 +294,7 @@ ROWINFORMATION"
     }
 
     interceptMaker <- function(variables, report = c("est", "se", "z", "p")){
-        trows <- parameters[which(parameters$lhs %in% dvs & parameters$op == "~1"), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
+        trows <- parameters[which(parameters$lhs %in% ints & parameters$op == "~1"), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
         if(dim(trows)[1] == 0){
             stop("Intercept estimates are requested in the table, but I can't find them in the output!")
             #return(print("It appears that no intercept estimates are present in the lavaan output"))
