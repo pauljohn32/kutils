@@ -1,3 +1,13 @@
+2017-06-27  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (keyApply): fix error in creation of factors
+	because of numeric -> factor error (wrong levels)
+
+2017-06-21  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R: new functions keyCheck, keysPoolCheck,
+	keyClassfix.
+
 2017-02-03  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (assignMissing): zapspace for spaces

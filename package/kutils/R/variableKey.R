@@ -1224,8 +1224,10 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
 
         ## If output is ordered or factor, must be dealt with specially
         if(length(v$class_new) > 0 && v$class_new %in% c("ordered", "factor")) {
-            xnew2 <- factor(xnew, levels = values$value_old, ordered = v$class_new == "ordered")
-            levels(xnew2) <- values$value_new
+            xnew2 <- plyr::mapvalues(xnew, from = values$value_old, to = values$value_new)
+            xnew2 <- factor(xnew2, levels = unique(values$value_new))
+            ## xnew2 <- factor(xnew, levels = values$value_old, ordered = v$class_new == "ordered")
+            ## levels(xnew2) <- values$value_new
             mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew2")
             eval(parse(text = mytext))
             next()
@@ -1811,237 +1813,237 @@ keyChecker <- function(key){
 
 
 
-##' Diagnose differences between keys
-##'
-##' When several supposedly "equivalent" data sets are used
-##' to generate variable keys, there may be trouble. If variables
-##' with same name have different classes, keyApply might fail.
-##'
-##' This reports on differences in classes among keys. By default, it
-##' looks for differences in "class_old", because that's where we
-##' usually see trouble.
-##'
-##' The output here is diagnostic.  The keys can be fixed manually, or the
-##' function keyClassFix can implement an automatic correction.
-##' @param keys A list with variable keys.
-##' @param col Name of key column to check for equivalence. Default is "class_old", but
-##' "class_new" can be checked as well.
-##' @param excludere Exclude variables matching a regular expression
-##'     (re). Default example shows exclusion of variables that end in
-##'     the symbol "TEXT".
-##' @return Data.frame summarizing class differences among keys
-##' @author Paul Johnson
-##' @examples
-##' ## TODO: Insert example data sets, take keys from them.
-##' ## See problem in class_old
-##' ## keysPoolCheck(keys, col = "class_old")
-##' ## problems in class_new
-##' ## keysPoolCheck(keys, col = "class_new")
-keysPoolCheck <- function(keys, col = "class_old", excludere = "TEXT$"){
-    ## How spot trouble? class_old changes among keys?
-    classnameold <- lapply(keys, function(x) {
-        fst <- x[!duplicated(x$name_old), ]
-        res <- fst[ , c("name_old", col)]
-        rownames(res) <- NULL
-        res
-    })
+## ##' Diagnose differences between keys
+## ##'
+## ##' When several supposedly "equivalent" data sets are used
+## ##' to generate variable keys, there may be trouble. If variables
+## ##' with same name have different classes, keyApply might fail.
+## ##'
+## ##' This reports on differences in classes among keys. By default, it
+## ##' looks for differences in "class_old", because that's where we
+## ##' usually see trouble.
+## ##'
+## ##' The output here is diagnostic.  The keys can be fixed manually, or the
+## ##' function keyClassFix can implement an automatic correction.
+## ##' @param keys A list with variable keys.
+## ##' @param col Name of key column to check for equivalence. Default is "class_old", but
+## ##' "class_new" can be checked as well.
+## ##' @param excludere Exclude variables matching a regular expression
+## ##'     (re). Default example shows exclusion of variables that end in
+## ##'     the symbol "TEXT".
+## ##' @return Data.frame summarizing class differences among keys
+## ##' @author Paul Johnson
+## ##' @examples
+## ##' ## TODO: Insert example data sets, take keys from them.
+## ##' ## See problem in class_old
+## ##' ## keysPoolCheck(keys, col = "class_old")
+## ##' ## problems in class_new
+## ##' ## keysPoolCheck(keys, col = "class_new")
+## keysPoolCheck <- function(keys, col = "class_old", excludere = "TEXT$"){
+##     ## How spot trouble? class_old changes among keys?
+##     classnameold <- lapply(keys, function(x) {
+##         fst <- x[!duplicated(x$name_old), ]
+##         res <- fst[ , c("name_old", col)]
+##         rownames(res) <- NULL
+##         res
+##     })
     
-    for(i in 2:length(keys)){
-        if (i == 2){
-            classmerge <- merge(classnameold[[1]], classnameold[[2]],
-                                by = "name_old", suffixes = c("1", "2"))
-        } else {
-            classmerge <- merge(classmerge, classnameold[[i]],
-                                by = "name_old", suffixes = c("", i))
-        }
-    }
-    ## ## Suppose all detected logicals should be integer (long story why)
-    ## classmerge[classmerge == "logical"] <- "integer"
-    ## ## Promote all integers to numeric
-    ## classmerge[classmerge == "integer"] <- "numeric"
+##     for(i in 2:length(keys)){
+##         if (i == 2){
+##             classmerge <- merge(classnameold[[1]], classnameold[[2]],
+##                                 by = "name_old", suffixes = c("1", "2"))
+##         } else {
+##             classmerge <- merge(classmerge, classnameold[[i]],
+##                                 by = "name_old", suffixes = c("", i))
+##         }
+##     }
+##     ## ## Suppose all detected logicals should be integer (long story why)
+##     ## classmerge[classmerge == "logical"] <- "integer"
+##     ## ## Promote all integers to numeric
+##     ## classmerge[classmerge == "integer"] <- "numeric"
     
-    classmerge$troublevar <- apply(classmerge, 1, function(x){length(unique(x[grep(col, names(x))])) > 1})
-    classProblems <- classmerge[classmerge$troublevar, ]
-    classProblems[!grepl(excludere, classProblems$name_old), ]
-    classProblems
-}
+##     classmerge$troublevar <- apply(classmerge, 1, function(x){length(unique(x[grep(col, names(x))])) > 1})
+##     classProblems <- classmerge[classmerge$troublevar, ]
+##     classProblems[!grepl(excludere, classProblems$name_old), ]
+##     classProblems
+## }
 
 
 
-##' Check a key for consistency of names, values with classes.
-##'
-##' Split the key into blocks of rows defined by "name_new". Within
-##' these blocks, Perform these checks: 1. name_old must be
-##' homogeneous (identical) within a block of rows. class_old and
-##' class_new must also be identical.
-##' 2. elements in "value_new" must be consistent with "class_new".
-##' If values cannot be coerced to match the class specified by
-##' class_new, there must be user error.
-##' Same for "value_old" and "class_old". 
-##' @param keylong A keylong class object. If key, will be converted to long by wide2long
-##' @param colname Leave as default to check consistency between classes, values, and names.
-##' One can specify a check only on "class_old" or "class_new", for example.  But now that
-##' all work correctly, why not allow the checking to happen?
-##' @param na.strings A regular expression of allowed text strings that represent missings.
-##' Now it amounts to any of these: ".", "NA", "N/A", or any white space or tab as signified by \s+.
-##' @return Profuse warnings will display problematic key portions. A list of failed key
-##' blocks will be returned.
-##' @author Paul Johnson <pauljohn@@ku.edu>
-keyCheck <- function(keylong,
-                     colname = c("name_new", "class_old", "class_new"),
-                     na.strings = "\\.|NA|N/A|\\s+|"){
+## ##' Check a key for consistency of names, values with classes.
+## ##'
+## ##' Split the key into blocks of rows defined by "name_new". Within
+## ##' these blocks, Perform these checks: 1. name_old must be
+## ##' homogeneous (identical) within a block of rows. class_old and
+## ##' class_new must also be identical.
+## ##' 2. elements in "value_new" must be consistent with "class_new".
+## ##' If values cannot be coerced to match the class specified by
+## ##' class_new, there must be user error.
+## ##' Same for "value_old" and "class_old". 
+## ##' @param keylong A keylong class object. If key, will be converted to long by wide2long
+## ##' @param colname Leave as default to check consistency between classes, values, and names.
+## ##' One can specify a check only on "class_old" or "class_new", for example.  But now that
+## ##' all work correctly, why not allow the checking to happen?
+## ##' @param na.strings A regular expression of allowed text strings that represent missings.
+## ##' Now it amounts to any of these: ".", "NA", "N/A", or any white space or tab as signified by \s+.
+## ##' @return Profuse warnings will display problematic key portions. A list of failed key
+## ##' blocks will be returned.
+## ##' @author Paul Johnson <pauljohn@@ku.edu>
+## keyCheck <- function(keylong,
+##                      colname = c("name_new", "class_old", "class_new"),
+##                      na.strings = "\\.|NA|N/A|\\s+|"){
 
-    if(!inherits(keylong, "keylong")) keylong <- kutils::wide2long(keylong) else keylong
-    keysplit <- split(keylong, keylong[ , "name_new"])
+##     if(!inherits(keylong, "keylong")) keylong <- kutils::wide2long(keylong) else keylong
+##     keysplit <- split(keylong, keylong[ , "name_new"])
 
-    keyfails <- list()
-    for(ii in intersect(c("name_old", "class_old", "class_new"), colname)){
-            ## check same-value for all of "class_old", or "class_new"
-            for(jj in names(keysplit)) {
-                keyblock <- keysplit[[jj]]
-                ## Stanza 1: check homogeneous colname = class_old(or new) values"
-                if (length(unique(keyblock[ , ii])) > 1) {
-                    warning(paste("Key name or class violation:", ii, jj,  "\n"), immediate. = TRUE)
-                    keyfails[[jj]] <- keysplit[[jj]]
-                }
-            }
-    }
+##     keyfails <- list()
+##     for(ii in intersect(c("name_old", "class_old", "class_new"), colname)){
+##             ## check same-value for all of "class_old", or "class_new"
+##             for(jj in names(keysplit)) {
+##                 keyblock <- keysplit[[jj]]
+##                 ## Stanza 1: check homogeneous colname = class_old(or new) values"
+##                 if (length(unique(keyblock[ , ii])) > 1) {
+##                     warning(paste("Key name or class violation:", ii, jj,  "\n"), immediate. = TRUE)
+##                     keyfails[[jj]] <- keysplit[[jj]]
+##                 }
+##             }
+##     }
 
-    for(ii in intersect(c("class_old", "class_new"), colname)){
-        ## compare value_old(new) against
-        ## class_old(new). If all non-missing cannot be coerced to
-        ## indicated class, key should fail.
-        for (jj in names(keysplit)) {
-            value_col <- paste0("value_", gsub("class_(.*)", "\\1", ii))
-            value <- keyblock[ , value_col]
-            ## exclude any that have missing marker from na.strings
-            value <- value[!grepl(na.strings, value, ignore.case = TRUE)]
-            mytext <- paste0("testcol <- as.", keyblock[1, ii], "(value)")
-            eval(parse(text = mytext))
-            if (sum(is.na(testcol)) > 0L){
-                warning(paste("Key value violation:", ii, jj, "\n"), immediate. = TRUE)
-                keyfails[[jj]] <- keysplit[[jj]]
-            }
-            ## did not fail yet, so return NULL for fails
-            ## NULL
-        }
-    }
+##     for(ii in intersect(c("class_old", "class_new"), colname)){
+##         ## compare value_old(new) against
+##         ## class_old(new). If all non-missing cannot be coerced to
+##         ## indicated class, key should fail.
+##         for (jj in names(keysplit)) {
+##             value_col <- paste0("value_", gsub("class_(.*)", "\\1", ii))
+##             value <- keyblock[ , value_col]
+##             ## exclude any that have missing marker from na.strings
+##             value <- value[!grepl(na.strings, value, ignore.case = TRUE)]
+##             mytext <- paste0("testcol <- as.", keyblock[1, ii], "(value)")
+##             eval(parse(text = mytext))
+##             if (sum(is.na(testcol)) > 0L){
+##                 warning(paste("Key value violation:", ii, jj, "\n"), immediate. = TRUE)
+##                 keyfails[[jj]] <- keysplit[[jj]]
+##             }
+##             ## did not fail yet, so return NULL for fails
+##             ## NULL
+##         }
+##     }
     
-    keyfails
-}
+##     keyfails
+## }
     
 
-##' Homogenize class values in a long key, or a list of keys
-##'
-##' Users might run keyTemplate on several data sets, arriving
-##' at keys that need to be combined.  The long versions of the
-##' keys can be stacked together by a function like \code{rbind}.
-##' If the values class_old and class_new for a single variable are
-##' inconsistent, then the "key stack" will fail the tests in keyCheck.
-##' This function automates the process of fixing the class variables by
-##' "promoting" classes where possible.
-##'
-##' Begin with a simple example.  In one data set, the value of x is
-##' drawn from integers 1L, 2L, 3L, while in another set it is
-##' floating values like 1.1, 2.2. After creating long format keys,
-##' and stacking them together, the values of class_old will clash.
-##' For x, we will observe both "integer" and "numeric" in the
-##' class_old column.  In that situation, the class_old for all of the
-##' rows under consideration should be set as "numeric".
-##'
-##' The promotion schemes are described by the variable classes, where
-##' we have the most conservative changes first. The most destructive
-##' change is when variables are converted from integer to character,
-##' for example. The conservative conversion strategies are specified
-##' in the classes variable, in which the last element in a vector
-##' will be used to replace the preceeding classes.  For example,
-##' c("ordered", "factor", "character") means that the class_old
-##' values of "ordered" and "factor" will be replaced by "character".
-##'
-##' The conversions specified by classes are tried, in order.
-##' 1. logical -> integer
-##' 2. integer -> numeric
-##' 3. ordered -> factor
-##'
-##' If their application fails to homogenize a vector, then class is
-##' changed to "character". For example, when the value of class_old
-##' observed is c("ordered", "numeric", "character"). In that case,
-##' the class is promoted to "character", it is the least common
-##' denominator.
-##' @param keylong a long key, resulting from "stacking together"
-##'     several long keys for different data sets
-##' @param keysplit a list of key blocks, each of which is to be
-##'     inspected and homogenized
-##' @param classes A list of vectors specifying legal promotions.
-##' @param colname Either "class_old" or "class_new". The former is
-##'     default.
-##' @param textre A regular expression matching a column name to be
-##'     treated as character. Default matches any variable name ending
-##'     in "TEXT"
-##' @return A class-corrected version of the same format as the input,
-##'     either a long key or a list of key elements.
-##' @author Paul Johnson <pauljohn@@ku.edu>
-##' ## keys2stack.fix <- keyClassFix(keys2stack)
-##' ## keys2stack.fix2 <- keyClassFix(keys2stack.fix, colname = "class_new")
-keyClassFix <- function(keylong, keysplit,
-                        classes = list(c("logical", "integer"),
-                                       c("integer", "numeric"),
-                                       c("ordered", "factor")),
-                        colname = "class_old", textre = "TEXT$")
-{
-    ##TODO: if key is wide, convert to long
-    ##TODO: check argument, if is list, don't split it again
+## ##' Homogenize class values in a long key, or a list of keys
+## ##'
+## ##' Users might run keyTemplate on several data sets, arriving
+## ##' at keys that need to be combined.  The long versions of the
+## ##' keys can be stacked together by a function like \code{rbind}.
+## ##' If the values class_old and class_new for a single variable are
+## ##' inconsistent, then the "key stack" will fail the tests in keyCheck.
+## ##' This function automates the process of fixing the class variables by
+## ##' "promoting" classes where possible.
+## ##'
+## ##' Begin with a simple example.  In one data set, the value of x is
+## ##' drawn from integers 1L, 2L, 3L, while in another set it is
+## ##' floating values like 1.1, 2.2. After creating long format keys,
+## ##' and stacking them together, the values of class_old will clash.
+## ##' For x, we will observe both "integer" and "numeric" in the
+## ##' class_old column.  In that situation, the class_old for all of the
+## ##' rows under consideration should be set as "numeric".
+## ##'
+## ##' The promotion schemes are described by the variable classes, where
+## ##' we have the most conservative changes first. The most destructive
+## ##' change is when variables are converted from integer to character,
+## ##' for example. The conservative conversion strategies are specified
+## ##' in the classes variable, in which the last element in a vector
+## ##' will be used to replace the preceeding classes.  For example,
+## ##' c("ordered", "factor", "character") means that the class_old
+## ##' values of "ordered" and "factor" will be replaced by "character".
+## ##'
+## ##' The conversions specified by classes are tried, in order.
+## ##' 1. logical -> integer
+## ##' 2. integer -> numeric
+## ##' 3. ordered -> factor
+## ##'
+## ##' If their application fails to homogenize a vector, then class is
+## ##' changed to "character". For example, when the value of class_old
+## ##' observed is c("ordered", "numeric", "character"). In that case,
+## ##' the class is promoted to "character", it is the least common
+## ##' denominator.
+## ##' @param keylong a long key, resulting from "stacking together"
+## ##'     several long keys for different data sets
+## ##' @param keysplit a list of key blocks, each of which is to be
+## ##'     inspected and homogenized
+## ##' @param classes A list of vectors specifying legal promotions.
+## ##' @param colname Either "class_old" or "class_new". The former is
+## ##'     default.
+## ##' @param textre A regular expression matching a column name to be
+## ##'     treated as character. Default matches any variable name ending
+## ##'     in "TEXT"
+## ##' @return A class-corrected version of the same format as the input,
+## ##'     either a long key or a list of key elements.
+## ##' @author Paul Johnson <pauljohn@@ku.edu>
+## ##' ## keys2stack.fix <- keyClassFix(keys2stack)
+## ##' ## keys2stack.fix2 <- keyClassFix(keys2stack.fix, colname = "class_new")
+## keyClassFix <- function(keylong, keysplit,
+##                         classes = list(c("logical", "integer"),
+##                                        c("integer", "numeric"),
+##                                        c("ordered", "factor")),
+##                         colname = "class_old", textre = "TEXT$")
+## {
+##     ##TODO: if key is wide, convert to long
+##     ##TODO: check argument, if is list, don't split it again
    
-    if (missing(keysplit)) keysplit <- split(keylong, keylong[ , "name_new"])
+##     if (missing(keysplit)) keysplit <- split(keylong, keylong[ , "name_new"])
       
-    ## Change the values of colname (say, class_old) to equal the last value of classes.
-    ## keyblock: a row block from a variable key
-    ## classes: vector of classes, the last of which is the acceptable one, to replace
-    ## the others.
-    ## colname: either "class_old" or "class_new"
-    classClean <- function (keyblock, colname = colname, classes)
-    {
-        keyblock[keyblock[ , colname] %in% classes[-length(classes)], colname] <- classes[length(classes)]
-        keyblock
-    }
+##     ## Change the values of colname (say, class_old) to equal the last value of classes.
+##     ## keyblock: a row block from a variable key
+##     ## classes: vector of classes, the last of which is the acceptable one, to replace
+##     ## the others.
+##     ## colname: either "class_old" or "class_new"
+##     classClean <- function (keyblock, colname = colname, classes)
+##     {
+##         keyblock[keyblock[ , colname] %in% classes[-length(classes)], colname] <- classes[length(classes)]
+##         keyblock
+##     }
 
-    ## if mixed, promote all to last named class
-    for(i in seq_along(keysplit)){
-        keyblock <- keysplit[[i]]
-        if (length(unique(keyblock[, colname])) == 1) next()
-        ## Special case. Any variable matching textre
-        if (any(grepl(textre, names(keysplit)[i], ignore.case = TRUE))){
-            keyblock[ , colname] <- "character"
-            keysplit[[i]] <- unique(keyblock)
-            next()
-        }
+##     ## if mixed, promote all to last named class
+##     for(i in seq_along(keysplit)){
+##         keyblock <- keysplit[[i]]
+##         if (length(unique(keyblock[, colname])) == 1) next()
+##         ## Special case. Any variable matching textre
+##         if (any(grepl(textre, names(keysplit)[i], ignore.case = TRUE))){
+##             keyblock[ , colname] <- "character"
+##             keysplit[[i]] <- unique(keyblock)
+##             next()
+##         }
         
-        for(j in classes){
-            keyblock <- classClean(keyblock, colname = colname, classes = j)
-            keysplit[[i]] <- unique(keyblock)
-            if (length(unique(keyblock[, colname])) == 1){
-                next()
-            }
-        }
+##         for(j in classes){
+##             keyblock <- classClean(keyblock, colname = colname, classes = j)
+##             keysplit[[i]] <- unique(keyblock)
+##             if (length(unique(keyblock[, colname])) == 1){
+##                 next()
+##             }
+##         }
 
-        if (length(unique(keyblock[, colname])) > 1) {
-            MESSG <- paste("Cannot painlessly reduce key classes to homogeneous.",
-                           names(keysplit)[i], "changing class to character")
-            warning(paste(",
-                          names(keysplit)[i], paste(unique(keyblock[ , colname]), collapse = "+")),
-                    immediate. = TRUE)
-            keyblock[ , colname] <- "character"
-            keysplit[[i]] <- unique(keyblock)
-            warning(paste(names(keysplit)[i], "changing class to character"), immediate. = TRUE)
-        }
-    }
+##         if (length(unique(keyblock[, colname])) > 1) {
+##             MESSG <- paste("Cannot painlessly reduce key classes to homogeneous.",
+##                            names(keysplit)[i], "changing class to character")
+##             warning(paste(",
+##                           names(keysplit)[i], paste(unique(keyblock[ , colname]), collapse = "+")),
+##                     immediate. = TRUE)
+##             keyblock[ , colname] <- "character"
+##             keysplit[[i]] <- unique(keyblock)
+##             warning(paste(names(keysplit)[i], "changing class to character"), immediate. = TRUE)
+##         }
+##     }
     
-    ## If a key came in, give back a key
-    if(!missing(keylong)){
-        keystack <- do.call(rbind, keysplit)
-        class(keystack) <- c("keylong", "data.frame")
-        return(keystack)
-    }
-    ## If a keysplit was passed in, give that back
-    return(keysplit)
-}
+##     ## If a key came in, give back a key
+##     if(!missing(keylong)){
+##         keystack <- do.call(rbind, keysplit)
+##         class(keystack) <- c("keylong", "data.frame")
+##         return(keystack)
+##     }
+##     ## If a keysplit was passed in, give that back
+##     return(keysplit)
+## }
