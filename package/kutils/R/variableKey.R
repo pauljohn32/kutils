@@ -877,7 +877,7 @@ keyImport <- function(key, ignoreCase = TRUE,
     MISSSymbol <- "."
     key[key$value_new %in% na.strings, "value_new"] <- MISSSymbol
     key[key$value_old %in% na.strings, "value_old"] <- MISSSymbol
-    
+
     ## Delete repeated rows:
     key <- key[!duplicated(key), ]
 
@@ -1103,17 +1103,17 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
     if(is.na(drop)) stop("drop is NA")
     if (is.character(drop)){
         stopifnot(drop %in%  c("vars","vals"))
-    } 
+    }
     if (is.logical(drop)){
         if(drop) drop <- c("vars","vals")
     }
-     
+
     dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
     if (diagnostic) dforig <- dframe
 
     ## Need to snapshot class of input variables before changing anything
     class_old.dframe <- sapply(dframe, function(x) class(x)[1])
-    
+
     ## implement ignoreCase by keeping vector dfname_old.orig that we
     ## can use later to put old names back onto data frame.
     ## If key has multiple entries that are identcal after tolower(), will use
@@ -1146,7 +1146,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             eval(parse(text = mytext))
         }
     }
-    
+
     ## Process variables in keylist, put into "xlist"
     for (v in keylist) {
         if(debug){
@@ -1180,14 +1180,14 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
 
         ## Extract candidate variable to column, will recode xnew.
         xnew <- dframe[ , v$name_old]
-        
- 
-        
+
+
+
         ## Apply missing codes
         if (length(v$missings) > 0){
             xnew <- assignMissing(xnew, v$missings)
         }
-        
+
         ## Be simple. If they have "recodes" in key, apply them. Ignore value_new. next().
         if (length(v$recodes) > 0 && !all(is.na(v$recodes))) {
             for (cmd in v$recodes) xnew <- assignRecode(xnew, cmd)
@@ -1200,7 +1200,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             eval(parse(text = mytext))
             next()
         }
-        
+
         ## value_old and value_new are full of only NA, so don't alter
         ## the variable
         if (NROW(na.omit(values)) == 0){
@@ -1208,7 +1208,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             eval(parse(text = mytext))
             next()
         }
-        
+
         if("vals" %in% drop){
              xnew.notinkey <- setdiff(unique(xnew), values$value_old)
             if(length(xnew.notinkey)){
@@ -1232,7 +1232,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             eval(parse(text = mytext))
             next()
         }
-        
+
         ## if class from data frame is not same as class_old, then MUST cast
         ## as correct type. Could cast as character.
         if((class(xnew)[1] != v$class_old) || (v$class_old %in% c("ordered", "factor"))) {
@@ -1246,7 +1246,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             }
             eval(parse(text = mytext1))
         }
-       
+
         ##Class stays same, so use mapvalues, only on values that differ:
         if (classsame <- v$class_new == v$class_old)
         {
@@ -1283,7 +1283,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             xnew3 <- as(levels(xnew2)[xnew2], v$class_new)
             mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew3")
             eval(parse(text = mytext))
-            next()  
+            next()
         }
 
         ## I believe these are safe to rely on coercion, since other
@@ -1378,7 +1378,6 @@ keyDiagnostic <- function(dfold, dfnew, keylist, max.values = 20,
     options(width = unlist(width.orig))
     NULL
 }
-
 
 
 ##' Convert a key object from wide to long format
@@ -1768,48 +1767,48 @@ keyDiff <- function(oldkey, newkey){
 print.keyDiagnostic <- function(x, ...) print(x[["changes"]], ...)
 
 
-##' Checks a variable key for possible errors.
-##'
-##' @param key variable key object or a file path to a key
-##' @keywords internal
-##' @author Ben Kite <bakite@@ku.edu
-keyChecker <- function(key){
-    if (is.character(key)){
-        key <- smartRead(key)
-    }
-    if (prod(c("name_old", "name_new", "class_old", "class_new",
-               "value_old", "value_new") %in% names(key)) != 1L){
-        stop ("At a minimum a variable key needs to have the following columns: name_old, name_new, class_old, class_new, value_old, value_new")
-    }
-    ## Deduce if this is a long key
-    name_old.new <- paste0(key[ , "name_old"], ".", key[ , "name_new"])
-    if (max(table(name_old.new)) > 1){
-        long <- TRUE
-    } else {
-        long <- FALSE
-    }
-    if (long){
-        if (identical(key, wide2long(long2wide(key)))){
-            stop ("There is an error with this key. The structure changes when being transformed from long to wide, and then back to long.")
-        }
-    } else {
-        if (identical(key, long2wide(wide2long(key)))){
-            stop ("There is an error with this key. The structure changes when being transformed from wide to long, and then back to wide.")
-        }
-    }
-    if (!long){
-        xx <- strsplit(key$value_old, split = "[|<]", fixed = FALSE)
-        xx.l <- sapply(xx, length)
-        yy <- strsplit(key$value_new, "[|<]", fixed = FALSE)
-        yy.l <- sapply(yy, length)
-        inconsistent <- xx.l != yy.l
-        issues <- key[inconsistent, "name_old"]
-        if (length(issues) > 0){
-            stop (paste0("The following variables have inconsistencies in the number of values listed between the value_old and value_new columns: ", issues))
-        }
-    }
-    print("No errors with this key were detected.")
-}
+####' Checks a variable key for possible errors.
+####'
+####' @param key variable key object or a file path to a key
+####' @keywords internal
+####' @author Ben Kite <bakite@@ku.edu
+##keyChecker <- function(key){
+##    if (is.character(key)){
+##        key <- smartRead(key)
+##    }
+##    if (prod(c("name_old", "name_new", "class_old", "class_new",
+##               "value_old", "value_new") %in% names(key)) != 1L){
+##        stop ("At a minimum a variable key needs to have the following columns: name_old, name_new, class_old, class_new, value_old, value_new")
+##    }
+##    ## Deduce if this is a long key
+##    name_old.new <- paste0(key[ , "name_old"], ".", key[ , "name_new"])
+##    if (max(table(name_old.new)) > 1){
+##        long <- TRUE
+##    } else {
+##        long <- FALSE
+##    }
+##    if (long){
+##        if (identical(key, wide2long(long2wide(key)))){
+##            stop ("There is an error with this key. The structure changes when being transformed from long to wide, and then back to long.")
+##        }
+##    } else {
+##        if (identical(key, long2wide(wide2long(key)))){
+##            stop ("There is an error with this key. The structure changes when being transformed from wide to long, and then back to wide.")
+##        }
+##    }
+##    if (!long){
+##        xx <- strsplit(key$value_old, split = "[|<]", fixed = FALSE)
+##        xx.l <- sapply(xx, length)
+##        yy <- strsplit(key$value_new, "[|<]", fixed = FALSE)
+##        yy.l <- sapply(yy, length)
+##        inconsistent <- xx.l != yy.l
+##        issues <- key[inconsistent, "name_old"]
+##        if (length(issues) > 0){
+##            stop (paste0("The following variables have inconsistencies in the number of values listed between the value_old and value_new columns: ", issues))
+##        }
+##    }
+##    print("No errors with this key were detected.")
+##}
 
 
 
@@ -1847,7 +1846,7 @@ keyChecker <- function(key){
 ##         rownames(res) <- NULL
 ##         res
 ##     })
-    
+
 ##     for(i in 2:length(keys)){
 ##         if (i == 2){
 ##             classmerge <- merge(classnameold[[1]], classnameold[[2]],
@@ -1861,7 +1860,7 @@ keyChecker <- function(key){
 ##     ## classmerge[classmerge == "logical"] <- "integer"
 ##     ## ## Promote all integers to numeric
 ##     ## classmerge[classmerge == "integer"] <- "numeric"
-    
+
 ##     classmerge$troublevar <- apply(classmerge, 1, function(x){length(unique(x[grep(col, names(x))])) > 1})
 ##     classProblems <- classmerge[classmerge$troublevar, ]
 ##     classProblems[!grepl(excludere, classProblems$name_old), ]
@@ -1870,68 +1869,104 @@ keyChecker <- function(key){
 
 
 
-## ##' Check a key for consistency of names, values with classes.
-## ##'
-## ##' Split the key into blocks of rows defined by "name_new". Within
-## ##' these blocks, Perform these checks: 1. name_old must be
-## ##' homogeneous (identical) within a block of rows. class_old and
-## ##' class_new must also be identical.
-## ##' 2. elements in "value_new" must be consistent with "class_new".
-## ##' If values cannot be coerced to match the class specified by
-## ##' class_new, there must be user error.
-## ##' Same for "value_old" and "class_old". 
-## ##' @param keylong A keylong class object. If key, will be converted to long by wide2long
-## ##' @param colname Leave as default to check consistency between classes, values, and names.
-## ##' One can specify a check only on "class_old" or "class_new", for example.  But now that
-## ##' all work correctly, why not allow the checking to happen?
-## ##' @param na.strings A regular expression of allowed text strings that represent missings.
-## ##' Now it amounts to any of these: ".", "NA", "N/A", or any white space or tab as signified by \s+.
-## ##' @return Profuse warnings will display problematic key portions. A list of failed key
-## ##' blocks will be returned.
-## ##' @author Paul Johnson <pauljohn@@ku.edu>
-## keyCheck <- function(keylong,
-##                      colname = c("name_new", "class_old", "class_new"),
-##                      na.strings = "\\.|NA|N/A|\\s+|"){
+##' Check a key for consistency of names, values with classes.
+##'
+##' Split the key into blocks of rows defined by "name_new". Within
+##' these blocks, Perform these checks: 1. name_old must be
+##' homogeneous (identical) within a block of rows. class_old and
+##' class_new must also be identical.
+##' 2. elements in "value_new" must be consistent with "class_new".
+##' If values cannot be coerced to match the class specified by
+##' class_new, there must be user error.
+##' Same for "value_old" and "class_old".
+##' @param key A variable key object.
+##' @param colname Leave as default to check consistency between classes, values, and names.
+##' One can specify a check only on "class_old" or "class_new", for example.  But now that
+##' all work correctly, why not allow the checking to happen?
+##' @param na.strings A regular expression of allowed text strings that represent missings.
+##' Now it amounts to any of these: ".", "NA", "N/A", or any white space or tab as signified by \\s+.
+##' @return Profuse warnings will display problematic key portions. A list of failed key
+##' blocks will be returned.
+##' @author Paul Johnson <pauljohn@@ku.edu> and Ben Kite
+##'     <bakite@@ku.edu>
+keyCheck <- function(key,
+                     colname = c("name_new", "class_old", "class_new"),
+                     na.strings = c(".", "", "\\s",  "NA", "N/A")){
+    if (is.character(key)){
+        key <- smartRead(key)
+    }
+    if (prod(c("name_old", "name_new", "class_old", "class_new",
+               "value_old", "value_new") %in% names(key)) != 1L){
+        stop ("At a minimum a variable key needs to have the following columns: name_old, name_new, class_old, class_new, value_old, value_new")
+    }
+    ## Deduce if this is a long key
 
-##     if(!inherits(keylong, "keylong")) keylong <- kutils::wide2long(keylong) else keylong
-##     keysplit <- split(keylong, keylong[ , "name_new"])
+    if(inherits(key, "keylong")) long = TRUE else long = FALSE
+    if (long){
+        if (identical(key, wide2long(long2wide(key)))){
+            stop ("There is an error with this key. The structure changes when being transformed from long to wide, and then back to long.")
+        }
+    } else {
+        if (identical(key, long2wide(wide2long(key)))){
+            stop ("There is an error with this key. The structure changes when being transformed from wide to long, and then back to wide.")
+        }
+    }
+    if (!long){
+        xx <- strsplit(key$value_old, split = "[|<]", fixed = FALSE)
+        xx.l <- sapply(xx, length)
+        yy <- strsplit(key$value_new, "[|<]", fixed = FALSE)
+        yy.l <- sapply(yy, length)
+        inconsistent <- xx.l != yy.l
+        issues <- key[inconsistent, "name_old"]
+        if (length(issues) > 0){
+            stop (paste0("The following variables have inconsistencies in the number of values listed between the value_old and value_new columns: ", issues))
+        }
+    }
+    ## Transition from Ben's work to PJ's
+    if(!inherits(key, "keylong")) keylong <- kutils::wide2long(key) else key
+    keysplit <- split(keylong, keylong[ , "name_new"])
 
-##     keyfails <- list()
-##     for(ii in intersect(c("name_old", "class_old", "class_new"), colname)){
-##             ## check same-value for all of "class_old", or "class_new"
-##             for(jj in names(keysplit)) {
-##                 keyblock <- keysplit[[jj]]
-##                 ## Stanza 1: check homogeneous colname = class_old(or new) values"
-##                 if (length(unique(keyblock[ , ii])) > 1) {
-##                     warning(paste("Key name or class violation:", ii, jj,  "\n"), immediate. = TRUE)
-##                     keyfails[[jj]] <- keysplit[[jj]]
-##                 }
-##             }
-##     }
+    keyfails <- list()
+    for(ii in intersect(c("name_old", "class_old", "class_new"), colname)){
+            ## check same-value for all of "class_old", or "class_new"
+            for(jj in names(keysplit)) {
+                keyblock <- keysplit[[jj]]
+                ## Stanza 1: check homogeneous colname = class_old(or new) values"
+                if (length(unique(keyblock[ , ii])) > 1) {
+                    warning(paste("Key name or class violation:", ii, jj,  "\n"), immediate. = TRUE)
+                    keyfails[[jj]] <- keysplit[[jj]]
+                }
+            }
+    }
+    for(ii in intersect(c("class_old", "class_new"), colname)){
+        ## compare value_old(new) against
+        ## class_old(new). If all non-missing cannot be coerced to
+        ## indicated class, key should fail.
+        for (jj in names(keysplit)) {
+            keyblock <- keysplit[[jj]]
+            value_col <- paste0("value_", gsub("class_(.*)", "\\1", ii))
+            value <- keyblock[ , value_col]
+            ## exclude any that have missing marker from na.strings
+            value <- value[!value %in% na.strings]
+            testcol <- NA
+            mytext <- paste0("testcol <- as.", keyblock[1, ii], "(value)")
+            eval(parse(text = mytext))
+            if (sum(is.na(testcol)) > 0L){
+                warning(paste("Key value violation:", ii, jj, "\n"), immediate. = TRUE)
+                keyfails[[jj]] <- keysplit[[jj]]
+            }
+            ## did not fail yet, so return NULL for fails
+            ##NULL
+        }
+    }
 
-##     for(ii in intersect(c("class_old", "class_new"), colname)){
-##         ## compare value_old(new) against
-##         ## class_old(new). If all non-missing cannot be coerced to
-##         ## indicated class, key should fail.
-##         for (jj in names(keysplit)) {
-##             value_col <- paste0("value_", gsub("class_(.*)", "\\1", ii))
-##             value <- keyblock[ , value_col]
-##             ## exclude any that have missing marker from na.strings
-##             value <- value[!grepl(na.strings, value, ignore.case = TRUE)]
-##             mytext <- paste0("testcol <- as.", keyblock[1, ii], "(value)")
-##             eval(parse(text = mytext))
-##             if (sum(is.na(testcol)) > 0L){
-##                 warning(paste("Key value violation:", ii, jj, "\n"), immediate. = TRUE)
-##                 keyfails[[jj]] <- keysplit[[jj]]
-##             }
-##             ## did not fail yet, so return NULL for fails
-##             ## NULL
-##         }
-##     }
-    
-##     keyfails
-## }
-    
+    if (length(keyfails) > 0){
+        return(keyfails)
+    }else{
+        message("No errors were detected")
+    }
+}
+
 
 ## ##' Homogenize class values in a long key, or a list of keys
 ## ##'
@@ -1993,9 +2028,9 @@ keyChecker <- function(key){
 ## {
 ##     ##TODO: if key is wide, convert to long
 ##     ##TODO: check argument, if is list, don't split it again
-   
+
 ##     if (missing(keysplit)) keysplit <- split(keylong, keylong[ , "name_new"])
-      
+
 ##     ## Change the values of colname (say, class_old) to equal the last value of classes.
 ##     ## keyblock: a row block from a variable key
 ##     ## classes: vector of classes, the last of which is the acceptable one, to replace
@@ -2017,7 +2052,7 @@ keyChecker <- function(key){
 ##             keysplit[[i]] <- unique(keyblock)
 ##             next()
 ##         }
-        
+
 ##         for(j in classes){
 ##             keyblock <- classClean(keyblock, colname = colname, classes = j)
 ##             keysplit[[i]] <- unique(keyblock)
@@ -2037,7 +2072,7 @@ keyChecker <- function(key){
 ##             warning(paste(names(keysplit)[i], "changing class to character"), immediate. = TRUE)
 ##         }
 ##     }
-    
+
 ##     ## If a key came in, give back a key
 ##     if(!missing(keylong)){
 ##         keystack <- do.call(rbind, keysplit)
