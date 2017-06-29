@@ -1841,9 +1841,9 @@ print.keyDiagnostic <- function(x, ...) print(x[["changes"]], ...)
 ##' key2 <- keyTemplate(dat2)
 ##' keys <- list(key1, key2)
 ##' ## See problem in class_old
-##' keysPoolCheck(keys, col = "class_old")
+##' kutils:::keysPoolCheck(keys, col = "class_old")
 ##' ## problems in class_new
-##' keysPoolCheck(keys, col = "class_new")
+##' kutils:::keysPoolCheck(keys, col = "class_new")
 keysPoolCheck <- function(keys, col = "class_old", excludere = "TEXT$"){
     ## How spot trouble? class_old changes among keys?
     classnameold <- lapply(keys, function(x) {
