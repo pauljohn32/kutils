@@ -1812,60 +1812,66 @@ print.keyDiagnostic <- function(x, ...) print(x[["changes"]], ...)
 
 
 
-## ##' Diagnose differences between keys
-## ##'
-## ##' When several supposedly "equivalent" data sets are used
-## ##' to generate variable keys, there may be trouble. If variables
-## ##' with same name have different classes, keyApply might fail.
-## ##'
-## ##' This reports on differences in classes among keys. By default, it
-## ##' looks for differences in "class_old", because that's where we
-## ##' usually see trouble.
-## ##'
-## ##' The output here is diagnostic.  The keys can be fixed manually, or the
-## ##' function keyClassFix can implement an automatic correction.
-## ##' @param keys A list with variable keys.
-## ##' @param col Name of key column to check for equivalence. Default is "class_old", but
-## ##' "class_new" can be checked as well.
-## ##' @param excludere Exclude variables matching a regular expression
-## ##'     (re). Default example shows exclusion of variables that end in
-## ##'     the symbol "TEXT".
-## ##' @return Data.frame summarizing class differences among keys
-## ##' @author Paul Johnson
-## ##' @examples
-## ##' ## TODO: Insert example data sets, take keys from them.
-## ##' ## See problem in class_old
-## ##' ## keysPoolCheck(keys, col = "class_old")
-## ##' ## problems in class_new
-## ##' ## keysPoolCheck(keys, col = "class_new")
-## keysPoolCheck <- function(keys, col = "class_old", excludere = "TEXT$"){
-##     ## How spot trouble? class_old changes among keys?
-##     classnameold <- lapply(keys, function(x) {
-##         fst <- x[!duplicated(x$name_old), ]
-##         res <- fst[ , c("name_old", col)]
-##         rownames(res) <- NULL
-##         res
-##     })
+##' Diagnose differences between keys
+##'
+##' When several supposedly "equivalent" data sets are used
+##' to generate variable keys, there may be trouble. If variables
+##' with same name have different classes, keyApply might fail.
+##'
+##' This reports on differences in classes among keys. By default, it
+##' looks for differences in "class_old", because that's where we
+##' usually see trouble.
+##'
+##' The output here is diagnostic.  The keys can be fixed manually, or the
+##' function keyClassFix can implement an automatic correction.
+##' @param keys A list with variable keys.
+##' @param col Name of key column to check for equivalence. Default is "class_old", but
+##' "class_new" can be checked as well.
+##' @param excludere Exclude variables matching a regular expression
+##'     (re). Default example shows exclusion of variables that end in
+##'     the symbol "TEXT".
+##' @return Data.frame summarizing class differences among keys
+##' @author Paul Johnson
+##' @examples
+##' dat1 <- data.frame(x1 = rnorm(100), x2 = sample(c("Male", "Female"),
+##'                    100, replace = TRUE))
+##' dat2 <- data.frame(x1 = rnorm(100), x2 = sample(c("Male", "Female"),
+##'                    100, replace = TRUE), stringsAsFactors = FALSE)
+##' key1 <- keyTemplate(dat1)
+##' key2 <- keyTemplate(dat2)
+##' keys <- list(key1, key2)
+##' ## See problem in class_old
+##' keysPoolCheck(keys, col = "class_old")
+##' ## problems in class_new
+##' keysPoolCheck(keys, col = "class_new")
+keysPoolCheck <- function(keys, col = "class_old", excludere = "TEXT$"){
+    ## How spot trouble? class_old changes among keys?
+    classnameold <- lapply(keys, function(x) {
+        fst <- x[!duplicated(x$name_old), ]
+        res <- fst[ , c("name_old", col)]
+        rownames(res) <- NULL
+        res
+    })
 
-##     for(i in 2:length(keys)){
-##         if (i == 2){
-##             classmerge <- merge(classnameold[[1]], classnameold[[2]],
-##                                 by = "name_old", suffixes = c("1", "2"))
-##         } else {
-##             classmerge <- merge(classmerge, classnameold[[i]],
-##                                 by = "name_old", suffixes = c("", i))
-##         }
-##     }
-##     ## ## Suppose all detected logicals should be integer (long story why)
-##     ## classmerge[classmerge == "logical"] <- "integer"
-##     ## ## Promote all integers to numeric
-##     ## classmerge[classmerge == "integer"] <- "numeric"
+    for(i in 2:length(keys)){
+        if (i == 2){
+            classmerge <- merge(classnameold[[1]], classnameold[[2]],
+                                by = "name_old", suffixes = c("1", "2"))
+        } else {
+            classmerge <- merge(classmerge, classnameold[[i]],
+                                by = "name_old", suffixes = c("", i))
+        }
+    }
+    ## ## Suppose all detected logicals should be integer (long story why)
+    ## classmerge[classmerge == "logical"] <- "integer"
+    ## ## Promote all integers to numeric
+    ## classmerge[classmerge == "integer"] <- "numeric"
 
-##     classmerge$troublevar <- apply(classmerge, 1, function(x){length(unique(x[grep(col, names(x))])) > 1})
-##     classProblems <- classmerge[classmerge$troublevar, ]
-##     classProblems[!grepl(excludere, classProblems$name_old), ]
-##     classProblems
-## }
+    classmerge$troublevar <- apply(classmerge, 1, function(x){length(unique(x[grep(col, names(x))])) > 1})
+    classProblems <- classmerge[classmerge$troublevar, ]
+    classProblems[!grepl(excludere, classProblems$name_old), ]
+    classProblems
+}
 
 
 
