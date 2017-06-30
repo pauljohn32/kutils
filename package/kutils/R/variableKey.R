@@ -1974,117 +1974,159 @@ keyCheck <- function(key,
 }
 
 
-## ##' Homogenize class values in a long key, or a list of keys
+##' Homogenize class values in a long key, or a list of keys
+##'
+##' Users might run keyTemplate on several data sets, arriving
+##' at keys that need to be combined.  The long versions of the
+##' keys can be stacked together by a function like \code{rbind}.
+##' If the values class_old and class_new for a single variable are
+##' inconsistent, then the "key stack" will fail the tests in keyCheck.
+##' This function automates the process of fixing the class variables by
+##' "promoting" classes where possible.
+##'
+##' Begin with a simple example.  In one data set, the value of x is
+##' drawn from integers 1L, 2L, 3L, while in another set it is
+##' floating values like 1.1, 2.2. After creating long format keys,
+##' and stacking them together, the values of class_old will clash.
+##' For x, we will observe both "integer" and "numeric" in the
+##' class_old column.  In that situation, the class_old for all of the
+##' rows under consideration should be set as "numeric".
+##'
+##' The promotion schemes are described by the variable classes, where
+##' we have the most conservative changes first. The most destructive
+##' change is when variables are converted from integer to character,
+##' for example. The conservative conversion strategies are specified
+##' in the classes variable, in which the last element in a vector
+##' will be used to replace the preceeding classes.  For example,
+##' c("ordered", "factor", "character") means that the class_old
+##' values of "ordered" and "factor" will be replaced by "character".
+##'
+##' The conversions specified by classes are tried, in order.
+##' 1. logical -> integer
+##' 2. integer -> numeric
+##' 3. ordered -> factor
+##'
+##' If their application fails to homogenize a vector, then class is
+##' changed to "character". For example, when the value of class_old
+##' observed is c("ordered", "numeric", "character"). In that case,
+##' the class is promoted to "character", it is the least common
+##' denominator.
+##' @param keylong a long key, resulting from "stacking together"
+##'     several long keys for different data sets. If a stacked wide
+##'     key is provided it will converted to long format.
+##' @param keysplit a list of key blocks, each of which is to be
+##'     inspected and homogenized. Not used if a key is provided.
+##' @param classes A list of vectors specifying legal promotions.
+##' @param colname Either "class_old" or "class_new". The former is
+##'     default.
+##' @param textre A regular expression matching a column name to be
+##'     treated as character. Default matches any variable name ending
+##'     in "TEXT"
+##' @return A class-corrected version of the same format as the input,
+##'     either a long key or a list of key elements.
+##' @author Paul Johnson <pauljohn@@ku.edu>
+##' @examples
+##' dat1 <- data.frame(x1 = as.integer(rnorm(100)), x2 = sample(c("Apple", "Orange"),
+##'                    100, replace = TRUE), x3 = ifelse(rnorm(100) < 0, TRUE, FALSE))
+##' dat2 <- data.frame(x1 = rnorm(100), x2 = ordered(sample(c("Apple", "Orange"),
+##'                    100, replace = TRUE)), x3 = rbinom(100, 1, .5),
+##'                    stringsAsFactors = FALSE)
+##' key1 <- keyTemplate(dat1, long = TRUE)
+##' key2 <- keyTemplate(dat2, long = TRUE)
+##' keys2stack <- rbind(key1, key2)
+##' keys2stack.fix <- kutils:::keyClassFix(keys2stack)
+##' keys2stack.fix2 <- kutils:::keyClassFix(keys2stack.fix, colname = "class_new")
+##' ## Sometimes this will not be able to homogenize
+##' dat1 <- data.frame(x1 = as.integer(rnorm(100)), x2 = sample(c("Apple", "Orange"),
+##'                    100, replace = TRUE))
+##' dat2 <- data.frame(x1 = rnorm(100), x2 = sample(c("Apple", "Orange"),
+##'                    100, replace = TRUE), stringsAsFactors = FALSE)
+##' key1 <- keyTemplate(dat1, long = TRUE)
+##' key2 <- keyTemplate(dat2, long = TRUE)
+##' keys2stack <- rbind(key1, key2)
+##' keys2stack.fix <- kutils:::keyClassFix(keys2stack)
+## ##' ## Wide keys stacked together trigger an error
 ## ##'
-## ##' Users might run keyTemplate on several data sets, arriving
-## ##' at keys that need to be combined.  The long versions of the
-## ##' keys can be stacked together by a function like \code{rbind}.
-## ##' If the values class_old and class_new for a single variable are
-## ##' inconsistent, then the "key stack" will fail the tests in keyCheck.
-## ##' This function automates the process of fixing the class variables by
-## ##' "promoting" classes where possible.
-## ##'
-## ##' Begin with a simple example.  In one data set, the value of x is
-## ##' drawn from integers 1L, 2L, 3L, while in another set it is
-## ##' floating values like 1.1, 2.2. After creating long format keys,
-## ##' and stacking them together, the values of class_old will clash.
-## ##' For x, we will observe both "integer" and "numeric" in the
-## ##' class_old column.  In that situation, the class_old for all of the
-## ##' rows under consideration should be set as "numeric".
-## ##'
-## ##' The promotion schemes are described by the variable classes, where
-## ##' we have the most conservative changes first. The most destructive
-## ##' change is when variables are converted from integer to character,
-## ##' for example. The conservative conversion strategies are specified
-## ##' in the classes variable, in which the last element in a vector
-## ##' will be used to replace the preceeding classes.  For example,
-## ##' c("ordered", "factor", "character") means that the class_old
-## ##' values of "ordered" and "factor" will be replaced by "character".
-## ##'
-## ##' The conversions specified by classes are tried, in order.
-## ##' 1. logical -> integer
-## ##' 2. integer -> numeric
-## ##' 3. ordered -> factor
-## ##'
-## ##' If their application fails to homogenize a vector, then class is
-## ##' changed to "character". For example, when the value of class_old
-## ##' observed is c("ordered", "numeric", "character"). In that case,
-## ##' the class is promoted to "character", it is the least common
-## ##' denominator.
-## ##' @param keylong a long key, resulting from "stacking together"
-## ##'     several long keys for different data sets
-## ##' @param keysplit a list of key blocks, each of which is to be
-## ##'     inspected and homogenized
-## ##' @param classes A list of vectors specifying legal promotions.
-## ##' @param colname Either "class_old" or "class_new". The former is
-## ##'     default.
-## ##' @param textre A regular expression matching a column name to be
-## ##'     treated as character. Default matches any variable name ending
-## ##'     in "TEXT"
-## ##' @return A class-corrected version of the same format as the input,
-## ##'     either a long key or a list of key elements.
-## ##' @author Paul Johnson <pauljohn@@ku.edu>
-## ##' ## keys2stack.fix <- keyClassFix(keys2stack)
-## ##' ## keys2stack.fix2 <- keyClassFix(keys2stack.fix, colname = "class_new")
-## keyClassFix <- function(keylong, keysplit,
-##                         classes = list(c("logical", "integer"),
-##                                        c("integer", "numeric"),
-##                                        c("ordered", "factor")),
-##                         colname = "class_old", textre = "TEXT$")
-## {
-##     ##TODO: if key is wide, convert to long
-##     ##TODO: check argument, if is list, don't split it again
+## ##' dat1 <- data.frame(x1 = as.integer(rnorm(100)), x2 = sample(c("Apple", "Orange"),
+## ##'                    100, replace = TRUE))
+## ##' dat2 <- data.frame(x1 = rnorm(100), x2 = sample(c("Apple", "Orange"),
+## ##'                    100, replace = TRUE), stringsAsFactors = FALSE)
+## ##' key1 <- keyTemplate(dat1)
+## ##' key2 <- keyTemplate(dat2)
+## ##' keys2stack <- rbind(key1, key2)
+## ##' keys2stack.fix <- kutils:::keyClassFix(keys2stack)
+keyClassFix <- function(keylong = NULL, keysplit = NULL,
+                        classes = list(c("logical", "integer"),
+                                       c("integer", "numeric"),
+                                       c("ordered", "factor")),
+                        colname = "class_old", textre = "TEXT$")
+{
+    if (!is.null(keylong)){
+        if (!is.null(keysplit)){
+            warning("A key and a keysplit were provided.  The keysplit arugment is ignored")
+        }
+        if(!inherits(keylong, "keylong")){
+            ##keylong <- kutils::wide2long(keylong)
+            ## TODO, work out a smooth wide2long conversion.
+            stop("keylong is not recognized as a long key")
+        }else{
+            NULL
+        }
+        if (missing(keysplit)) keysplit <- split(keylong, keylong[ , "name_new"])
+    } else {
+        if (is.null(keysplit)){
+            stop("A key or keysplit argument must be provided")
+        }
+    }
 
-##     if (missing(keysplit)) keysplit <- split(keylong, keylong[ , "name_new"])
+    ## Change the values of colname (say, class_old) to equal the last value of classes.
+    ## keyblock: a row block from a variable key
+    ## classes: vector of classes, the last of which is the acceptable one, to replace
+    ## the others.
+    ## colname: either "class_old" or "class_new"
+    classClean <- function (keyblock, colname = colname, classes)
+    {
+        keyblock[keyblock[ , colname] %in% classes[-length(classes)], colname] <- classes[length(classes)]
+        keyblock
+    }
 
-##     ## Change the values of colname (say, class_old) to equal the last value of classes.
-##     ## keyblock: a row block from a variable key
-##     ## classes: vector of classes, the last of which is the acceptable one, to replace
-##     ## the others.
-##     ## colname: either "class_old" or "class_new"
-##     classClean <- function (keyblock, colname = colname, classes)
-##     {
-##         keyblock[keyblock[ , colname] %in% classes[-length(classes)], colname] <- classes[length(classes)]
-##         keyblock
-##     }
+    ## if mixed, promote all to last named class
+    for(i in seq_along(keysplit)){
+        keyblock <- keysplit[[i]]
+        if (length(unique(keyblock[, colname])) == 1) next()
+        ## Special case. Any variable matching textre
+        if (any(grepl(textre, names(keysplit)[i], ignore.case = TRUE))){
+            keyblock[ , colname] <- "character"
+            keysplit[[i]] <- unique(keyblock)
+            next()
+        }
 
-##     ## if mixed, promote all to last named class
-##     for(i in seq_along(keysplit)){
-##         keyblock <- keysplit[[i]]
-##         if (length(unique(keyblock[, colname])) == 1) next()
-##         ## Special case. Any variable matching textre
-##         if (any(grepl(textre, names(keysplit)[i], ignore.case = TRUE))){
-##             keyblock[ , colname] <- "character"
-##             keysplit[[i]] <- unique(keyblock)
-##             next()
-##         }
+        for(j in classes){
+            keyblock <- classClean(keyblock, colname = colname, classes = j)
+            keysplit[[i]] <- unique(keyblock)
+            if (length(unique(keyblock[, colname])) == 1){
+                next()
+            }
+        }
 
-##         for(j in classes){
-##             keyblock <- classClean(keyblock, colname = colname, classes = j)
-##             keysplit[[i]] <- unique(keyblock)
-##             if (length(unique(keyblock[, colname])) == 1){
-##                 next()
-##             }
-##         }
+        if (length(unique(keyblock[, colname])) > 1) {
+            MESSG <- paste("Cannot painlessly reduce key classes to homogeneous.",
+                           names(keysplit)[i], "changing class to character")
+            warning(paste0(names(keysplit)[i], " ", paste(unique(keyblock[ , colname]),
+                                                    collapse = " + "), ". ", MESSG), immediate. = TRUE)
+            keyblock[ , colname] <- "character"
+            keysplit[[i]] <- unique(keyblock)
+            ##warning(paste(names(keysplit)[i], "changing class to character"), immediate. = TRUE)
+        }
+    }
 
-##         if (length(unique(keyblock[, colname])) > 1) {
-##             MESSG <- paste("Cannot painlessly reduce key classes to homogeneous.",
-##                            names(keysplit)[i], "changing class to character")
-##             warning(paste(",
-##                           names(keysplit)[i], paste(unique(keyblock[ , colname]), collapse = "+")),
-##                     immediate. = TRUE)
-##             keyblock[ , colname] <- "character"
-##             keysplit[[i]] <- unique(keyblock)
-##             warning(paste(names(keysplit)[i], "changing class to character"), immediate. = TRUE)
-##         }
-##     }
+    ## If a key came in, give back a key
+    if(!is.null(keylong)){
+        keystack <- do.call(rbind, keysplit)
+        class(keystack) <- c("keylong", "data.frame")
+        return(keystack)
+    }
+    ## If a keysplit was passed in, give that back
+    return(keysplit)
+}
 
-##     ## If a key came in, give back a key
-##     if(!missing(keylong)){
-##         keystack <- do.call(rbind, keysplit)
-##         class(keystack) <- c("keylong", "data.frame")
-##         return(keystack)
-##     }
-##     ## If a keysplit was passed in, give that back
-##     return(keysplit)
-## }
