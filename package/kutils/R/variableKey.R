@@ -2146,6 +2146,8 @@ keyClassFix <- function(keylong = NULL, keysplit = NULL,
 ##'     coded. Takes a string or vector.
 ##' @param verbose Should a statement about the number of issues
 ##'     detected be returned? Defaults to FALSE.
+##' @param lowercase Should old and new values be passed through
+##'     tolower function? Defaults to FALSE.
 ##' @return Presents a warning for potentially problematic key
 ##'     sections. Return is dependent on verbose argument.
 ##' @author Ben Kite <bakite@@ku.edu>
@@ -2163,7 +2165,7 @@ keyClassFix <- function(keylong = NULL, keysplit = NULL,
 ##' key[7:9, "value_new"] <- c("high", "medium", "low")
 ##' kutils:::keyCrossRef(key)
 ##' kutils:::keyCrossRef(key, ignoreClass = c("ordered", "character"), verbose = TRUE)
-keyCrossRef <- function(key, ignoreClass = NULL, verbose = FALSE){
+keyCrossRef <- function(key, ignoreClass = NULL, verbose = FALSE, lowercase = FALSE){
     if(!inherits(key, "keylong")){
         key <- kutils::wide2long(key)
     }
@@ -2173,13 +2175,18 @@ keyCrossRef <- function(key, ignoreClass = NULL, verbose = FALSE){
         if (k[1, "class_new"] %in% ignoreClass){
             next()
         }
-        n <- nrow(k)
-        for (i in k[,"value_new"]){
-            rown <- which(k[,"value_new"] == i)
-            if (k[rown,"value_new"] %in% k[seq(1, n)[!seq(1,n) %in% rown],"value_old"]){
+        N <- nrow(k)
+        for (r in 1:length(k[,"value_new"])){
+            i <- k[r, "value_new"]
+            others <- k[seq(1, N)[!seq(1,N) %in% r],"value_old"]
+            if (isTRUE(lowercase)){
+                i <- tolower(i)
+                others <- tolower(others)
+            }
+            if (i %in% others){
                 problems <- problems + 1
                 warning(k[1, "name_new"], ": The value of \"", i, "\" is at level ",
-                        which(k[,"value_new"] == i), " in value_new, but \"", i,
+                        r, " in value_new, but \"", i,
                         "\" is also the value at level ",
                         which(k[,"value_old"] == i), " in value_old.")
             }
@@ -2195,3 +2202,4 @@ keyCrossRef <- function(key, ignoreClass = NULL, verbose = FALSE){
     }
 
 }
+
