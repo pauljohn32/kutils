@@ -2130,3 +2130,68 @@ keyClassFix <- function(keylong = NULL, keysplit = NULL,
     return(keysplit)
 }
 
+
+##' Checks a key for dangerous matches of old and new values in a key
+##' for different levels.
+##'
+##' Positions in a long key are referred to as levels. If a value is
+##' mismatched at levels 1 and 3, this means that issues are in rows 1
+##' and 3 of the section of the given variable in a long key.
+##'
+##' @title keyCrossRef
+##' @param key A variable key, ideally a long key. If a wide key is
+##'     provided it is converted to long.
+##' @param ignoreClass Classes that should be excluded from
+##'     check. Useful when many integer variables are being reverse-
+##'     coded. Takes a string or vector.
+##' @param verbose Should a statement about the number of issues
+##'     detected be returned? Defaults to FALSE.
+##' @return Presents a warning for potentially problematic key
+##'     sections. Return is dependent on verbose argument.
+##' @author Ben Kite <bakite@@ku.edu>
+##' @examples
+##' dat <- data.frame(x1 = sample(c("a", "b", "c", "d"), 100, replace = TRUE),
+##'                   x2 = sample(c("Apple", "Orange"), 100, replace = TRUE),
+##'                   x3 = ordered(sample(c("low", "medium", "high"), 100, replace = TRUE),
+##'                   levels = c("low", "medium", "high")),
+##'                   stringsAsFactors = FALSE)
+##' key <- keyTemplate(dat, long = TRUE)
+##' ## No errors with a fresh key.
+##' kutils:::keyCrossRef(key, verbose = TRUE)
+##' key[1:2, "value_new"] <- c("b", "a")
+##' key[5, "value_new"]
+##' key[7:9, "value_new"] <- c("high", "medium", "low")
+##' kutils:::keyCrossRef(key)
+##' kutils:::keyCrossRef(key, ignoreClass = c("ordered", "character"), verbose = TRUE)
+keyCrossRef <- function(key, ignoreClass = NULL, verbose = FALSE){
+    if(!inherits(key, "keylong")){
+        key <- kutils::wide2long(key)
+    }
+    keysplit <- split(key, key[ , "name_new"])
+    problems <- 0
+    for (k in keysplit){
+        if (k[1, "class_new"] %in% ignoreClass){
+            next()
+        }
+        n <- nrow(k)
+        for (i in k[,"value_new"]){
+            rown <- which(k[,"value_new"] == i)
+            if (k[rown,"value_new"] %in% k[seq(1, n)[!seq(1,n) %in% rown],"value_old"]){
+                problems <- problems + 1
+                warning(k[1, "name_new"], ": The value of \"", i, "\" is at level ",
+                        which(k[,"value_new"] == i), " in value_new, but \"", i,
+                        "\" is also the value at level ",
+                        which(k[,"value_old"] == i), " in value_old.")
+            }
+        }
+    }
+    if (isTRUE(verbose)){
+        if (problems == 0){
+            return("No potentially problematic value matches across levels detected.")
+        } else {
+            return(paste0("There are ", problems,
+                          " potential issues with this key that need to be considered"))
+        }
+    }
+
+}
