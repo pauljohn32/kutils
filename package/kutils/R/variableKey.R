@@ -857,8 +857,14 @@ keyImport <- function(key, ignoreCase = TRUE,
     key.orig <- key
     attr(key, "na.strings") <- na.strings
     if (!long) key <- wide2long(key, sep)
-    key$missings <- gsub("<-", "< -", key$missings, fixed = TRUE)
 
+    ## For Logicals: If value_new is 1 or 0, convert to TRUE/FALSE symbols
+    key[key$class_new == "logical" & !is.na(key$value_new) & key$value_new == 1, "value_new"] <- TRUE
+    key[key$class_new == "logical" & !is.na(key$value_new) & key$value_new == 0, "value_new"] <- FALSE
+    key[key$class_old == "logical" & !is.na(key$value_old) & key$value_old == 1, "value_old"] <- TRUE
+    key[key$class_old == "logical" & !is.na(key$value_old) & key$value_old == 0, "value_old"] <- FALSE
+    
+    key$missings <- gsub("<-", "< -", key$missings, fixed = TRUE)
     ## protect against user-inserted spaces (leading or trailing)
     key$name_old <- zapspace(key$name_old)
     key$name_new <- zapspace(key$name_new)
@@ -878,6 +884,7 @@ keyImport <- function(key, ignoreCase = TRUE,
     key[key$value_new %in% na.strings, "value_new"] <- MISSSymbol
     key[key$value_old %in% na.strings, "value_old"] <- MISSSymbol
 
+
     ## Delete repeated rows:
     key <- key[!duplicated(key), ]
 
@@ -889,6 +896,7 @@ keyImport <- function(key, ignoreCase = TRUE,
     }
 
     if (long){
+  
         class(key) <- c("keylong", "data.frame")
         attr(key, "ignoreCase") <- ignoreCase
         attr(key, "na.strings") <- na.strings
@@ -1910,15 +1918,7 @@ keyCheck <- function(key,
     ## Deduce if this is a long key
 
     if(inherits(key, "keylong")) long = TRUE else long = FALSE
-    if (long){
-        if (identical(key, wide2long(long2wide(key)))){
-            stop ("There is an error with this key. The structure changes when being transformed from long to wide, and then back to long.")
-        }
-    } else {
-        if (identical(key, long2wide(wide2long(key)))){
-            stop ("There is an error with this key. The structure changes when being transformed from wide to long, and then back to wide.")
-        }
-    }
+
     if (!long){
         xx <- strsplit(key$value_old, split = "[|<]", fixed = FALSE)
         xx.l <- sapply(xx, length)
@@ -1927,7 +1927,7 @@ keyCheck <- function(key,
         inconsistent <- xx.l != yy.l
         issues <- key[inconsistent, "name_old"]
         if (length(issues) > 0){
-            stop (paste0("The following variables have inconsistencies in the number of values listed between the value_old and value_new columns: ", issues))
+            stop (paste0("Value error, columns: ", issues))
         }
     }
     ## Transition from Ben's work to PJ's
@@ -1942,7 +1942,7 @@ keyCheck <- function(key,
                 keyblock <- keysplit[[jj]]
                 ## Stanza 1: check homogeneous colname = class_old(or new) values"
                 if (length(unique(keyblock[ , ii])) > 1) {
-                    warning(paste("Key name or class violation:", ii, jj,  "\n"), immediate. = TRUE)
+                    warning(paste("Key Violation:", jj, ii,  "\n"), immediate. = TRUE)
                     keyfails[[jj]] <- keysplit[[jj]]
                 }
             }
@@ -1956,7 +1956,7 @@ keyCheck <- function(key,
             value_col <- paste0("value_", gsub("class_(.*)", "\\1", ii))
             value <- keyblock[ , value_col]
             ## exclude any that have missing marker from na.strings
-            value <- value[!value %in% na.strings]
+            value <- na.omit(value[!value %in% na.strings])
             testcol <- NA
             mytext <- paste0("testcol <- as.", keyblock[1, ii], "(value)")
             eval(parse(text = mytext))
@@ -1968,7 +1968,16 @@ keyCheck <- function(key,
             ##NULL
         }
     }
-
+    
+    if (long){
+        if (!identical(key, wide2long(long2wide(key)))){
+            stop ("Key Structure error.")
+        }
+    } else {
+        if (!identical(key, long2wide(wide2long(key)))){
+            stop ("Key Structure error.")
+        }
+    }
     if (length(keyfails) > 0){
         return(keyfails)
     }else{
