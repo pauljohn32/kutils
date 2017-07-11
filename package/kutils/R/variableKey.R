@@ -1334,16 +1334,17 @@ NULL
 ##'     variable
 ##' @param nametrunc Truncate column and row names. Needed if there
 ##'     are long factor labels and we want to fit more information on
-##'     table. Default = 6.
+##'     table. Default = 18 for new name, old name is 10 more
+##'     characters (18 + 10 = 28).
 ##' @param wide Number of characters per row in printed
 ##'     output. Suggest very wide screen, default = 200.
-##' @param confidential Should numbers in table be rounded to nearest "10"
-##'     to comply with security standard enforced by some American research
-##'     departments.
+##' @param confidential Should numbers in table be rounded to nearest
+##'     "10" to comply with security standard enforced by some
+##'     American research departments.
 ##' @return NULL
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 keyDiagnostic <- function(dfold, dfnew, keylist, max.values = 20,
-                          nametrunc = 8, wide = 200, confidential = FALSE)
+                          nametrunc = 18, wide = 200, confidential = FALSE)
 {
 
     ## TODO if class in dfnew does not match keylist specification, fail
@@ -1360,13 +1361,13 @@ keyDiagnostic <- function(dfold, dfnew, keylist, max.values = 20,
         roundAt <- 2
     }
     for (v in keylist){
-        if ((length(v$name_new) == 0) || (!v$name_new %in% colnames(dfnew))){
+        if (is.na(v$name_new) ||(length(v$name_new) == 0) || (!v$name_new %in% colnames(dfnew))){
             messg <- paste("Variable", v$name_new, "is not included in the new data frame")
             next()
         }
-        if (length(unique(dfold[ , v$name_old])) <= max.values){
+        if (length(unique(dfnew[ , v$name_new])) <= max.values){
             name_new.trunc <- substr(v$name_new, 1, min(nchar(v$name_new), nametrunc))
-            name_old.trunc <- paste0(substr(v$name_old, 1, min(nchar(v$name_old), nametrunc)), " (old var)")
+            name_old.trunc <- paste0(substr(v$name_old, 1, min(nchar(v$name_old), nametrunc + 10)), " (old var)")
             print(round(table(dfnew[ , v$name_new], dfold[ , v$name_old],
                               exclude = NULL, dnn = c(name_new.trunc, name_old.trunc)), roundAt))
         } else {
@@ -1893,6 +1894,7 @@ keysPoolCheck <- function(keys, col = "class_old", excludere = "TEXT$"){
 ##' Now it amounts to any of these: ".", "NA", "N/A", or any white space or tab as signified by \\s+.
 ##' @return Profuse warnings will display problematic key portions. A list of failed key
 ##' blocks will be returned.
+##' @export
 ##' @author Paul Johnson <pauljohn@@ku.edu> and Ben Kite
 ##'     <bakite@@ku.edu>
 keyCheck <- function(key,
@@ -1929,7 +1931,8 @@ keyCheck <- function(key,
         }
     }
     ## Transition from Ben's work to PJ's
-    if(!inherits(key, "keylong")) keylong <- kutils::wide2long(key) else key
+    if(!inherits(key, "keylong")) keylong <- kutils::wide2long(key) else keylong <- key
+    
     keysplit <- split(keylong, keylong[ , "name_new"])
 
     keyfails <- list()

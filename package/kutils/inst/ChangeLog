@@ -1,3 +1,8 @@
+2017-07-10  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (keyDiagnostic): nametrunc-fiddle, make name
+	old longer, change keyDiag logic on name_new missing.
+
 2017-06-27  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (keyApply): fix error in creation of factors
