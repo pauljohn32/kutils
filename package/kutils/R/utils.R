@@ -28,6 +28,54 @@ dms <- function(name) gsub("(/)\\1+", "/", name)
 NULL
 
 
+##' Removes redundant words from beginnings of character strings
+##'
+##' In Qualtrix data, we sometimes find repeated words in column names.
+##' This changes a vector c("Philadelphia_Philadelphia_3", "Denver_Denver_4")
+##' to c("Philadelphia_3", "Denver_4")
+##' 
+##' See \url{https://stackoverflow.com/questions/43711240/r-regular-expression-match-omit-several-repeats}
+##' @param x Character vector
+##' @param sep Delimiter. A regular expression indicating the point at
+##'     which to split the strings before checking for
+##'     duplicates. Default will look for repeat separated by comma,
+##'     underscore, or one space character.
+##' @param  n Limit on number of duplicates to remove. Default, NULL,
+##'      means delete all duplicates at the beginning of a string.
+##' @export
+##' @author Paul Johnson <pauljohn@@ku.edu>
+##' @examples
+##' x <- c("Philadelphia_Philadelphia_3", "Denver_Denver_4",
+##'         "Den_Den_Den_Den_Den_Den_Den_5")
+##' deduper(x)
+##' deduper(x, n = 2)
+##' deduper(x, n = 3)
+##' deduper(x, n = 4)
+##' x <- c("Philadelphia,Philadelphia_3", "Denver Denver_4")
+##' ## Shows comma also detected by default
+##' deduper(x)
+##' ## Works even if delimiter is inside matched string,
+##' ## or separators vary
+##'  x <- c("Den_5_Den_5_Den_5,Den_5 Den_5")
+##' deduper(x)
+##' ## generate vector
+##' x <- replicate(10, paste(sample(letters, 5), collapse = ""))
+##' n <- c(paste0("_", sample(1:10, 5)), rep("", 5))
+##' x <- paste0(x, "_", x, n, n)
+##' x
+##' deduper(x)
+##'
+##' @return Cleaned up vector.
+deduper <- function(x, sep = ",_\\s-", n = NULL) {
+    gsub(paste0("^(.*?)(?:[", sep, "]\\1){1,", n, "}"),
+         "\\1", x, perl = TRUE)
+}
+NULL
+
+
+
+
+
 ##' How many stars would we need for this p value?
 ##'
 ##' Regression table makers need to know how many stars
