@@ -1,4 +1,5 @@
 
+
 ##' If a numeric variable has only integer values, then
 ##' make it an integer.
 ##'
@@ -879,7 +880,7 @@ keyImport <- function(key, ignoreCase = TRUE,
                               integer = "\\|", factor = "[\\|<]",
                               ordered = "[\\|<]", numeric = "\\|")
                      ,
-                      na.strings = c(".", "", "\\s",  "NA", "N/A")
+                      na.strings = c(".", "", " ",  "NA", "N/A")
                      ,
                       ...
                      ,
@@ -920,7 +921,7 @@ keyImport <- function(key, ignoreCase = TRUE,
     key[key$class_new == "logical" & !is.na(key$value_new) & key$value_new == 0, "value_new"] <- FALSE
     key[key$class_old == "logical" & !is.na(key$value_old) & key$value_old == 1, "value_old"] <- TRUE
     key[key$class_old == "logical" & !is.na(key$value_old) & key$value_old == 0, "value_old"] <- FALSE
-    
+
     key$missings <- gsub("<-", "< -", key$missings, fixed = TRUE)
     ## protect against user-inserted spaces (leading or trailing)
     key$name_old <- zapspace(key$name_old)
@@ -935,12 +936,13 @@ keyImport <- function(key, ignoreCase = TRUE,
     }
 
     ## if this is long key, following is safe. How about wide key?
-    key$value_old <- n2NA(zapspace(key$value_old))
-    key$value_new <- n2NA(zapspace(key$value_new))
+    key$value_old <- trimws(key$value_old)
+    key$value_new <- trimws(key$value_new)
+    key$value_old <- ifelse(is.na(key$value_old), ".", key$value_old)
+    key$value_new <- ifelse(is.na(key$value_new), ".", key$value_new)
     MISSSymbol <- "."
     key[key$value_new %in% na.strings, "value_new"] <- MISSSymbol
     key[key$value_old %in% na.strings, "value_old"] <- MISSSymbol
-
 
     ## Delete repeated rows:
     key <- key[!duplicated(key), ]
@@ -953,7 +955,7 @@ keyImport <- function(key, ignoreCase = TRUE,
     }
 
     if (long){
-  
+
         class(key) <- c("keylong", "data.frame")
         attr(key, "ignoreCase") <- ignoreCase
         attr(key, "na.strings") <- na.strings
@@ -1989,7 +1991,7 @@ keyCheck <- function(key,
     }
     ## Transition from Ben's work to PJ's
     if(!inherits(key, "keylong")) keylong <- kutils::wide2long(key) else keylong <- key
-    
+
     keysplit <- split(keylong, keylong[ , "name_new"])
 
     keyfails <- list()
@@ -2025,7 +2027,7 @@ keyCheck <- function(key,
             ##NULL
         }
     }
-    
+
     if (long){
         if (!identical(key, wide2long(long2wide(key)))){
             stop ("Key Structure error.")
