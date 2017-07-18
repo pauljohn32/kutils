@@ -466,10 +466,15 @@ checkValue_new <- function(value_new, class_new){
 ##'     which appear to be integers as integers? If a column is
 ##'     numeric, it might be safe to treat it as an integer.  In many
 ##'     csv data sets, the values coded c(1, 2, 3) are really
-##'     integers, not floats c(1.0, 2.0, 3.0). See
-##'     \code{safeInteger}.
+##'     integers, not floats c(1.0, 2.0, 3.0). See \code{safeInteger}.
+##' @param varlab If variable labels are available, they can be
+##'     supplied as a named vector of labels, e.g., \code{c("x1" =
+##'     "happiness", "x2" = "wealth")}, where the name is a variable
+##'      name in dframe and its desired label is a quoted character
+##'      string. This is not required, the new key object will have
+##'      an attribute varlab that has empty labels.
 ##' @return A key in the form of a data frame. May also be saved on
-##'     disk.
+##'     disk. The key will have an attribute "varlab", variable labels.
 ##' @export
 ##' @importFrom utils write.csv
 ##' @importFrom methods as
@@ -518,7 +523,8 @@ checkValue_new <- function(value_new, class_new){
 ##'
 keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
                         file = NULL, outdir = getwd(),
-                        max.levels = 15, safeNumericToInteger = TRUE)
+                        max.levels = 15, safeNumericToInteger = TRUE,
+                        varlab = NULL)
 {
 
     dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
@@ -527,7 +533,6 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
     cn <- colnames(dframe)
     ## Make a long key
     if(isTRUE(long)){
-
         getUnique <- function(xname){
             if (df.class[[xname]] == "numeric") return ("")
             if (df.class[[xname]] %in% c("integer", "character", "logical", "Date")){
@@ -537,7 +542,6 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
                 } else {
                     return ("")
                 }
-
             }
             if (df.class[[xname]] %in% c("factor", "ordered")){
                 return(levels(dframe[ , xname]))
@@ -558,21 +562,16 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
                           missings = "",
                           recodes = "",
                           stringsAsFactors = FALSE)
-
         if (sort) key <- key[order(key$name_old), ]
         key$missings <- ""
         key$recodes <- ""
-
         class(key) <- c("keylong", class(key))
     } else {
-
         ## else !long, so make a wide key
         key <- data.frame(name_old = colnames(dframe), name_new = colnames(dframe),
                           class_old = df.class, class_new = df.class,
                           value_old = as.character(""), value_new = "",
                           missings = "",  recodes = "", stringsAsFactors = FALSE)
-
-
         for (i in cn){
             getValues <- function(x){
                 y <- dframe[ , x]
@@ -597,9 +596,7 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
             }
             key[i, "value_old"] <- getValues(i)
         }
-
         key[ , "value_new"] <- key[ , "value_old"]
-
         if (sort) key <- key[order(key$name_old), ]
         class(key) <- c("key", class(key))
     }
@@ -610,28 +607,78 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
     key
 }
 
+##' Create Variable Label Template
+##'
+##' Receive a key, create a varlab object, with columns
+##'     \code{name_old} \code{name_new}, and \code{varlab}.
+##'
+##' If not specified, a matrix is created with empty variable labels.
+##' @title
+##' @param obj A variable key
+##' @param varlab Default NULL, function will start from clean slate,
+##'     empty column of labels.  If specified, varlab should be a named
+##'     vector of labels, e.g., \code{c("x1" = "happiness", "x2" =
+##'     "wealth")}, where the names are values to be matched against
+##'     "name_new" in key.
+##' @return Character matrix
+##' @export
+##' @author Paul Johnson
+##' @examples
+##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
+##' mydf <- read.csv(mydf.path, stringsAsFactors=FALSE)
+##' ## Target we are trying to match:
+##' mydf.keylong <- keyTemplate(mydf, long = TRUE, sort = FALSE)
+varlabTemplate <- function(obj, varlab = NULL){
+    varlabs <- if (is.null(varlab)){
+        unique(cbind(name_old = obj$name_old,
+                     name_new = obj$name_new, varlab = ""))
+    } else {
+        cbind(name_old = obj$name_old,
+              name_new = obj$name_new,
+              varlab = varlab[obj$name_new])
+    }
+    varlabs[is.na(varlabs[ , "varlab"]), "varlab"] <- ""
+    varlabs
+}
+    
 ##' save file after deducing type from suffix
 ##'
-##' just a convenience for this work, not general purpose
-##' @param obj an object
+##' Just a convenience for this work, not general purpose thing
+##' @param obj a variable key object
 ##' @param file file name. must end in "csv", "xlsx" or "rds"
 ##' @param outdir directory path
-##' @return NULL
+##' @param varlab character matrix of variable labels, with columns
+##'     \code{name_old} \code{name_new}, and \code{varlab}. If not
+##'     specified, a matrix is created with empty variable labels.
+##' @return NULL if no file is created. Otherwise, a key object with
+##'     an attribute varlab is returned. The files created incorporate
+##'     the variable labels object in different ways. 1) XLSX:
+##'     variable labels a worksheet named "varlab" 2) CSV: variable
+##'     labels saved in a separate file suffixed "-varlab.csv". 3)
+##'     RDS: varlab is an attribute of the key object.
 ##' @keywords internal
 ##' @author Paul Johnson <pauljohn@@ku.edu>
-smartSave <- function(obj, file, outdir){
+smartSave <- function(obj, file, outdir, varlab = NULL){
     fp <- file
-    if (!is.null(outdir) && missing(outdir))
-        fp <- paste0(outdir, "/", file)
+    ## varlab neither provided with key nor as argument, so create
+    if (is.null(attr(obj, "varlab")) && is.null(varlab)) {
+        attr(obj, "varlab") <- varlabTemplate(obj, varlab)
+    }
+    if (!missing(outdir) && !is.null(outdir))
+        fp <- file.path(outdir, file)
     if (length(grep("csv$", tolower(file))) > 0){
         write.csv(obj, file = fp, row.names = FALSE)
-    } else if ((length(grep("xlsx$", tolower(file))))){
-        openxlsx::write.xlsx(obj, file = fp)
+        write.csv(attr(obj, "varlab"),
+                  file = gsub(".csv$", "-varlab.csv", fp), row.names = FALSE) 
+    } else if (length(grep("xlsx$", tolower(file)))){
+        openxlsx::write.xlsx(list(key = obj, varlab = attr(obj, "varlab")), file = fp)
     } else if (length(grep("rds$", tolower(file)))){
         saveRDS(obj, file = fp)
     } else {
-        warning("Proposed key name did not end in csv, xlsx, or rds, so no file created")
+        warning("smartSave: unrecognized suffix. No file created")
+        NULL
     }
+    obj
 }
 
 
@@ -659,7 +706,6 @@ smartRead <- function(file, ...){
                        "that gives the full path and file name to be used")
         stop(messg)
     } else {
-
         ## key is file name, so scan for suffix
         if (length(grep("xlsx$", tolower(file))) > 0){
             xlsxargs <- list(file = file, colNames = TRUE, check.names = FALSE)
@@ -670,10 +716,21 @@ smartRead <- function(file, ...){
             for(i in colnames(key)){
                 if (class(key[ , i]) != "character") key[ , i] <- as.character(key[ , i])
             }
+            xlsxargz[["sheet"]] <- "varlab"
+            attr(key, "varlab") <- tryCatch(do.call("read.xlsx", xlsxargz),
+                                            error = varlabTemplate(key),
+                                            finally = NULL)
         } else if (length(grep("csv$", tolower(file))) > 0){
             csvargs <- list(file = file, stringsAsFactors = FALSE, colClasses = "character")
             csvargz <- modifyList(csvargs, dotsforcsv)
             key <- do.call("read.csv", csvargz)
+            filevarlab <- gsub("csv$", "-varlab.csv", file)
+            if (file.exists(filevarlab)){
+                csvargs[["file"]] <- filevarlab
+                attr(key, "varlab") <- do.call("read.csv", csvargz) 
+            } else {
+                attr(key, "varlab") <- varlabTemplate(key)
+            }
         } else if (length(grep("rds$", tolower(file))) > 0){
             key <- readRDS(file)
         }
