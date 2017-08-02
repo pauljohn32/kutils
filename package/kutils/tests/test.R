@@ -1,6 +1,9 @@
+## run unit tests
+## Charlie Redmon
+## 20170801
+
 library(RUnit)
 library(kutils)
-
 
 #testsuite.variableKey <- defineTestSuite("VariableKey",
 #                                         dirs = file.path(system.file("test", package="kutils")),
