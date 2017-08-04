@@ -1235,9 +1235,8 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         ## If output is ordered or factor, must be dealt with specially
         if(length(v$class_new) > 0 && v$class_new %in% c("ordered", "factor")) {
             xnew2 <- plyr::mapvalues(xnew, from = values$value_old, to = values$value_new)
-            xnew2 <- factor(xnew2, levels = unique(values$value_new))
-            ## xnew2 <- factor(xnew, levels = values$value_old, ordered = v$class_new == "ordered")
-            ## levels(xnew2) <- values$value_new
+            xnew2 <- factor(xnew2, levels=unique(values$value_new),
+                            ordered=(v$class_new == "ordered"))
             mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew2")
             eval(parse(text = mytext))
             next()
