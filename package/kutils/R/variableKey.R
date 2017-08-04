@@ -1165,6 +1165,9 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         }
         ## Extract values for convenience
         values <- v$values
+        oldVals <- v$values$value_old
+        newVals <- as.character(v$values$value_new)
+        
         ## keep spare copy of original name, in case it gets lowercased next
         v$name_old.orig <- v$name_old
         if(ignoreCase) v$name_old <- tolower(v$name_old)
@@ -1211,11 +1214,19 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             next()
         }
 
-        ## value_old and value_new are full of only NA, so don't alter
-        ## the variable
-        if (NROW(na.omit(values)) == 0){
-            mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew")
+        ## value_old and value_new are full of only NA, so only perform direct class
+        ## conversions
+        if (NROW(na.omit(values)) == 0 || length(na.omit(newVals)) == 0 || all(oldVals==newVals)) {
+            if (v$class_new %in% c("factor", "ordered")) {
+                # no direct conversion to factors
+                xnew1 <- factor(xnew, ordered=(v$class_new == "ordered"))  
+            } else {
+                xnew1 <- as(xnew, v$class_new)
+            }
+            mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew1")
             eval(parse(text = mytext))
+            coercionWarning <- "Applying class conversion by coercion. Check to be sure desired result is obtained."
+            if (v$class_old != v$class_new) warning(coercionWarning)
             next()
         }
 
