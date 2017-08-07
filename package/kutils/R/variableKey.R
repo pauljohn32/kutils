@@ -1216,16 +1216,18 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
 
         ## value_old and value_new are full of only NA, so only perform direct class
         ## conversions
-        if (NROW(na.omit(values)) == 0 || length(na.omit(newVals)) == 0 || all(oldVals==newVals)) {
+        if (NROW(na.omit(values)) == 0 || length(na.omit(newVals)) == 0) {
             if (v$class_new %in% c("factor", "ordered")) {
                 # no direct conversion to factors
                 xnew1 <- factor(xnew, ordered=(v$class_new == "ordered"))  
             } else {
-                xnew1 <- as(xnew, v$class_new)
+                eval(parse(text=paste0("xnew1 <- ", "as.", v$class_new, "(xnew)")))
             }
             mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew1")
             eval(parse(text = mytext))
-            coercionWarning <- "Applying class conversion by coercion. Check to be sure desired result is obtained."
+            coercionWarning <- paste0("Coercing ",
+                                      v$class_old, " to ", v$class_new,
+                                      ". Check to be sure desired result is obtained.")
             if (v$class_old != v$class_new) warning(coercionWarning)
             next()
         }
@@ -1306,12 +1308,8 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             next()
         }
 
-        ## I believe these are safe to rely on coercion, since other
-        ## specific cases were done
-        discreteClasses <- c("logical", "factor", "ordered", "character", "integer")
-        if (v$class_old %in% discreteClasses && v$class_new %in% discreteClasses ||
-              v$class_old %in% c("logical", "integer", "numeric", "double"))
-        {
+        ## convert for variables with new mapping of value_old to value_new
+        if (any(v$values$value_old != v$values$value_new)) {
             xnew <- plyr::mapvalues(xnew, values$value_old, values$value_new, warn_missing = FALSE)
             mytext1 <- paste0("xnew2 <- as.", v$class_new, "(xnew)")
             eval(parse(text = mytext1))
