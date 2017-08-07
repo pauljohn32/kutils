@@ -68,15 +68,15 @@ test.keyApply <- function() {
     
     ## logical --> logical
     ll0 <- ifelse(l == FALSE, TRUE, FALSE)
-    checkEquals(ll0, df1[,"varLL"])  #compare code version with VarKey version
+    checkIdentical(ll0, df1[,"varLL"])  #compare code version with VarKey version
 
     ## logical --> integer (1)
     li0 <- as.integer(l)
-    checkEquals(li0, df1[,"varLI1"])
+    checkIdentical(li0, df1[,"varLI1"])
 
     ## logical --> integer (2)
-    li0 <- ifelse(l == FALSE, 0, 1)
-    checkEquals(li0, df1[,"varLI2"])
+    li0 <- as.integer(ifelse(l == FALSE, 0, 1))
+    checkIdentical(li0, df1[,"varLI2"])
 
     ## logical --> numeric (1)
     ln0 <- as.numeric(l)
@@ -88,68 +88,95 @@ test.keyApply <- function() {
 
     ## logical --> factor (1)
     lf0 <- factor(l)
-    checkEquals(lf0, df1[,"varLF1"])
+    checkIdentical(lf0, df1[,"varLF1"])
     
     ## logical --> factor (2)
     lf0 <- factor(ifelse(l == FALSE, "no", "yes"), levels=c("yes","no"))
-    checkEquals(lf0, df1[,"varLF2"])
+    checkIdentical(lf0, df1[,"varLF2"])
 
-    ## logical --> ordinal
+    ## logical --> ordinal (1)
+    lo0 <- ordered(l)
+    checkIdentical(lo0, df1[,"varLO1"])
+    
+    ## logical --> ordinal (2)
     lo0 <- ordered(ifelse(l == FALSE, "fail", "pass"))
-    lo1 <- df1[,"varLO"]
-    checkEquals(lo0, lo1)
+    checkIdentical(lo0, df1[,"varLO2"])
 
-    ## logical --> character
+    ## logical --> character (1)
+    lc0 <- as.character(l)
+    checkIdentical(lc0, df1[,"varLC1"])
+
+    ## logical --> character (2)
     lc0 <- as.character(ifelse(l == FALSE, "A", "B"))
-    checkEquals(lc0, df1[,"varLC"])
+    checkIdentical(lc0, df1[,"varLC2"])
 
     ## TEST CONVERSIONS FROM INTEGER
     i1 <- df0[,"varI1"]
     i2 <- df0[,"varI2"]
     
-    ## integer --> logical (1) FAIL
+    ## integer --> logical (1)
     il0 <- as.logical(ifelse(i1 >= 999, NA, i1))
-    checkEquals(il0, df1[,"varIL1"])
+    checkIdentical(il0, df1[,"varIL1"])
 
     ## integer --> logical (2)
     il0 <- as.logical(ifelse(i2 == 1, TRUE, FALSE))
-    checkEquals(il0, df1[,"varIL2"])
+    checkIdentical(il0, df1[,"varIL2"])
     
     ## integer --> integer
     ii0 <- ifelse(i1 >= 999, NA, i1)
-    checkEquals(ii0, df1[,"varII"])
+    checkIdentical(ii0, df1[,"varII"])
 
-    ## integer --> numeric
+    ## integer --> numeric (1)
+    in0 <- as.numeric(ifelse(i1 >= 999, NA, i1))
+    checkEqualsNumeric(in0, df1[,"varIN1"], tolerance=floatPrecision)
+ 
+    ## integer --> numeric (2)
     in0 <- as.numeric(plyr::mapvalues(i2, from=1:5, to=seq(1, 3, by=0.5)))
-    checkEquals(in0, df1[,"varIN"])
+    checkEqualsNumeric(in0, df1[,"varIN2"], tolerance=floatPrecision)
 
-    ## integer --> factor
+    ## integer --> factor (1)
+    if0 <- factor(i2)
+    checkIdentical(if0, df1[,"varIF1"])
+    
+    ## integer --> factor (2)
     if0 <- factor(ifelse(i2 < 3, "nonHOV", "HOV"), levels=c("nonHOV","HOV"))
-    checkEquals(if0, df1[,"varIF"])
+    checkIdentical(if0, df1[,"varIF2"])
 
-    ## integer --> ordinal
+    ## integer --> ordinal (1)
+    io0 <- ordered(i2)
+    checkIdentical(io0, df1[,"varIO1"])
+    
+    ## integer --> ordinal (2)
     io0 <- ordered(plyr::mapvalues(i2, from=1:5,
                    to=c("unfavorable", "slightlyUnfavorable", "neutral",
                         "slightlyFavorable", "favorable")),
                    levels=c("unfavorable", "slightlyUnfavorable", "neutral",
                             "slightlyFavorable", "favorable"))
-    checkEquals(io0, df1[,"varIO"])
+    checkIdentical(io0, df1[,"varIO2"])
 
-    ## integer --> character
+    ## integer --> character (1)
+    ic0 <- as.character(ifelse(i1 >= 999, NA, i1))
+    checkIdentical(ic0, df1[,"varIC1"])
+    
+    ## integer --> character (2)
     ic0 <- as.character(plyr::mapvalues(i2, from=1:5,
                                         to=c("a", "b", "c", "d", "f")))
-    checkEquals(ic0, df1[,"varIC"])
+    checkIdentical(ic0, df1[,"varIC2"])
     
     ## TEST CONVERSIONS FROM NUMERIC
     n1 <- df0[,"varN1"]
     n2 <- df0[,"varN2"]
+
+    ## numeric --> logical (2)
+    nl0 <- as.logical(n2)
+    checkIdentical(nl0, df1[,"varNL1"])
     
-    ## numeric --> logical
+    ## numeric --> logical (2)
     nl0 <- ifelse(n2 < 0.5, FALSE, TRUE)
-    checkEquals(nl0, df1[,"varNL"])
+    checkIdentical(nl0, df1[,"varNL2"])
 
     ## numeric --> integer (1)
-    ni0 <- as.integer(ifelse(n1 <= -999, NA, n1))
+    ni0 <- as.integer(n2)
     checkEquals(ni0, df1[,"varNI1"])
     
     ## numeric --> integer (2)
@@ -160,121 +187,190 @@ test.keyApply <- function() {
     nn0 <- ifelse(n1 <= -999, NA, n1)
     checkEqualsNumeric(nn0, df1[,"varNN"], tolerance=floatPrecision)
 
-    ## numeric --> factor
+    ## numeric --> factor (1)
+    nf0 <- factor(n2)
+    checkIdentical(nf0, df1[,"varNF1"])
+    
+    ## numeric --> factor (2)
     nf0 <- factor(plyr::mapvalues(as.character(n2),
                   from=as.character(seq(0, 1, 0.1)),
                   to=c(rep("Q1", 3), rep(paste0("Q",2:5), each=2))))
-    checkEquals(nf0, df1[,"varNF"])
+    checkIdentical(nf0, df1[,"varNF2"])
     
-    ## numeric --> ordinal
+    ## numeric --> ordinal (1)
+    no1 <- ordered(n2)
+    checkIdentical(no1, df1[,"varNO1"])
+
+    ## numeric --> ordinal (2)
     no1 <- ordered(plyr::mapvalues(as.character(n2),
                    from=as.character(seq(0, 1, 0.1)),
                    to=c(rep("lower",5), rep("middle",4), rep("upper",2))))
-    checkEquals(no1, df1[,"varNO"])
-
-    ## numeric --> character (2)
-    nc0 <- as.character(n1)
-    checkEquals(nc0, df1[,"varNC1"])
+    checkIdentical(no1, df1[,"varNO2"])
+    
+    ## numeric --> character (1)
+    nc0 <- as.character(ifelse(n1 <= -999, NA, n1))
+    checkIdentical(nc0, df1[,"varNC1"])
 
     ## numeric --> character (2)
     nc0 <- plyr::mapvalues(as.character(n2), from=as.character(seq(0, 1, 0.1)),
                            to=c("A","B","C","D","E","F","G","H","I","J","K"))
-    checkEquals(nc0, df1[,"varNC2"])
+    checkIdentical(nc0, df1[,"varNC2"])
 
     ## TEST CONVERSIONS FROM FACTOR
     f1 <- df0[,"varF1"]
     f2 <- df0[,"varF2"]
     f3 <- df0[,"varF3"]
     f4 <- df0[,"varF4"]
+
+    ## factor --> logical (1)
+    fl0 <- as.logical(f1)
+    checkIdentical(fl0, df1[,"varFL1"])
     
-    ## factor --> logical
+    ## factor --> logical (2)
     fl0 <- ifelse(f1 == "yes", TRUE, FALSE)
-    checkEquals(fl0, df1[,"varFL"])
+    checkIdentical(fl0, df1[,"varFL2"])
 
-    ## factor --> integer
-    fi0 <- ifelse(f1 == "yes", 1, 0)
-    checkEquals(fi0, df1[,"varFI"])
+    ## factor --> integer (1)
+    fi0 <- as.integer(f1)
+    checkIdentical(fi0, df1[,"varFI1"])
+    
+    ## factor --> integer (2)
+    fi0 <- as.integer(ifelse(f1 == "yes", 1, 0))
+    checkIdentical(fi0, df1[,"varFI2"])
 
-    ## factor --> numeric
+    ## factor --> numeric (1)
+    fn0 <- as.numeric(f2)
+    checkEqualsNumeric(fn0, df1[,"varFN1"], tolerance=floatPrecision)
+    
+    ## factor --> numeric (2)
     fn0 <- as.numeric(as.character(plyr::mapvalues(f2,
                                                    from=c("lo", "med", "hi"),
                                                    to=c(-0.5, 0, 0.5))))
-    checkEquals(fn0, df1[,"varFN"])
+    checkEqualsNumeric(fn0, df1[,"varFN2"], tolerance=floatPrecision)
 
     ## factor --> factor
     ff0 <- plyr::mapvalues(f3, from=levels(f3), to=c(rep("P", 4), "F"))
     checkEquals(ff0, df1[,"varFF"])
 
-    ## factor --> ordinal
-    ff0 <- ordered(f2, levels=c("lo","med","hi"))
-    checkEquals(ff0, df1[,"varFO"])
+    ## factor --> ordinal (2)
+    fo0 <- ordered(f2)
+    checkIdentical(fo0, df1[,"varFO1"])
 
-    ## factor --> character
+    ## factor --> ordinal (2)
+    fo0 <- ordered(plyr::mapvalues(f2,
+                   from=levels(f2), to=c("high", "low", "mid")),
+                   levels=c("low","mid","high"))
+    checkIdentical(fo0, df1[,"varFO2"])
+
+    ## factor --> character (1)
+    fc0 <- as.character(f4)
+    checkIdentical(fc0, df1[,"varFC1"])
+
+    
+    ## factor --> character (2)
     fc0 <- as.character(plyr::mapvalues(f4, from=levels(f4),
                         to=c("Bobby","Cindy","Greg","Marcia","Peter")))
-    checkEquals(fc0, df1[,"varFC"])
+    checkIdentical(fc0, df1[,"varFC2"])
 
     ## TEST CONVERSIONS FROM ORDINAL
     o <- df0[,"varO1"]
 
-    ## ordinal --> logical
+    ## ordinal --> logical (1)
+    ol0 <- as.logical(o)
+    checkIdentical(ol0, df1[,"varOL1"])
+    
+    ## ordinal --> logical (2)
     ol0 <- ifelse(o == "1", FALSE, TRUE)
-    checkEquals(ol0, df1[,"varOL"])
+    checkIdentical(ol0, df1[,"varOL2"])
 
-    ## ordinal --> integer (NOTE: < must be changed to | in value_new col)
+    ## ordinal --> integer (1)
+    oi0 <- as.integer(o)
+    checkIdentical(oi0, df1[,"varOI1"])
+    
+    ## ordinal --> integer (2)
     oi0 <- as.integer(as.character(o))
-    checkEquals(oi0, df1[,"varOI"])
+    checkIdentical(oi0, df1[,"varOI2"])
 
-    ## ordinal --> numeric
+    ## ordinal --> numeric (1)
+    on0 <- as.numeric(o)
+    checkEqualsNumeric(on0, df1[,"varON1"], tolerance=floatPrecision)
+    
+    ## ordinal --> numeric (2)
     on0 <- as.numeric(as.character(o))
-    checkEqualsNumeric(on0, df1[,"varON"], tolerance=floatPrecision)
+    checkEqualsNumeric(on0, df1[,"varON2"], tolerance=floatPrecision)
 
-    ## ordinal --> factor (FAIL: CONVERSION RETAINS ORDERED CLASS)
+    ## ordinal --> factor (1)
+    of0 <- factor(o, ordered=FALSE)
+    checkIdentical(of0, df1[,"varOF1"])
+    
+    ## ordinal --> factor (2)
     of0 <- factor(plyr::mapvalues(o, c(1,3,5), c("A","B","C")), ordered=FALSE)
-    checkEquals(of0, df1[,"varOF"])
+    checkIdentical(of0, df1[,"varOF2"])
 
     ## ordinal --> ordinal
     of0 <- plyr::mapvalues(o, from=c(1,3,5), to=c("low","mid","high"))
-    checkEquals(of0, df1[,"varOO"])
+    checkIdentical(of0, df1[,"varOO"])
 
-    ## ordinal --> character (NOTE: < must be changed to | in value_new col)
+    ## ordinal --> character (1)
     oc0 <- as.character(o)
-    checkEquals(oc0, df1[,"varOC"])
+    checkIdentical(oc0, df1[,"varOC1"])
+    
+    ## ordinal --> character (2)
+    oc0 <- as.character(plyr::mapvalues(o, from=c("1","3","5"),
+                                        to=c("1","5","7")))
+    checkIdentical(oc0, df1[,"varOC2"])
 
     ## TEST CONVERSIONS FROM CHARACTER
     c1 <- df0[,"varC1"]
 
-    ## character --> logical
+    ## character --> logical (1)
+    cl0 <- as.logical(c1)
+    checkIdentical(cl0, df1[,"varCL1"])
+    
+    ## character --> logical (2)
     cl0 <- ifelse(c1 %in% c("0","0.1","0.2","0.3","0.4"), FALSE, TRUE)
-    checkEquals(cl0, df1[,"varCL"])
+    checkIdentical(cl0, df1[,"varCL2"])
 
-    ## character --> integer
-    ci0 <- ifelse(c1 %in% c("0","0.1","0.2","0.3","0.4"), 0, 1)
-    checkEquals(ci0, df1[,"varCI"])
+    ## character --> integer (1)
+    ci0 <- as.integer(c1)
+    checkIdentical(ci0, df1[,"varCI1"])
+    
+    ## character --> integer (2)
+    ci0 <- as.integer(ifelse(c1 %in% c("0","0.1","0.2","0.3","0.4"), 0, 1))
+    checkIdentical(ci0, df1[,"varCI2"])
 
     ## character --> numeric (1)
     cn0 <- as.numeric(c1)
     checkEqualsNumeric(cn0, df1[,"varCN1"], tolerance=floatPrecision)
     
     ## character --> numeric (2)
-    cn0 <- as.numeric(c1)
+    cn0 <- as.numeric(plyr::mapvalues(c1, from=seq(0, 1, 0.1),
+                                      to=seq(-0.5, 0.5, 0.1)))
     checkEqualsNumeric(cn0, df1[,"varCN2"], tolerance=floatPrecision)
 
-    ## character --> factor
+    ## character --> factor (1)
+    cf0 <- factor(c1)
+    checkIdentical(cf0, df1[,"varCF1"])
+    
+    ## character --> factor (2)
     cf0 <- factor(plyr::mapvalues(c1, from=as.character(seq(0,1,0.1)),
                   to=c("X","X","X","X","Y","Y","Y","Y","Z","Z","Z")))
-    checkEquals(cf0, df1[,"varCF"])
+    checkIdentical(cf0, df1[,"varCF2"])
 
-    ## character --> ordinal
+    ## character --> ordinal (1)
+    co0 <- ordered(c1)
+    checkIdentical(co0, df1[,"varCO1"])
+        
+    ## character --> ordinal (2) 
     co0 <- ordered(plyr::mapvalues(c1, from=as.character(seq(0,1,0.1)),
                    to=c("F","F","F","F","F","F","D","C","B","A","A")),
                    levels=c("F","D","C","B","A"))
-    checkEquals(co0, df1[,"varCO"])
+    checkIdentical(co0, df1[,"varCO2"])
 
     ## character --> character
     cc0 <- plyr::mapvalues(c1, from=as.character(seq(0,1,0.1)),
                            to=letters[seq(1, 11)])
-    checkEquals(cc0, df1[,"varCC"])
+    checkIdentical(cc0, df1[,"varCC"])
     
 }
 
