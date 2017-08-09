@@ -903,7 +903,6 @@ keyImport <- function(key, ignoreCase = TRUE,
     }
 
     if (long){
-
         class(key) <- c("keylong", "data.frame")
         attr(key, "ignoreCase") <- ignoreCase
         attr(key, "na.strings") <- na.strings
