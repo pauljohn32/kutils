@@ -127,6 +127,37 @@ test.assignMissing <- function() {
     checkEqualsNumeric(x1, x2, tolerance=floatPrecision)
 }
 
+## testing assignRecode() function:
+##   1. check numeric transformations
+test.assignRecode <- function() {
+
+    set.seed(234234)
+    x <- rpois(100, lambda = 3)
+    x <- x[order(x)]
+
+    ## log transformation
+    xlog1 <- log(x + 1)
+    xlog2 <- assignRecode(x, "log(x + 1)")
+    checkEqualsNumeric(xlog1, xlog2, tolerance=floatPrecision)
+
+    ## quadratic transformation
+    xsq1 <- x^2
+    xsq2 <- assignRecode(x, "x^2")
+    checkEqualsNumeric(xsq1, xsq2, tolerance=floatPrecision)
+    
+    ## square root transformation
+    xsqrt1 <- sqrt(x)
+    xsqrt2 <- assignRecode(x, "sqrt(x)")
+    checkEqualsNumeric(xsqrt1, xsqrt2, tolerance=floatPrecision)
+    
+}
+
+## testing cleanDataFrame() function:
+##   1. ...
+test.cleanDataFrame <- function() {
+    
+}
+
 ## testing keyTemplate() function:
 ##   1. 
 test.keyTemplate <- function(){
