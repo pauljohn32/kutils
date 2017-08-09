@@ -127,6 +127,7 @@ test.assignMissing <- function() {
     checkEqualsNumeric(x1, x2, tolerance=floatPrecision)
 }
 
+
 ## testing assignRecode() function:
 ##   1. check numeric transformations
 test.assignRecode <- function() {
@@ -152,21 +153,52 @@ test.assignRecode <- function() {
     
 }
 
-## testing cleanDataFrame() function:
-##   1. ...
-test.cleanDataFrame <- function() {
-    
-}
 
 ## testing keyTemplate() function:
-##   1. 
+##   1. Test wide key
+##   2. Test long key
+##   3. Test sorting
 test.keyTemplate <- function(){
-    dat <- data.frame("Score" = c(1, 2, 3, 42, 4, 2),
-                      "Gender" = c("M", "M", "M", "F", "F", "F"),
-                      "x" = rnorm(6))
-    kt <- keyTemplate(dat)
-    checkEquals(kt$class_old, c("integer", "factor", "numeric"))
-    checkEquals(kt$value_new, c("1|2|3|4|42", "F|M", ""))
+    set.seed(234234)
+    N <- 200
+    mydf <- data.frame(x5 = rnorm(N),
+                       x4 = rpois(N, lambda = 3),
+                       x3 = ordered(sample(c("lo", "med", "hi"),
+                                           size = N, replace=TRUE),
+                                    levels = c("med", "lo", "hi")),
+                       x2 = letters[sample(c(1:4,6), N, replace = TRUE)],
+                       x1 = factor(sample(c("cindy", "bobby", "marcia",
+                                            "greg", "peter"), N,
+                                          replace = TRUE)),
+                       x7 = ordered(letters[sample(c(1:4,6), N,
+                                                   replace = TRUE)]),
+                       x6 = sample(c(1:5), N, replace = TRUE),
+                       stringsAsFactors = FALSE)
+    mydf$x4[sample(1:N, 10)] <- 999
+    mydf$x5[sample(1:N, 10)] <- -999
+
+    ## test basic keyTemplate functionality
+    kt <- keyTemplate(mydf)
+    checkEquals(kt$class_old, kt$class_new, c("numeric", "integer", "ordered",
+                                              "character", "factor", "ordered",
+                                              "integer"))
+    checkEquals(kt$value_old, kt$value_new, c("", "0|1|2|3|4|5|6|7|11|999",
+                                              "med<lo<hi", "a|b|c|d|f",
+                                              "bobby|cindy|greg|marcia|peter",
+                                              "a<b<c<d<f", "1|2|3|4|5"))
+
+    ## test long key
+    ktL <- keyTemplate(mydf, long=TRUE)
+    checkEquals(nrow(ktL[ktL$name_old=="x3",]), 3)
+    checkEquals(unique(ktL$class_old), unique(kt$class_old))
+
+    ## test key sorting
+    ktS <- keyTemplate(mydf, sort=TRUE)
+    checkEquals(ktS$name_old, paste0("x", 1:7))
+    ktSvals <- unique(ktS$value_old)
+    ktVals <- unique(kt$value_old)
+    checkEquals(ktSvals[order(ktSvals)], ktVals[order(ktVals)])
+
 }
 
 ## from inst/examples/ directory:
