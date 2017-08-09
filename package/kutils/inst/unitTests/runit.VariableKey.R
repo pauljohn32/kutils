@@ -17,12 +17,118 @@ longkeyPath <- "../extdata/mydf.key_long.csv"
 ## widekeyPath <- system.file("extdata", "mydf.key.csv", package = "kutils")
 ## longkeyPath <- system.file("extdata", "mydf.key_long.csv", package = "kutils")
 
-## can set "tolerance" argument for handling floating point issues
+## define precision level for float comparisons
+floatPrecision <- 1e-6
+
+## testing safeInteger() function:
+##   1. Test safeInteger non-application (digits < tolerance)
+##   2. Test safeInteger application (digits > tolerance)
 test.safeInteger <- function() {
-    checkEquals(kutils::safeInteger(1.001), NULL)
-    checkEquals(kutils::safeInteger(1.0000000000001), 1)
+    checkIdentical(kutils::safeInteger(1.001), NULL)
+    checkIdentical(kutils::safeInteger(1.0000000000001), 1L)
 }
 
+## testing assignMissing() function:
+##   1. Test integers
+##   2. Test characters
+##   3. Test factors
+##   4. Test ordered factors
+##   5. Test numerics
+test.assignMissing <- function() {
+
+    ## CHECK INTEGERS
+    x <- seq.int(-2L, 22L, by = 2L)
+
+    ## specify specific values to drop
+    x1 <- ifelse(x %in% c(8, 10, 18), NA, x)
+    x2 <- assignMissing(x, "8;10;18")
+    checkIdentical(x1, x2)
+
+    ## specify range, inclusive
+    x1 <- ifelse(x >= 4 & x <= 12, NA, x)
+    x2 <- assignMissing(x, "[4,12]")
+    checkIdentical(x1, x2)
+
+    ## specify range, exclusive
+    x1 <- ifelse(x > 4 & x < 12, NA, x)
+    x2 <- assignMissing(x,  "(4,12)")
+    checkIdentical(x1, x2)
+
+    ## specify single inequality, exclusive
+    x1 <- ifelse(x < 7, NA, x)
+    x2 <- assignMissing(x, "< 7")
+    checkIdentical(x1, x2)
+    x1 <- ifelse(x > 11, NA, x)
+    x2 <- assignMissing(x, "> 11")
+    checkIdentical(x1, x2)
+
+    ## specify single inequality, inclusive
+    x1 <- ifelse(x <= 8, NA, x)
+    x2 <- assignMissing(x, "<= 8")
+    checkIdentical(x1, x2)
+
+    ## specify multiple inequalities
+    x1 <- ifelse(x < -1 | x==2 | x==4 | (x > 7 & x < 9) | x > 20, NA, x)
+    x2 <- assignMissing(x, "< -1;2;4;(7, 9);> 20")
+    checkIdentical(x1, x2)
+
+    ## CHECK CHARACTERS
+    x <- c("low", "low", "med", "high")
+
+    ## specify multiple values to drop
+    x1 <- ifelse(x %in% c("low", "high"), NA, x)
+    x2 <- assignMissing(x, "low;high")
+    checkIdentical(x1, x2)
+
+    ## handling nonexistent values (possibly due to spelling mistakes)
+    x1 <- ifelse(x %in% c("med","lo"), NA, x)
+    x2 <- assignMissing(x, "med;lo")
+    checkIdentical(x1, x2)
+    
+    ## test alternate separator
+    x1 <- ifelse(x %in% c("low", "med"), NA, x)
+    x2 <- assignMissing(x, "low|med", sep = "|")
+    checkIdentical(x1, x2)
+
+    ## CHECK FACTORS
+    x <- factor(c("low", "low", "med", "high"), levels = c("low", "med", "high"))
+    x1 <- x
+    x1[x1 %in% c("low", "high")] <- NA
+    x1 <- factor(x1)
+    x2 <- assignMissing(x, "low;high")
+    checkIdentical(x1, x2)
+
+    ## CHECK ORDINAL FACTORS
+    x <- ordered(c("low", "low", "med", "high"), levels = c("low", "med", "high"))
+    x1 <- x
+    x1[x1 %in% c("low", "high")] <- NA
+    x1 <- factor(x1)
+    x2 <- assignMissing(x, c("low", "high"))
+    checkIdentical(x1, x2)
+
+    ## CHECK NUMERICS
+    set.seed(234234)
+    x <- rnorm(10)
+
+    ## test inequalities
+    x1 <- ifelse(x < 0, NA, x)
+    x2 <- assignMissing(x, "< 0")
+    checkIdentical(x1, x2)
+    x1 <- ifelse(x > -0.2, NA, x)
+    x2 <- assignMissing(x, "> -0.2")
+    checkIdentical(x1, x2)
+    
+    ## test ranges
+    x1 <- ifelse(x > 0.1 & x < 0.7, NA, x)
+    x2 <- assignMissing(x, "(0.1,0.7)")
+    checkEqualsNumeric(x1, x2, tolerance=floatPrecision)
+    x1 <- ifelse(x > -0.487971 & x < 0.143579, NA, x)
+    x2 <- assignMissing(x, "(-0.487971, 0.143579)")
+    checkEqualsNumeric(x1, x2, tolerance=floatPrecision)
+}
+
+## testing keyTemplate() function:
+##   1. 
 test.keyTemplate <- function(){
     dat <- data.frame("Score" = c(1, 2, 3, 42, 4, 2),
                       "Gender" = c("M", "M", "M", "F", "F", "F"),
@@ -51,8 +157,6 @@ test.keyImport <- function() {
 
 }
 
-## define precision level for float comparisons
-floatPrecision <- 1e-6
 
 ## test keyApply function
 test.keyApply <- function() {
