@@ -12,6 +12,7 @@ dfPath <- "../extdata/testDF.csv"
 keyPath <- "../extdata/testDFkey.csv"
 widekeyPath <- "../extdata/mydf.key.csv"
 longkeyPath <- "../extdata/mydf.key_long.csv"
+longkey1Path <- "../extdata/longKey.csv"
 
 ## dfPath <- system.file("extdata", "mydf.csv", package = "kutils")
 ## widekeyPath <- system.file("extdata", "mydf.key.csv", package = "kutils")
@@ -541,3 +542,33 @@ test.keyApply <- function() {
     
 }
 
+
+## test wide2long() function
+test.wide2long <- function() {
+
+    wkey <- keyImport(widekeyPath, long=FALSE)
+    lkey0 <- keyImport(longkey1Path, long=TRUE)
+    row.names(lkey0) <- NULL
+    attributes(lkey0)$ignoreCase <- NULL
+    lkey1 <- wide2long(wkey)
+    ## handle "." -> NA conversion (this is taken care of in keyImport)
+    lkey1$value_old <- ifelse(lkey1$value_old==".", NA, lkey1$value_old)
+    lkey1$value_new <- ifelse(lkey1$value_new==".", NA, lkey1$value_new)
+    row.names(lkey1) <- NULL
+    checkEquals(lkey0, lkey1)
+    
+}
+
+
+## test long2wide() function
+test.long2wide <- function() {
+
+    lkey <- keyImport(longkey1Path, long=TRUE)
+    wkey0 <- keyImport(widekeyPath, long=FALSE)
+    row.names(wkey0) <- NULL
+    attributes(wkey0)$ignoreCase <- NULL
+    wkey1 <- long2wide(lkey)
+    row.names(wkey1) <- NULL
+    checkEquals(wkey0, wkey1)
+    
+}
