@@ -201,18 +201,18 @@ test.keyTemplate <- function(){
 
 }
 
-## from inst/examples/ directory:
-## test keyImport function (currently fails but this is due to an upstream
-##   problem with wide2long)
+## testing keyImport() function:
+##   1. check that direct import produces same result as data.frame import
+##   (all other parameters handled by separate functions)
 test.keyImport <- function() {
 
     ## check wide key direct import and import from read-in data
-    widekey1 <- keyImport(widekeyPath)
+    widekey1 <- keyImport(widekeyPath, long=FALSE)
     widekeyDF <- read.csv(widekeyPath, stringsAsFactors=FALSE)
     widekey2 <- keyImport(widekeyDF, long=FALSE)
     checkEquals(widekey1, widekey2)
 
-    ## check long keys
+    ## check long key import
     longkey1 <- keyImport(longkeyPath, long=TRUE)
     longkeyDF <- read.csv(longkeyPath, stringsAsFactors=FALSE)
     longkey2 <- keyImport(longkeyDF, long=TRUE)
