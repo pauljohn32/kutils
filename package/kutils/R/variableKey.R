@@ -425,7 +425,7 @@ checkValue_new <- function(value_new, class_new){
 ##' classes, and legal values, and then it creates a table summarizing
 ##' that information. The aim is to create a document that principal
 ##' investigators and research assistants can use to keep a project
-##' well organize.  Please see the vignette in this package.
+##' well organized.  Please see the vignette in this package.
 ##'
 ##' The variable key can be created in two formats.  The original
 ##' style of the variable key has one row per variable. It has a style
@@ -866,10 +866,15 @@ keyImport <- function(key, ignoreCase = TRUE,
     key[key$class_old == "logical" & !is.na(key$value_old) & key$value_old == 0, "value_old"] <- FALSE
 
     key$missings <- gsub("<-", "< -", key$missings, fixed = TRUE)
+    
     ## protect against user-inserted spaces (leading or trailing)
     key$name_old <- zapspace(key$name_old)
     key$name_new <- zapspace(key$name_new)
 
+    ## handle empty missing/recode columns
+    if (all(is.na(key$missings))) key$missings <- character(length(key$missings))
+    if (all(is.na(key$recodes))) key$recodes <- character(length(key$recodes))
+    
     ## If name_new is any missing symbol, remove from key
     remove <- key$name_old[key$name_new %in% na.strings]
     key <- key[!key$name_old %in% remove,]
