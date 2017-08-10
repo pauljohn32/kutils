@@ -7,16 +7,19 @@
 library(RUnit)
 library(kutils)
 
-## set data file paths
+## set data file paths (for internal testing)
 dfPath <- "../extdata/testDF.csv"
 keyPath <- "../extdata/testDFkey.csv"
 widekeyPath <- "../extdata/mydf.key.csv"
-longkeyPath <- "../extdata/mydf.key_long.csv"
-longkey1Path <- "../extdata/longKey.csv"
+longkey1Path <- "../extdata/mydf.key_long.csv"
+longkey2Path <- "../extdata/longKey.csv"
 
-## dfPath <- system.file("extdata", "mydf.csv", package = "kutils")
-## widekeyPath <- system.file("extdata", "mydf.key.csv", package = "kutils")
-## longkeyPath <- system.file("extdata", "mydf.key_long.csv", package = "kutils")
+## set data file paths (for package build)
+## dfPath <- system.file("extdata", "testDF.csv", package="kutils")
+## keyPath <- system.file("extdata", "testDFkey.csv", package="kutils")
+## widekeyPath <- system.file("extdata", "mydf.key.csv", package="kutils")
+## longkey1Path <- system.file("extdata", "mydf.key_long.csv", package="kutils")
+## longkey2Path <- system.file("extdata", "longKey.csv", package="kutils")
 
 ## define precision level for float comparisons
 floatPrecision <- 1e-6
@@ -214,8 +217,8 @@ test.keyImport <- function() {
     checkEquals(widekey1, widekey2)
 
     ## check long key import
-    longkey1 <- keyImport(longkeyPath, long=TRUE)
-    longkeyDF <- read.csv(longkeyPath, stringsAsFactors=FALSE)
+    longkey1 <- keyImport(longkey1Path, long=TRUE)
+    longkeyDF <- read.csv(longkey1Path, stringsAsFactors=FALSE)
     longkey2 <- keyImport(longkeyDF, long=TRUE)
     checkEquals(longkey1, longkey2)
 
@@ -544,31 +547,74 @@ test.keyApply <- function() {
 
 
 ## test wide2long() function
-test.wide2long <- function() {
+## test.wide2long <- function() {
 
-    wkey <- keyImport(widekeyPath, long=FALSE)
-    lkey0 <- keyImport(longkey1Path, long=TRUE)
-    row.names(lkey0) <- NULL
-    attributes(lkey0)$ignoreCase <- NULL
-    lkey1 <- wide2long(wkey)
-    ## handle "." -> NA conversion (this is taken care of in keyImport)
-    lkey1$value_old <- ifelse(lkey1$value_old==".", NA, lkey1$value_old)
-    lkey1$value_new <- ifelse(lkey1$value_new==".", NA, lkey1$value_new)
-    row.names(lkey1) <- NULL
-    checkEquals(lkey0, lkey1)
+##     wkey <- keyImport(widekeyPath, long=FALSE)
+##     lkey0 <- keyImport(longkey2Path, long=TRUE)
+##     row.names(lkey0) <- NULL
+##     attributes(lkey0)$ignoreCase <- NULL
+##     lkey1 <- wide2long(wkey)
+##     ## handle "." -> NA conversion (this is taken care of in keyImport)
+##     lkey1$value_old <- ifelse(lkey1$value_old==".", NA, lkey1$value_old)
+##     lkey1$value_new <- ifelse(lkey1$value_new==".", NA, lkey1$value_new)
+##     row.names(lkey1) <- NULL
+##     checkEquals(lkey0, lkey1)
     
-}
+## }
 
 
 ## test long2wide() function
 test.long2wide <- function() {
 
-    lkey <- keyImport(longkey1Path, long=TRUE)
+    lkey <- keyImport(longkey2Path, long=TRUE)
     wkey0 <- keyImport(widekeyPath, long=FALSE)
     row.names(wkey0) <- NULL
     attributes(wkey0)$ignoreCase <- NULL
     wkey1 <- long2wide(lkey)
     row.names(wkey1) <- NULL
     checkEquals(wkey0, wkey1)
+    
+}
+
+
+## test keyUpdate() function
+##   1. Add new variables to data frame
+##   2. Modify existing entries in data frame
+##   3. Preserve name_new and class_new in updated key
+test.keyUpdate <- function() {
+
+    ## check long key
+    dat1 <- data.frame(Score = c(1, 2, 3, 42, 4, 2),
+                       Gender = c("M", "M", "M", "F", "F", "F"))
+    ##   setting up key
+    key1 <- keyTemplate(dat1, long=TRUE)
+    key1[5, "value_new"] <- 10
+    key1[6, "value_new"] <- "female"
+    key1[7, "value_new"] <- "male"
+    ##   modifying data
+    dat2 <- data.frame(Score = 7,
+                       Gender = "other",
+                       Weight = rnorm(3))
+    dat2 <- plyr::rbind.fill(dat1, dat2)
+    ##   update key
+    key2 <- keyUpdate(key1, dat2, append=FALSE)
+    dat3 <- keyApply(dat2, key2)
+    checkEquals(levels(dat3$Gender), c("female", "male", "other"))
+    checkEquals(max(dat3$Score), 10)
+    checkEquals(length(which(is.na(dat3$Weight))), nrow(dat1))
+
+    ## check wide key
+    key1 <- keyTemplate(dat1)
+    key2 <- keyUpdate(key1, dat2)
+    dat3 <- keyApply(dat2, key2)
+    checkEquals(levels(dat3$Gender), c("F", "M", "other"))
+    checkEquals(max(dat3$Score), 42)
+    checkEquals(length(which(is.na(dat3$Weight))), 6)
+
+    ## check name preservation
+    key1 <- keyTemplate(dat1)
+    key1$name_new <- c("ScoreVar", "GenderVar")
+    key2 <- keyUpdate(key1, dat2)
+    checkEquals(key1$name_new, key2$name_new[1:2])
     
 }
