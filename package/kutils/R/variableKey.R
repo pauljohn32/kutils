@@ -668,8 +668,10 @@ smartRead <- function(file, ...){
             names(xlsxargz)[which(names(xlsxargz) == "file")] <- "xlsxFile"
             key <- do.call("read.xlsx", xlsxargz)
             ## Force columns to be of type "character"
+            ## replace NAs with empty strings
             for(i in colnames(key)){
                 if (class(key[ , i]) != "character") key[ , i] <- as.character(key[ , i])
+                key[which(is.na(key[,i])), i] <- ""
             }
         } else if (length(grep("csv$", tolower(file))) > 0){
             csvargs <- list(file = file, stringsAsFactors = FALSE, colClasses = "character")
@@ -1607,7 +1609,7 @@ long2wide <- function(keylong){
 ##' @export
 ##' @return Updated variable key.
 ##' @importFrom plyr rbind.fill
-##' @author Ben Kite <bakite@@ku.edu>
+##' @author Ben Kite <bakite@ku.edu>
 ##' @examples
 ##' dat1 <- data.frame("Score" = c(1, 2, 3, 42, 4, 2),
 ##'                    "Gender" = c("M", "M", "M", "F", "F", "F"))
