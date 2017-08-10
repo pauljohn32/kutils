@@ -577,7 +577,7 @@ test.long2wide <- function() {
 }
 
 
-## test keyUpdate() function
+## test keyUpdate() function:
 ##   1. Add new variables to data frame
 ##   2. Modify existing entries in data frame
 ##   3. Preserve name_new and class_new in updated key
@@ -618,3 +618,29 @@ test.keyUpdate <- function() {
     checkEquals(key1$name_new, key2$name_new[1:2])
     
 }
+
+
+## test keyDiff() function
+test.keyDiff <- function() {
+
+    ## check that keyUpdate changes are reflected in keyDiff
+    dat1 <- data.frame(Score = c(1, 2, 3, 42, 4, 2),
+                       Gender = c("M", "M", "M", "F", "F", "F"))
+    key1 <- keyTemplate(dat1, long = TRUE)
+    key1[5, "value_new"] <- 10
+    key1[6, "value_new"] <- "female"
+    key1[7, "value_new"] <- "male"
+    key1[key1$name_old=="Score", "name_new"] <- "ScoreVar"
+    dat2 <- data.frame(Score = 7, Gender = "other", Weight = rnorm(3))
+    dat2 <- plyr::rbind.fill(dat1, dat2)
+    key2 <- keyUpdate(key1, dat2, append=FALSE)
+    diffOutput1 <- keyDiff(key1, key2)$changes
+    checkEquals(grepl("Gender", diffOutput1), TRUE)
+    checkEquals(grepl("ScoreVar", diffOutput1), FALSE)
+
+    ## check identity condition
+    diffOutput2 <- keyDiff(key1, key1)
+    checkEquals(grepl("no differences", diffOutput2), TRUE)
+    
+}
+
