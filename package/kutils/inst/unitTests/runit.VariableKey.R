@@ -652,8 +652,42 @@ test.keyDiff <- function() {
 ## test smartRead() function:
 ##   1. xlsx and csv imports should be equivalent
 test.smartRead <- function() {
-    key1 <- smartRead(widekey2Path)
-    key2 <- smartRead(widekey3Path)
+    key1 <- kutils:::smartRead(widekey2Path)
+    key2 <- kutils:::smartRead(widekey3Path)
     checkEquals(key1, key2)
 }
 
+
+## TODO:
+
+## test keyClassFix() function
+## test.keyClassFix <- function() {
+
+## }
+
+
+## test keyCrossRef() function
+test.keyCrossRef <- function() {
+
+    ## set up key
+    dat <- data.frame(x1 = sample(c("a", "b", "c", "d"), 100, replace = TRUE),
+                     x2 = sample(c("Apple", "Orange"), 100, replace = TRUE),
+                     x3 = ordered(sample(c("low", "medium", "high"), 100, replace = TRUE),
+                                  levels = c("low", "medium", "high")),
+                     stringsAsFactors = FALSE)
+    key1 <- keyTemplate(dat, long = TRUE)
+    
+    ## with a fresh key no flags should be produced
+    crossref1 <- tryCatch(kutils:::keyCrossRef(key1, verbose = TRUE),
+                          warning = function(w) w)
+    checkEquals("warning" %in% class(crossref1), FALSE)
+
+    ## modify key and check for flags
+    key2 <- key1
+    key2[1:2, "value_new"] <- c("b", "a")
+    key2[7:9, "value_new"] <- c("high", "medium", "low")
+    crossref2 <- tryCatch(kutils:::keyCrossRef(key2, verbose=TRUE),
+                          warning = function(w) w)
+    checkEquals("warning" %in% class(crossref2), TRUE)
+    
+}
