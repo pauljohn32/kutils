@@ -11,6 +11,8 @@ library(kutils)
 dfPath <- "../extdata/testDF.csv"
 keyPath <- "../extdata/testDFkey.csv"
 widekeyPath <- "../extdata/mydf.key.csv"
+widekey2Path <- "../extdata/wideKey.csv"
+widekey3Path <- "../extdata/wideKey.xlsx"
 longkey1Path <- "../extdata/mydf.key_long.csv"
 longkey2Path <- "../extdata/longKey.csv"
 
@@ -18,6 +20,8 @@ longkey2Path <- "../extdata/longKey.csv"
 ## dfPath <- system.file("extdata", "testDF.csv", package="kutils")
 ## keyPath <- system.file("extdata", "testDFkey.csv", package="kutils")
 ## widekeyPath <- system.file("extdata", "mydf.key.csv", package="kutils")
+## widekey2Path <- system.file("extdata", "wideKey.csv", package="kutils")
+## widekey3Path <- system.file("extdata", "wideKey.xlsx", package="kutils")
 ## longkey1Path <- system.file("extdata", "mydf.key_long.csv", package="kutils")
 ## longkey2Path <- system.file("extdata", "longKey.csv", package="kutils")
 
@@ -642,5 +646,14 @@ test.keyDiff <- function() {
     diffOutput2 <- keyDiff(key1, key1)
     checkEquals(grepl("no differences", diffOutput2), TRUE)
     
+}
+
+
+## test smartRead() function:
+##   1. xlsx and csv imports should be equivalent
+test.smartRead <- function() {
+    key1 <- smartRead(widekey2Path)
+    key2 <- smartRead(widekey3Path)
+    checkEquals(key1, key2)
 }
 
