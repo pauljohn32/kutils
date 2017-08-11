@@ -10,20 +10,16 @@ library(kutils)
 ## set data file paths (for internal testing)
 dfPath <- "../extdata/testDF.csv"
 keyPath <- "../extdata/testDFkey.csv"
-widekeyPath <- "../extdata/mydf.key.csv"
-widekey2Path <- "../extdata/wideKey.csv"
-widekey3Path <- "../extdata/wideKey.xlsx"
-longkey1Path <- "../extdata/mydf.key_long.csv"
-longkey2Path <- "../extdata/longKey.csv"
+widekeyPath <- "../extdata/wideKey.csv"
+longkeyPath <- "../extdata/longKey.csv"
+widekeyXLSPath <- "../extdata/wideKey.xlsx"
 
 ## set data file paths (for package build)
 ## dfPath <- system.file("extdata", "testDF.csv", package="kutils")
 ## keyPath <- system.file("extdata", "testDFkey.csv", package="kutils")
-## widekeyPath <- system.file("extdata", "mydf.key.csv", package="kutils")
-## widekey2Path <- system.file("extdata", "wideKey.csv", package="kutils")
-## widekey3Path <- system.file("extdata", "wideKey.xlsx", package="kutils")
-## longkey1Path <- system.file("extdata", "mydf.key_long.csv", package="kutils")
-## longkey2Path <- system.file("extdata", "longKey.csv", package="kutils")
+## widekeyPath <- system.file("extdata", "wideKey.csv", package="kutils")
+## longkeyPath <- system.file("extdata", "longKey.csv", package="kutils")
+## widekeyXLSPath <- system.file("extdata", "wideKey.xlsx", package="kutils")
 
 ## define precision level for float comparisons
 floatPrecision <- 1e-6
@@ -221,8 +217,8 @@ test.keyImport <- function() {
     checkEquals(widekey1, widekey2)
 
     ## check long key import
-    longkey1 <- keyImport(longkey1Path, long=TRUE)
-    longkeyDF <- read.csv(longkey1Path, stringsAsFactors=FALSE)
+    longkey1 <- keyImport(longkeyPath, long=TRUE)
+    longkeyDF <- read.csv(longkeyPath, stringsAsFactors=FALSE)
     longkey2 <- keyImport(longkeyDF, long=TRUE)
     checkEquals(longkey1, longkey2)
 
@@ -570,7 +566,7 @@ test.keyApply <- function() {
 ## test long2wide() function
 test.long2wide <- function() {
 
-    lkey <- keyImport(longkey2Path, long=TRUE)
+    lkey <- keyImport(longkeyPath, long=TRUE)
     wkey0 <- keyImport(widekeyPath, long=FALSE)
     row.names(wkey0) <- NULL
     attributes(wkey0)$ignoreCase <- NULL
@@ -652,18 +648,61 @@ test.keyDiff <- function() {
 ## test smartRead() function:
 ##   1. xlsx and csv imports should be equivalent
 test.smartRead <- function() {
-    key1 <- kutils:::smartRead(widekey2Path)
-    key2 <- kutils:::smartRead(widekey3Path)
+    key1 <- kutils:::smartRead(widekeyPath)
+    key2 <- kutils:::smartRead(widekeyXLSPath)
     checkEquals(key1, key2)
 }
 
 
-## TODO:
+## test keyClassFix() function:
+##   1. Legal conversions (on both or a single class column)
+##   2. Non-legal conversions result in warning
+test.keyClassFix <- function() {
 
-## test keyClassFix() function
-## test.keyClassFix <- function() {
+    ## setup
+    dat1 <- data.frame(x1 = as.integer(rnorm(100)),
+                       x2 = sample(c("Apple", "Orange"), 100, replace = TRUE),
+                       x3 = ifelse(rnorm(100) < 0, TRUE, FALSE))
+    dat2 <- data.frame(x1 = rnorm(100),
+                       x2 = ordered(sample(c("Apple","Orange"),100,replace=TRUE)),
+                       x3 = rbinom(100, 1, .5),
+                       stringsAsFactors = FALSE)
+    key1 <- keyTemplate(dat1, long=TRUE)
+    key2 <- keyTemplate(dat2, long=TRUE)
+    stackedKeys <- rbind(key1, key2)
 
-## }
+    ## check default usage with promotable classes
+    stackedKeysFix <- kutils:::keyClassFix(stackedKeys)
+    checkEquals(stackedKeysFix$class_old,
+                stackedKeysFix$class_new,
+                c(rep("numeric", 6), rep("factor", 2), rep("numeric", 4)))
+    
+    ## check change restricted to class_old
+    stackedKeysFix2 <- kutils:::keyClassFix(stackedKeys, colnames="class_old")
+    checkEquals(stackedKeysFix2$class_old,
+                c(rep("numeric", 6), rep("factor", 4), rep("numeric", 4)))
+    checkTrue(!all(stackedKeysFix2$class_new ==
+                   c(rep("numeric", 6), rep("factor", 4), rep("numeric", 4))))
+    
+    ## check change restricted to class_new
+    stackedKeysFix3 <- kutils:::keyClassFix(stackedKeys, colnames="class_new")    
+    checkEquals(stackedKeysFix3$class_new,
+                c(rep("numeric", 6), rep("factor", 4), rep("numeric", 4)))
+    
+    ## check case where to homogenization is not possible
+    dat3 <- data.frame(x1 = as.integer(rnorm(100)),
+                       x2 = sample(c("Apple", "Orange"), 100, replace = TRUE))
+    dat4 <- data.frame(x1 = rnorm(100),
+                       x2 = sample(c("Apple", "Orange"), 100, replace = TRUE),
+                       stringsAsFactors = FALSE)
+    key3 <- keyTemplate(dat3, long = TRUE)
+    key4 <- keyTemplate(dat4, long = TRUE)
+    stackedKeys2 <- rbind(key3, key4)
+    stackedKeys2Fix <- tryCatch(kutils:::keyClassFix(stackedKeys2),
+                                warning=function(w) w)
+    checkTrue("warning" %in% class(stackedKeys2Fix))
+
+}
 
 
 ## test keyCrossRef() function
@@ -680,7 +719,7 @@ test.keyCrossRef <- function() {
     ## with a fresh key no flags should be produced
     crossref1 <- tryCatch(kutils:::keyCrossRef(key1, verbose = TRUE),
                           warning = function(w) w)
-    checkEquals("warning" %in% class(crossref1), FALSE)
+    checkTrue(!("warning" %in% class(crossref1)))
 
     ## modify key and check for flags
     key2 <- key1
@@ -688,6 +727,6 @@ test.keyCrossRef <- function() {
     key2[7:9, "value_new"] <- c("high", "medium", "low")
     crossref2 <- tryCatch(kutils:::keyCrossRef(key2, verbose=TRUE),
                           warning = function(w) w)
-    checkEquals("warning" %in% class(crossref2), TRUE)
+    checkTrue("warning" %in% class(crossref2))
     
 }
