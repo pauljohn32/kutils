@@ -888,12 +888,13 @@ keyImport <- function(key, ignoreCase = TRUE,
     ## if this is long key, following is safe. How about wide key?
     key$value_old <- trimws(key$value_old)
     key$value_new <- trimws(key$value_new)
-    key$value_old <- ifelse(is.na(key$value_old), ".", key$value_old)
-    key$value_new <- ifelse(is.na(key$value_new), ".", key$value_new)
-    MISSSymbol <- "."
-    key[key$value_new %in% na.strings, "value_new"] <- MISSSymbol
-    key[key$value_old %in% na.strings, "value_old"] <- MISSSymbol
 
+    missSymbol <- "."
+    key$value_old <- ifelse(is.na(key$value_old), missSymbol, key$value_old)
+    key$value_new <- ifelse(is.na(key$value_new), missSymbol, key$value_new)
+    key[key$value_new %in% na.strings, "value_new"] <- missSymbol
+    key[key$value_old %in% na.strings, "value_old"] <- missSymbol
+    
     ## Delete repeated rows:
     key <- key[!duplicated(key), ]
 
@@ -1514,20 +1515,12 @@ long2wide <- function(keylong){
         values <- cbind(value_old = x$value_old, value_new = x$value_new)
         values <- unique(values)
 
-        ## 20170130: Was worried that NA and "NA" become indistinguisable
-        ## All values marked as R missing NA will be re-set as "." in the
-        ## short key
-        printvals <- function(x, collapse){
-            x <- ifelse(is.na(x), ".", x)
-            paste(x, collapse = collapse)
-        }
-
         list(name_old = unique(x$name_old),
              name_new = unique(x$name_new),
              class_old = unique(x$class_old),
              class_new = unique(x$class_new),
-             value_old = printvals(values[ , "value_old"], collapse = sep_old),
-             value_new = printvals(values[ , "value_new"], collapse = sep_new),
+             value_old = paste(values[ , "value_old"], collapse = sep_old),
+             value_new = paste(values[ , "value_new"], collapse = sep_new),
              missings = paste(missings, collapse = ";"),
              recodes =  paste(recodes, collapse = ";"))
     }
