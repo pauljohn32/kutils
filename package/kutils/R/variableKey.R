@@ -2045,8 +2045,8 @@ keyCheck <- function(key,
 ##' @param keysplit a list of key blocks, each of which is to be
 ##'     inspected and homogenized. Not used if a key is provided.
 ##' @param classes A list of vectors specifying legal promotions.
-##' @param colname Either "class_old" or "class_new". The former is
-##'     default.
+##' @param colnames Either c("class_old","class_new), ""class_old", or "class_new". 
+##'     The former is the default.
 ##' @param textre A regular expression matching a column name to be
 ##'     treated as character. Default matches any variable name ending
 ##'     in "TEXT"
@@ -2087,22 +2087,23 @@ keyClassFix <- function(keylong = NULL, keysplit = NULL,
                         classes = list(c("logical", "integer"),
                                        c("integer", "numeric"),
                                        c("ordered", "factor")),
-                        colname = "class_old", textre = "TEXT$")
+                        colnames = c("class_old","class_new"),
+                        textre = "TEXT$")
 {
     if (!is.null(keylong)){
         if (!is.null(keysplit)){
-            warning("A key and a keysplit were provided.  The keysplit arugment is ignored")
+            warning("A key and a keysplit were provided.  The keysplit argument is ignored")
         }
-        if(!inherits(keylong, "keylong")){
+        if (!inherits(keylong, "keylong")) {
             ##keylong <- kutils::wide2long(keylong)
             ## TODO, work out a smooth wide2long conversion.
             stop("keylong is not recognized as a long key")
-        }else{
+        } else {
             NULL
         }
         if (missing(keysplit)) keysplit <- split(keylong, keylong[ , "name_new"])
     } else {
-        if (is.null(keysplit)){
+        if (is.null(keysplit)) {
             stop("A key or keysplit argument must be provided")
         }
     }
@@ -2112,37 +2113,43 @@ keyClassFix <- function(keylong = NULL, keysplit = NULL,
     ## classes: vector of classes, the last of which is the acceptable one, to replace
     ## the others.
     ## colname: either "class_old" or "class_new"
-    classClean <- function (keyblock, colname = colname, classes)
+    classClean <- function (keyblock, colnames = colnames, classes)
     {
-        keyblock[keyblock[ , colname] %in% classes[-length(classes)], colname] <- classes[length(classes)]
+        for (col in colnames) {
+            keyblock[keyblock[ , col] %in% classes[-length(classes)], col] <- classes[length(classes)]
+        }
         keyblock
     }
 
     ## if mixed, promote all to last named class
     for(i in seq_along(keysplit)){
         keyblock <- keysplit[[i]]
-        if (length(unique(keyblock[, colname])) == 1) next()
+        if (length(unique(keyblock[, colnames[1]])) == 1) next() # use first col if two
         ## Special case. Any variable matching textre
-        if (any(grepl(textre, names(keysplit)[i], ignore.case = TRUE))){
-            keyblock[ , colname] <- "character"
+        if (any(grepl(textre, names(keysplit)[i], ignore.case = TRUE))) {
+            for (col in colnames) {
+                keyblock[ , col] <- "character"
+            }
             keysplit[[i]] <- unique(keyblock)
             next()
         }
 
-        for(j in classes){
-            keyblock <- classClean(keyblock, colname = colname, classes = j)
+        for (j in classes) {
+            keyblock <- classClean(keyblock, colnames = colnames, classes = j)
             keysplit[[i]] <- unique(keyblock)
-            if (length(unique(keyblock[, colname])) == 1){
+            if (length(unique(keyblock[, colnames[1]])) == 1) {
                 next()
             }
         }
 
-        if (length(unique(keyblock[, colname])) > 1) {
-            MESSG <- paste("Cannot painlessly reduce key classes to homogeneous.",
+        if (length(unique(keyblock[, colnames[1]])) > 1) {
+            MESSG <- paste("Cannot painlessly reduce key classes to homogeneous class.",
                            names(keysplit)[i], "changing class to character")
-            warning(paste0(names(keysplit)[i], " ", paste(unique(keyblock[ , colname]),
+            warning(paste0(names(keysplit)[i], " ", paste(unique(keyblock[ , colnames[1]]),
                                                     collapse = " + "), ". ", MESSG), immediate. = TRUE)
-            keyblock[ , colname] <- "character"
+            for (col in colnames) {
+                keyblock[ , col] <- "character"
+            }
             keysplit[[i]] <- unique(keyblock)
             ##warning(paste(names(keysplit)[i], "changing class to character"), immediate. = TRUE)
         }
