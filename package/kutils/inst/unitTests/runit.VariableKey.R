@@ -547,20 +547,17 @@ test.keyApply <- function() {
 
 
 ## test wide2long() function
-## test.wide2long <- function() {
+test.wide2long <- function() {
 
-##     wkey <- keyImport(widekeyPath, long=FALSE)
-##     lkey0 <- keyImport(longkey2Path, long=TRUE)
-##     row.names(lkey0) <- NULL
-##     attributes(lkey0)$ignoreCase <- NULL
-##     lkey1 <- wide2long(wkey)
-##     ## handle "." -> NA conversion (this is taken care of in keyImport)
-##     lkey1$value_old <- ifelse(lkey1$value_old==".", NA, lkey1$value_old)
-##     lkey1$value_new <- ifelse(lkey1$value_new==".", NA, lkey1$value_new)
-##     row.names(lkey1) <- NULL
-##     checkEquals(lkey0, lkey1)
+    wkey <- keyImport(widekeyPath, long=FALSE)
+    lkey0 <- keyImport(longkeyPath, long=TRUE)
+    row.names(lkey0) <- NULL
+    attributes(lkey0)$ignoreCase <- NULL
+    lkey1 <- wide2long(wkey)
+    row.names(lkey1) <- NULL
+    checkEquals(lkey0, lkey1)
     
-## }
+}
 
 
 ## test long2wide() function
