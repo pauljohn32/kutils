@@ -8,18 +8,18 @@ library(RUnit)
 library(kutils)
 
 ## set data file paths (for internal testing)
-dfPath <- "../extdata/testDF.csv"
-keyPath <- "../extdata/testDFkey.csv"
-widekeyPath <- "../extdata/wideKey.csv"
-longkeyPath <- "../extdata/longKey.csv"
-widekeyXLSPath <- "../extdata/wideKey.xlsx"
+## dfPath <- "../extdata/testDF.csv"
+## keyPath <- "../extdata/testDFkey.csv"
+## widekeyPath <- "../extdata/wideKey.csv"
+## longkeyPath <- "../extdata/longKey.csv"
+## widekeyXLSPath <- "../extdata/wideKey.xlsx"
 
 ## set data file paths (for package build)
-## dfPath <- system.file("extdata", "testDF.csv", package="kutils")
-## keyPath <- system.file("extdata", "testDFkey.csv", package="kutils")
-## widekeyPath <- system.file("extdata", "wideKey.csv", package="kutils")
-## longkeyPath <- system.file("extdata", "longKey.csv", package="kutils")
-## widekeyXLSPath <- system.file("extdata", "wideKey.xlsx", package="kutils")
+dfPath <- system.file("extdata", "testDF.csv", package="kutils")
+keyPath <- system.file("extdata", "testDFkey.csv", package="kutils")
+widekeyPath <- system.file("extdata", "wideKey.csv", package="kutils")
+longkeyPath <- system.file("extdata", "longKey.csv", package="kutils")
+widekeyXLSPath <- system.file("extdata", "wideKey.xlsx", package="kutils")
 
 ## define precision level for float comparisons
 floatPrecision <- 1e-6

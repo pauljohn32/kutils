@@ -20,7 +20,7 @@ Description: Tools for data importation, recoding, and inspection that
     about the variable key and the vignette about it.
 License: GPL-2
 Depends: R (>= 3.3.0)
-Imports: stats, utils, methods, xtable, lavaan, plyr, openxlsx 
+Imports: stats, utils, methods, xtable, lavaan, plyr, openxlsx, RUnit
 Suggests: rockchalk
 RoxygenNote: 6.0.1
 LazyData: TRUE

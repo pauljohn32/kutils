@@ -13,11 +13,11 @@ path <- system.file(package="kutils", "unitTests")
 stopifnot(file.exists(path), file.info(path.expand(path))$isdir)
 
 testsuite.variableKey <- defineTestSuite("VariableKey",
-                                        dirs=path,
-                                        testFileRegexp="^runit.+\\.R",
-                                        testFuncRegexp="^test.+",
-                                        rngKind="Marsaglia-Multicarry",
-                                        rngNormalKind="Kinderman-Ramage")
+                                         dirs=path,
+                                         testFileRegexp="^runit.+\\.R",
+                                         testFuncRegexp="^test.+",
+                                         rngKind="Marsaglia-Multicarry",
+                                         rngNormalKind="Kinderman-Ramage")
 
 testResult <- runTestSuite(testsuite.variableKey)
 printTextProtocol(testResult, showDetails=TRUE)
@@ -27,10 +27,3 @@ if (tmp$nFail > 0 | tmp$nErr > 0) {
   stop(paste0("\n\nUnit testing failed (", tmp$nFail, " test failures), ",
               tmp$nErr, " R errors)\n\n"))
 }
-
-## files <- list.files(pattern = "^runit.")
-
-## for (f in files){
-##     tmp <- runTestFile(f)
-##     printTextProtocol(tmp)
-## }
