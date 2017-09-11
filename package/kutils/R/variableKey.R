@@ -425,7 +425,7 @@ checkValue_new <- function(value_new, class_new){
 ##' classes, and legal values, and then it creates a table summarizing
 ##' that information. The aim is to create a document that principal
 ##' investigators and research assistants can use to keep a project
-##' well organize.  Please see the vignette in this package.
+##' well organized.  Please see the vignette in this package.
 ##'
 ##' The variable key can be created in two formats.  The original
 ##' style of the variable key has one row per variable. It has a style
@@ -714,8 +714,10 @@ smartRead <- function(file, ...){
             names(xlsxargz)[which(names(xlsxargz) == "file")] <- "xlsxFile"
             key <- do.call("read.xlsx", xlsxargz)
             ## Force columns to be of type "character"
+            ## replace NAs with empty strings
             for(i in colnames(key)){
                 if (class(key[ , i]) != "character") key[ , i] <- as.character(key[ , i])
+                key[which(is.na(key[,i])), i] <- ""
             }
             xlsxargz[["sheet"]] <- "varlab"
             attr(key, "varlab") <- tryCatch(do.call("read.xlsx", xlsxargz),
@@ -923,10 +925,15 @@ keyImport <- function(key, ignoreCase = TRUE,
     key[key$class_old == "logical" & !is.na(key$value_old) & key$value_old == 0, "value_old"] <- FALSE
 
     key$missings <- gsub("<-", "< -", key$missings, fixed = TRUE)
+    
     ## protect against user-inserted spaces (leading or trailing)
     key$name_old <- zapspace(key$name_old)
     key$name_new <- zapspace(key$name_new)
 
+    ## handle empty missing/recode columns
+    if (all(is.na(key$missings))) key$missings <- character(length(key$missings))
+    if (all(is.na(key$recodes))) key$recodes <- character(length(key$recodes))
+    
     ## If name_new is any missing symbol, remove from key
     remove <- key$name_old[key$name_new %in% na.strings]
     key <- key[!key$name_old %in% remove,]
@@ -938,12 +945,13 @@ keyImport <- function(key, ignoreCase = TRUE,
     ## if this is long key, following is safe. How about wide key?
     key$value_old <- trimws(key$value_old)
     key$value_new <- trimws(key$value_new)
-    key$value_old <- ifelse(is.na(key$value_old), ".", key$value_old)
-    key$value_new <- ifelse(is.na(key$value_new), ".", key$value_new)
-    MISSSymbol <- "."
-    key[key$value_new %in% na.strings, "value_new"] <- MISSSymbol
-    key[key$value_old %in% na.strings, "value_old"] <- MISSSymbol
 
+    missSymbol <- "."
+    key$value_old <- ifelse(is.na(key$value_old), missSymbol, key$value_old)
+    key$value_new <- ifelse(is.na(key$value_new), missSymbol, key$value_new)
+    key[key$value_new %in% na.strings, "value_new"] <- missSymbol
+    key[key$value_old %in% na.strings, "value_old"] <- missSymbol
+    
     ## Delete repeated rows:
     key <- key[!duplicated(key), ]
 
@@ -955,7 +963,6 @@ keyImport <- function(key, ignoreCase = TRUE,
     }
 
     if (long){
-
         class(key) <- c("keylong", "data.frame")
         attr(key, "ignoreCase") <- ignoreCase
         attr(key, "na.strings") <- na.strings
@@ -1222,6 +1229,9 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         }
         ## Extract values for convenience
         values <- v$values
+        oldVals <- v$values$value_old
+        newVals <- as.character(v$values$value_new)
+        
         ## keep spare copy of original name, in case it gets lowercased next
         v$name_old.orig <- v$name_old
         if(ignoreCase) v$name_old <- tolower(v$name_old)
@@ -1268,11 +1278,21 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             next()
         }
 
-        ## value_old and value_new are full of only NA, so don't alter
-        ## the variable
-        if (NROW(na.omit(values)) == 0){
-            mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew")
+        ## value_old and value_new are full of only NA, so only perform direct class
+        ## conversions
+        if (NROW(na.omit(values)) == 0 || length(na.omit(newVals)) == 0) {
+            if (v$class_new %in% c("factor", "ordered")) {
+                # no direct conversion to factors
+                xnew1 <- factor(xnew, ordered=(v$class_new == "ordered"))  
+            } else {
+                eval(parse(text=paste0("xnew1 <- ", "as.", v$class_new, "(xnew)")))
+            }
+            mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew1")
             eval(parse(text = mytext))
+            coercionWarning <- paste0("Coercing ",
+                                      v$class_old, " to ", v$class_new,
+                                      ". Check to be sure desired result is obtained.")
+            if (v$class_old != v$class_new) warning(coercionWarning)
             next()
         }
 
@@ -1292,9 +1312,8 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         ## If output is ordered or factor, must be dealt with specially
         if(length(v$class_new) > 0 && v$class_new %in% c("ordered", "factor")) {
             xnew2 <- plyr::mapvalues(xnew, from = values$value_old, to = values$value_new)
-            xnew2 <- factor(xnew2, levels = unique(values$value_new))
-            ## xnew2 <- factor(xnew, levels = values$value_old, ordered = v$class_new == "ordered")
-            ## levels(xnew2) <- values$value_new
+            xnew2 <- factor(xnew2, levels=unique(values$value_new),
+                            ordered=(v$class_new == "ordered"))
             mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew2")
             eval(parse(text = mytext))
             next()
@@ -1353,12 +1372,8 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             next()
         }
 
-        ## I believe these are safe to rely on coercion, since other
-        ## specific cases were done
-        discreteClasses <- c("logical", "factor", "ordered", "character", "integer")
-        if (v$class_old %in% discreteClasses && v$class_new %in% discreteClasses ||
-              v$class_old %in% c("logical", "integer", "numeric", "double"))
-        {
+        ## convert for variables with new mapping of value_old to value_new
+        if (any(v$values$value_old != v$values$value_new)) {
             xnew <- plyr::mapvalues(xnew, values$value_old, values$value_new, warn_missing = FALSE)
             mytext1 <- paste0("xnew2 <- as.", v$class_new, "(xnew)")
             eval(parse(text = mytext1))
@@ -1557,20 +1572,12 @@ long2wide <- function(keylong){
         values <- cbind(value_old = x$value_old, value_new = x$value_new)
         values <- unique(values)
 
-        ## 20170130: Was worried that NA and "NA" become indistinguisable
-        ## All values marked as R missing NA will be re-set as "." in the
-        ## short key
-        printvals <- function(x, collapse){
-            x <- ifelse(is.na(x), ".", x)
-            paste(x, collapse = collapse)
-        }
-
         list(name_old = unique(x$name_old),
              name_new = unique(x$name_new),
              class_old = unique(x$class_old),
              class_new = unique(x$class_new),
-             value_old = printvals(values[ , "value_old"], collapse = sep_old),
-             value_new = printvals(values[ , "value_new"], collapse = sep_new),
+             value_old = paste(values[ , "value_old"], collapse = sep_old),
+             value_new = paste(values[ , "value_new"], collapse = sep_new),
              missings = paste(missings, collapse = ";"),
              recodes =  paste(recodes, collapse = ";"))
     }
@@ -1652,7 +1659,7 @@ long2wide <- function(keylong){
 ##' @export
 ##' @return Updated variable key.
 ##' @importFrom plyr rbind.fill
-##' @author Ben Kite <bakite@@ku.edu>
+##' @author Ben Kite <bakite@ku.edu>
 ##' @examples
 ##' dat1 <- data.frame("Score" = c(1, 2, 3, 42, 4, 2),
 ##'                    "Gender" = c("M", "M", "M", "F", "F", "F"))
@@ -2088,8 +2095,8 @@ keyCheck <- function(key,
 ##' @param keysplit a list of key blocks, each of which is to be
 ##'     inspected and homogenized. Not used if a key is provided.
 ##' @param classes A list of vectors specifying legal promotions.
-##' @param colname Either "class_old" or "class_new". The former is
-##'     default.
+##' @param colnames Either c("class_old","class_new), ""class_old", or "class_new". 
+##'     The former is the default.
 ##' @param textre A regular expression matching a column name to be
 ##'     treated as character. Default matches any variable name ending
 ##'     in "TEXT"
@@ -2130,22 +2137,23 @@ keyClassFix <- function(keylong = NULL, keysplit = NULL,
                         classes = list(c("logical", "integer"),
                                        c("integer", "numeric"),
                                        c("ordered", "factor")),
-                        colname = "class_old", textre = "TEXT$")
+                        colnames = c("class_old","class_new"),
+                        textre = "TEXT$")
 {
     if (!is.null(keylong)){
         if (!is.null(keysplit)){
-            warning("A key and a keysplit were provided.  The keysplit arugment is ignored")
+            warning("A key and a keysplit were provided.  The keysplit argument is ignored")
         }
-        if(!inherits(keylong, "keylong")){
+        if (!inherits(keylong, "keylong")) {
             ##keylong <- kutils::wide2long(keylong)
             ## TODO, work out a smooth wide2long conversion.
             stop("keylong is not recognized as a long key")
-        }else{
+        } else {
             NULL
         }
         if (missing(keysplit)) keysplit <- split(keylong, keylong[ , "name_new"])
     } else {
-        if (is.null(keysplit)){
+        if (is.null(keysplit)) {
             stop("A key or keysplit argument must be provided")
         }
     }
@@ -2155,37 +2163,43 @@ keyClassFix <- function(keylong = NULL, keysplit = NULL,
     ## classes: vector of classes, the last of which is the acceptable one, to replace
     ## the others.
     ## colname: either "class_old" or "class_new"
-    classClean <- function (keyblock, colname = colname, classes)
+    classClean <- function (keyblock, colnames = colnames, classes)
     {
-        keyblock[keyblock[ , colname] %in% classes[-length(classes)], colname] <- classes[length(classes)]
+        for (col in colnames) {
+            keyblock[keyblock[ , col] %in% classes[-length(classes)], col] <- classes[length(classes)]
+        }
         keyblock
     }
 
     ## if mixed, promote all to last named class
     for(i in seq_along(keysplit)){
         keyblock <- keysplit[[i]]
-        if (length(unique(keyblock[, colname])) == 1) next()
+        if (length(unique(keyblock[, colnames[1]])) == 1) next() # use first col if two
         ## Special case. Any variable matching textre
-        if (any(grepl(textre, names(keysplit)[i], ignore.case = TRUE))){
-            keyblock[ , colname] <- "character"
+        if (any(grepl(textre, names(keysplit)[i], ignore.case = TRUE))) {
+            for (col in colnames) {
+                keyblock[ , col] <- "character"
+            }
             keysplit[[i]] <- unique(keyblock)
             next()
         }
 
-        for(j in classes){
-            keyblock <- classClean(keyblock, colname = colname, classes = j)
+        for (j in classes) {
+            keyblock <- classClean(keyblock, colnames = colnames, classes = j)
             keysplit[[i]] <- unique(keyblock)
-            if (length(unique(keyblock[, colname])) == 1){
+            if (length(unique(keyblock[, colnames[1]])) == 1) {
                 next()
             }
         }
 
-        if (length(unique(keyblock[, colname])) > 1) {
-            MESSG <- paste("Cannot painlessly reduce key classes to homogeneous.",
+        if (length(unique(keyblock[, colnames[1]])) > 1) {
+            MESSG <- paste("Cannot painlessly reduce key classes to homogeneous class.",
                            names(keysplit)[i], "changing class to character")
-            warning(paste0(names(keysplit)[i], " ", paste(unique(keyblock[ , colname]),
+            warning(paste0(names(keysplit)[i], " ", paste(unique(keyblock[ , colnames[1]]),
                                                     collapse = " + "), ". ", MESSG), immediate. = TRUE)
-            keyblock[ , colname] <- "character"
+            for (col in colnames) {
+                keyblock[ , col] <- "character"
+            }
             keysplit[[i]] <- unique(keyblock)
             ##warning(paste(names(keysplit)[i], "changing class to character"), immediate. = TRUE)
         }
