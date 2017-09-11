@@ -1,4 +1,15 @@
+2017-09-18  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (smartRead): tryCatch failed when varlab was
+	not a sheet.
+
+2017-09-11  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (varlabTemplate): correct Roxygen
+
 2017-07-11  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/utils.R (deduper): new function to clean strings
 
 	* ../R/variableKey.R (keyImport): Logicals: change value_new from
 	1/0 to TRUE/FALSE. This fixes a problem caused by LibreOffice

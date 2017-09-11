@@ -614,7 +614,6 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
 ##'     \code{name_old} \code{name_new}, and \code{varlab}.
 ##'
 ##' If not specified, a matrix is created with empty variable labels.
-##' @title
 ##' @param obj A variable key
 ##' @param varlab Default NULL, function will start from clean slate,
 ##'     empty column of labels.  If specified, varlab should be a named
@@ -721,7 +720,7 @@ smartRead <- function(file, ...){
             }
             xlsxargz[["sheet"]] <- "varlab"
             attr(key, "varlab") <- tryCatch(do.call("read.xlsx", xlsxargz),
-                                            error = varlabTemplate(key),
+                                            error = function(x) kutils::varlabTemplate(key),
                                             finally = NULL)
         } else if (length(grep("csv$", tolower(file))) > 0){
             csvargs <- list(file = file, stringsAsFactors = FALSE, colClasses = "character")
@@ -732,7 +731,7 @@ smartRead <- function(file, ...){
                 csvargs[["file"]] <- filevarlab
                 attr(key, "varlab") <- do.call("read.csv", csvargz) 
             } else {
-                attr(key, "varlab") <- varlabTemplate(key)
+                attr(key, "varlab") <- kutils::varlabTemplate(key)
             }
         } else if (length(grep("rds$", tolower(file))) > 0){
             key <- readRDS(file)
