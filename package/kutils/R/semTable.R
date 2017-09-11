@@ -75,7 +75,9 @@
 ##' @param group Group for which parameters should be
 ##'     reported. Provide the value in the data that indicates the
 ##'     desired group. Only necessary for multiple group
-##'     models. Defaults to NULL.
+##'     models. Defaults to NULL. If multiple groups are present but
+##'     no group is specified, a column indicating the group for each
+##'     parameter estimate will be added to the output table.
 ##' @param longtable Should a latex longtable be generated? Defaults
 ##'     to FALSE, which makes the table tabular. Ignored if type =
 ##'     "html".
@@ -200,12 +202,19 @@ semTable <-
 
     ## Handle which group to make the table for here
     if (!is.null(group)){
+        includeGroup <- FALSE
         if (!is.null(parameters$group)){
             gval <- which(object@Data@group.label %in% as.character(group))
             if (!gval%in% unique(parameters$group)){
                 stop(paste0("The value provided to the group argument is not valid."))
             }
             parameters <- parameters[parameters$group == gval,]
+        }
+    } else {
+        if (!is.null(parameters$group)){
+            includeGroup <- TRUE
+        } else {
+            includeGroup <- FALSE
         }
     }
 
@@ -223,6 +232,9 @@ Note. IDENTNOTEFITINFORMATION
 
     if(standardized == TRUE){
         report <- c("est", "se", "stdest", "stdse")
+        if(isTRUE(includeGroup)){
+            report <- c(report, "group")
+        }
         std <- update(object, std.lv = TRUE, std.ov = TRUE)
         parameters$stdest <- std@Fit@est
         parameters$stdse <- std@Fit@se
@@ -231,6 +243,9 @@ Note. IDENTNOTEFITINFORMATION
         holder <- "_BOCU_NAME_EOC_"
         reportx <- list()
         columnNames <- c("Estimate", "SE", "Estimate", "SE")
+        if(isTRUE(includeGroup)){
+            report <- c(columnNames, "Group")
+        }
         for(i in 1:length(columnNames)){
             reportx[i] <- gsub("NAME", columnNames[i], holder)
 
@@ -239,6 +254,9 @@ Note. IDENTNOTEFITINFORMATION
 
     }else{
         report <- c("est", "se", "z", "p")
+        if(isTRUE(includeGroup)){
+            report <- c(report, "group")
+        }
         parameters$stdest <- NA
         parameters$stdse <- NA
 
@@ -247,6 +265,9 @@ Note. IDENTNOTEFITINFORMATION
         holder <- "_BOCU_NAME_EOC_"
         reportx <- list()
         columnNames <- c("Estimate", "SE", "z", "p")
+        if(isTRUE(includeGroup)){
+            columnNames <- c(columnNames, "Group")
+        }
         for(i in 1:length(columnNames)){
             reportx[i] <- gsub("NAME", columnNames[i], holder)
 
@@ -271,7 +292,7 @@ Note. IDENTNOTEFITINFORMATION
 
     loadingMaker <- function(loads, report = c("est", "se", "z", "p")){
         lvname <- loads
-        trows <- parameters[which(parameters$rhs %in% variables & parameters$lhs %in% lvname & parameters$op == "=~"), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
+        trows <- parameters[which(parameters$rhs %in% variables & parameters$lhs %in% lvname & parameters$op == "=~"),]
         trows$est <- formatC(round(trows$est, 3), format = 'f', digits = 2)
         trows$se <- formatC(round(trows$se, 3), format = 'f', digits = 2)
         trows$stdest <- formatC(round(trows$stdest, 3), format = 'f', digits = 2)
@@ -294,7 +315,7 @@ ROWINFORMATION"
     }
 
     interceptMaker <- function(variables, report = c("est", "se", "z", "p")){
-        trows <- parameters[which(parameters$lhs %in% ints & parameters$op == "~1"), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
+        trows <- parameters[which(parameters$lhs %in% ints & parameters$op == "~1"),]
         if(dim(trows)[1] == 0){
             stop("Intercept estimates are requested in the table, but I can't find them in the output!")
             #return(print("It appears that no intercept estimates are present in the lavaan output"))
@@ -323,7 +344,7 @@ ROWINFORMATION"
     }
 
     observedMeanMaker <- function(variables, report = c("est", "se", "z", "p")){
-        trows <- parameters[which(parameters$lhs %in% ivs & parameters$op == "~1"), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
+        trows <- parameters[which(parameters$lhs %in% ivs & parameters$op == "~1"),]
         if(dim(trows)[1] == 0){
             stop("Predictor variable mean estimates are requested in the table, but I can't find them in the output!")
             #return(print("It appears that no intercept estimates are present in the lavaan output"))
@@ -353,7 +374,7 @@ ROWINFORMATION"
 
     slopeMaker <- function(dv, regs, report = c("est", "se", "z", "p")){
         dvname <- dv
-        trows <- regs[which(regs$lhs == dvname), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
+        trows <- regs[which(regs$lhs == dvname),]
         trows$est <- formatC(round(trows$est, 3), format = 'f', digits = 2)
         trows$se <- formatC(round(trows$se, 3), format = 'f', digits = 2)
         trows$stdest <- formatC(round(trows$stdest, 3), format = 'f', digits = 2)
@@ -378,7 +399,7 @@ ROWINFORMATION"
     }
 
     thresholdMaker <- function(variables, report = c("est", "se", "z", "p")){
-        trows <- parameters[which(parameters$op == "|" & parameters$lhs %in% variables), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
+        trows <- parameters[which(parameters$op == "|" & parameters$lhs %in% variables),]
         if(dim(trows)[1] == 0){
             stop("Threshold estimates are requested in the table, but I can't find them in the output!")
         }else{
@@ -406,7 +427,7 @@ ROWINFORMATION"
     }
 
     residualMaker <- function(variables, covariance = FALSE, report = c("est", "se", "z", "p")){
-        trows <- parameters[which(parameters$rhs %in% variables & parameters$lhs %in% variables & parameters$op == "~~"), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
+        trows <- parameters[which(parameters$rhs %in% variables & parameters$lhs %in% variables & parameters$op == "~~"),]
         if (isTRUE(covariance)){
             trows <- trows[which(trows$rhs != trows$lhs),]
             tmpx <- "_BR__EOC_ _BOMC4__UL_Covariances_EOUL__EOMC__EOR_
@@ -452,7 +473,7 @@ ROWINFORMATION"
     }
 
     latentMaker <- function(latents, report = c("est", "se", "z", "p")){
-        trows <- parameters[which(parameters$rhs %in% latents & parameters$lhs %in% latents & parameters$op == "~~"), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
+        trows <- parameters[which(parameters$rhs %in% latents & parameters$lhs %in% latents & parameters$op == "~~"),]
         if(dim(trows)[1] == 0){
             stop("Latent variance/covariance estimates are requested in the table, but I can't find them in the output!")
             #return(print("It appears that no intercept estimates are present in the lavaan output"))
@@ -469,10 +490,10 @@ ROWINFORMATION"
             trows$p <- ifelse(trows$free == 0, "", trows$p)
             tmpx <- "_BR__EOC__BOMC4__UL_Latent Variances/Covariances_EOUL__EOMC__EOR_
 ROWINFORMATION"
-            rowinfo <- paste0("_BR_", trows[1,1], " with ", trows[1,2], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
+            rowinfo <- paste0("_BR_", trows[1,1], " with ", trows[1,3], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
             if (nrow(trows) > 1){
                 for (i in 2:nrow(trows)){
-                    rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,1], " with ", trows[i,2], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+                    rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,1], " with ", trows[i,3], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
                 }
             }
             tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
@@ -481,7 +502,7 @@ ROWINFORMATION"
     }
 
     latentMeanMaker <- function(latents, report = c("est", "se", "z", "p")){
-        trows <- parameters[which(parameters$lhs %in% latents & parameters$op == "~1"), c("lhs", "rhs", "est", "se", "z", "p", "free", "stdest", "stdse")]
+        trows <- parameters[which(parameters$lhs %in% latents & parameters$op == "~1"),]
         if(dim(trows)[1] == 0){
             stop("Latent mean estimates are requested in the table, but I can't find them in the output!")
             #return(print("It appears that no intercept estimates are present in the lavaan output"))
