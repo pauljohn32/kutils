@@ -17,9 +17,9 @@ library(kutils)
 ## set data file paths (for package build)
 dfPath <- system.file("extdata", "testDF.csv", package="kutils")
 keyPath <- system.file("extdata", "testDFkey.csv", package="kutils")
-widekeyPath <- system.file("extdata", "wideKey.csv", package="kutils")
-longkeyPath <- system.file("extdata", "longKey.csv", package="kutils")
-widekeyXLSPath <- system.file("extdata", "wideKey.xlsx", package="kutils")
+widekeyPath <- system.file("extdata", "mydf.key.csv", package="kutils")
+longkeyPath <- system.file("extdata", "mydf.key_long2.csv", package="kutils")
+widekeyXLSPath <- system.file("extdata", "mydf.key.xlsx", package="kutils")
 
 ## define precision level for float comparisons
 floatPrecision <- 1e-6
@@ -214,12 +214,16 @@ test.keyImport <- function() {
     widekey1 <- keyImport(widekeyPath, long=FALSE)
     widekeyDF <- read.csv(widekeyPath, stringsAsFactors=FALSE)
     widekey2 <- keyImport(widekeyDF, long=FALSE)
+    attr(widekey1, "varlab") <- NULL
+    attr(widekey2, "varlab") <- NULL
     checkEquals(widekey1, widekey2)
 
     ## check long key import
     longkey1 <- keyImport(longkeyPath, long=TRUE)
     longkeyDF <- read.csv(longkeyPath, stringsAsFactors=FALSE)
     longkey2 <- keyImport(longkeyDF, long=TRUE)
+    attr(longkey1, "varlab") <- NULL
+    attr(longkey2, "varlab") <- NULL
     checkEquals(longkey1, longkey2)
 
 }
@@ -548,27 +552,30 @@ test.keyApply <- function() {
 
 ## test wide2long() function
 test.wide2long <- function() {
-
     wkey <- keyImport(widekeyPath, long=FALSE)
     lkey0 <- keyImport(longkeyPath, long=TRUE)
-    row.names(lkey0) <- NULL
-    attributes(lkey0)$ignoreCase <- NULL
     lkey1 <- wide2long(wkey)
-    row.names(lkey1) <- NULL
+    ## Ignore differences in attributes
+    rownames(lkey0) <- NULL
+    attr(lkey0, "ignoreCase") <- NULL
+    attr(lkey0, "varlab") <- NULL
+    rownames(lkey1) <- NULL
+    attr(lkey1, "ignoreCase") <- NULL
+    attr(lkey1, "varlab") <- NULL
     checkEquals(lkey0, lkey1)
-    
 }
 
 
 ## test long2wide() function
 test.long2wide <- function() {
-
     lkey <- keyImport(longkeyPath, long=TRUE)
     wkey0 <- keyImport(widekeyPath, long=FALSE)
     row.names(wkey0) <- NULL
-    attributes(wkey0)$ignoreCase <- NULL
+    attr(wkey0, "ignoreCase") <- NULL
     wkey1 <- long2wide(lkey)
     row.names(wkey1) <- NULL
+    attr(wkey0, "varlab") <- NULL
+    attr(wkey1, "varlab") <- NULL
     checkEquals(wkey0, wkey1)
     
 }
@@ -579,7 +586,6 @@ test.long2wide <- function() {
 ##   2. Modify existing entries in data frame
 ##   3. Preserve name_new and class_new in updated key
 test.keyUpdate <- function() {
-
     ## check long key
     dat1 <- data.frame(Score = c(1, 2, 3, 42, 4, 2),
                        Gender = c("M", "M", "M", "F", "F", "F"))
@@ -619,7 +625,6 @@ test.keyUpdate <- function() {
 
 ## test keyDiff() function
 test.keyDiff <- function() {
-
     ## check that keyUpdate changes are reflected in keyDiff
     dat1 <- data.frame(Score = c(1, 2, 3, 42, 4, 2),
                        Gender = c("M", "M", "M", "F", "F", "F"))
@@ -647,6 +652,8 @@ test.keyDiff <- function() {
 test.smartRead <- function() {
     key1 <- kutils:::smartRead(widekeyPath)
     key2 <- kutils:::smartRead(widekeyXLSPath)
+    attr(key1, "varlab") <- NULL
+    attr(key2, "varlab") <- NULL
     checkEquals(key1, key2)
 }
 
@@ -698,13 +705,11 @@ test.keyClassFix <- function() {
     stackedKeys2Fix <- tryCatch(kutils:::keyClassFix(stackedKeys2),
                                 warning=function(w) w)
     checkTrue("warning" %in% class(stackedKeys2Fix))
-
 }
 
 
 ## test keyCrossRef() function
 test.keyCrossRef <- function() {
-
     ## set up key
     dat <- data.frame(x1 = sample(c("a", "b", "c", "d"), 100, replace = TRUE),
                      x2 = sample(c("Apple", "Orange"), 100, replace = TRUE),
