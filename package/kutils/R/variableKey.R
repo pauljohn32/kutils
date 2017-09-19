@@ -441,6 +441,18 @@ checkValue_new <- function(value_new, class_new){
 ##' \code{kutils::keyImport} function.  Then the key structure can
 ##' guide the importation and recoding of the data set.
 ##'
+##' Concerning the varlab attribute. Run \code{attr(key, "varlab"} to
+##' review existing labels, if any.
+##'
+##' Storing the variable labels in files requires some care because
+##' the \code{rds}, \code{xlsx}, and \code{csv} formats have different
+##' capabilities.  The \code{rds} storage format saves all attributes without
+##' difficulty. In contrast, because \code{csv} and \code{xlsx} do not save
+##' attributes, the varlabs are stored as separate character
+##' matrices. For \code{xlsx} files, the varlab object is saved as a second
+##' sheet in \code{xlsx} file, while in \code{csv} a second file suffixed
+##' "-varlab.csv" is created. 
+##'
 ##' @param dframe A data frame
 ##' @param long Default FALSE.
 ##' @param sort Default FALSE. Should the rows representing the
@@ -468,14 +480,15 @@ checkValue_new <- function(value_new, class_new){
 ##'     numeric, it might be safe to treat it as an integer.  In many
 ##'     csv data sets, the values coded c(1, 2, 3) are really
 ##'     integers, not floats c(1.0, 2.0, 3.0). See \code{safeInteger}.
-##' @param varlab If variable labels are available, they can be
-##'     supplied as a named vector of labels, e.g., \code{c("x1" =
-##'     "happiness", "x2" = "wealth")}, where the name is a variable
-##'      name in dframe and its desired label is a quoted character
-##'      string. This is not required, the new key object will have
-##'      an attribute varlab that has empty labels.
+##' @param varlab A key can have a companion data structure for
+##'     variable labels. Default is FALSE, but the value may also be
+##'     TRUE or a named vector of variable labels, such as
+##'     \code{c("x1" = "happiness", "x2" = "wealth")}. The labels
+##'     become an attribute of the key object. See Details for
+##'     information on storage of varlabs in saved key files.
 ##' @return A key in the form of a data frame. May also be saved on
-##'     disk. The key will have an attribute "varlab", variable labels.
+##'     disk if the file argument is supplied. The key may have an
+##'     attribute "varlab", variable labels.
 ##' @export
 ##' @importFrom utils write.csv
 ##' @importFrom methods as
@@ -507,6 +520,15 @@ checkValue_new <- function(value_new, class_new){
 ##' ## smartSave(mydf.templ, file = "mydf.templ.xlsx", outdir = ".")
 ##' ## smartSave(mydf.templ_long, file = "mydf.templ_long.xlsx", outdir = ".")
 ##'
+##' mydf.key2 <- keyTemplate(mydf, file = "mydf.templ.csv", varlab = TRUE)
+##' ## Check the varlab attribute
+##' attr(mydf.key2, "varlab")
+##' mydf.key3 <- keyTemplate(mydf, file = "mydf.templ.csv",
+##'                 varlab = c(x5 = "height", x4 = "age", x3 = "intelligence",
+##'                 x1 = "Name"))
+##' ## Check the varlab attribute
+##' attr(mydf.key3, "varlab")
+##' 
 ##' ## Try with the national longitudinal study data
 ##' data(natlongsurv)
 ##' natlong.templ <- keyTemplate(natlongsurv, file = "natlongsurv.templ.csv",
@@ -525,9 +547,8 @@ checkValue_new <- function(value_new, class_new){
 keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
                         file = NULL, outdir = getwd(),
                         max.levels = 15, safeNumericToInteger = TRUE,
-                        varlab = NULL)
+                        varlab = FALSE)
 {
-
     dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
 
     df.class <- sapply(dframe, function(x)class(x)[1])
@@ -602,6 +623,9 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
         class(key) <- c("key", class(key))
     }
 
+    if (!missing(varlab) && !identical(varlab, FALSE)) {
+        attr(key, "varlab") <- varlabTemplate(key, varlab)
+    }
     if (!missing(file) && !is.null(file)){
         smartSave(key, file, outdir)
     }
@@ -616,29 +640,81 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
 ##' If not specified, a matrix is created with empty variable labels.
 ##' @param obj A variable key
 ##' @param varlab Default NULL, function will start from clean slate,
-##'     empty column of labels.  If specified, varlab should be a named
-##'     vector of labels, e.g., \code{c("x1" = "happiness", "x2" =
-##'     "wealth")}, where the names are values to be matched against
-##'     "name_new" in key.
-##' @return Character matrix
+##'     a set of column labels that match \code{name_new}. User can
+##'     specify values by providing a named vector of labels, e.g.,
+##'     \code{c("x1" = "happiness", "x2" = "wealth")}, where the names
+##'     are values to be matched against "name_new" in key.
+##' @return Character matrix with columns \code{name_new} and \code{varlab}.
 ##' @export
 ##' @author Paul Johnson
 ##' @examples
 ##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
 ##' mydf <- read.csv(mydf.path, stringsAsFactors=FALSE)
+##' mydf.keywide1 <- keyTemplate(mydf, long = FALSE, sort = FALSE,
+##'                     varlab = TRUE)
+##' attr(mydf.keywide1, "varlab")
+##' mydf.keywide2 <- keyTemplate(mydf, long = FALSE, sort = FALSE,
+##'                     varlab = c("x3" = "fun"))
+##' attr(mydf.keywide2, "varlab")
+##' attr(mydf.keywide2, "varlab") <- varlabTemplate(mydf.keywide2,
+##'                   varlab = c("x5" = "wealth", "x10" = "happy"))
+##' attr(mydf.keywide2, "varlab")
+##' attr(mydf.keywide2, "varlab") <- varlabTemplate(mydf.keywide2,
+##'                   varlab = TRUE)
+##' attr(mydf.keywide2, "varlab")
 ##' ## Target we are trying to match:
-##' mydf.keylong <- keyTemplate(mydf, long = TRUE, sort = FALSE)
-varlabTemplate <- function(obj, varlab = NULL){
-    varlabs <- if (is.null(varlab)){
-        unique(cbind(name_old = obj$name_old,
-                     name_new = obj$name_new, varlab = ""))
-    } else {
-        cbind(name_old = obj$name_old,
-              name_new = obj$name_new,
-              varlab = varlab[obj$name_new])
+##' mydf.keylong <- keyTemplate(mydf, long = TRUE, sort = FALSE, varlab = TRUE)
+##' attr(mydf.keylong, "varlab")
+##' attr(mydf.keylong, "varlab") <- NULL
+##' varlabTemplate(mydf.keylong)
+##' attr(mydf.keylong, "varlab") <- varlabTemplate(mydf.keylong,
+##'                    varlab = c("x3" = "wealth", "x10" = "happy"))
+##' attr(mydf.keylong, "varlab")
+##' attr(mydf.keylong, "varlab") <- varlabTemplate(mydf.keylong, varlab = TRUE)
+##' attr(mydf.keylong, "varlab")
+varlabTemplate <- function(obj, varlab = TRUE){
+    if (identical(varlab, FALSE)){
+        return(NULL)
     }
-    varlabs[is.na(varlabs[ , "varlab"]), "varlab"] <- ""
-    varlabs
+    varlabs.orig <- attr(obj, "varlab")
+    if(is.null(varlabs.orig)){
+        if (isTRUE(varlab)) {
+            varlabs <- unique(obj[ , "name_new", drop = TRUE])
+            names(varlabs) <- varlabs
+            return(varlabs)
+        } else if (is.vector(varlab)){
+            return(varlab)
+        } else {
+            MESSG <- paste("varlabTemplate input:",
+                           paste(varlab, collapse = " "),
+                           "is not understandable")
+            stop(MESSG)
+        }
+    }
+
+    varlabs.all <- unique(obj[ , "name_new"])
+    names(varlabs.all) <- varlabs.all
+    if (isTRUE(varlab)){
+        ## don't change existing varlabs, only new ones
+        ## replace from varlabs.orig into varlabs.all
+        varlabs <- varlabs.all
+        varlabs.addtokey <- varlabs.all[!names(varlabs.all) %in% names(varlabs.orig)]
+        return(c(varlabs.orig, varlabs.addtokey))
+    } else if (is.vector(varlab)){
+        ## keep if in original and not in varlab
+        keepinkey <- varlabs.orig[!names(varlabs.orig) %in% names(varlab)]
+        ## add from varlab to replace
+        replaceinkey <- varlab[names(varlab) %in% names(varlabs.orig)]
+        addtokey <- varlab[!names(varlab) %in% names(varlabs.orig)]
+        res <- c(keepinkey, replaceinkey, addtokey)
+        if(any(duplicated(names(res)))) stop("varlabTemplate fail1")
+        return(c(keepinkey, replaceinkey, addtokey))
+    } else {
+            MESSG <- paste("varlabTemplate input:",
+                           paste(varlab, collapse = " "),
+                           "is not understandable")
+            stop(MESSG)
+    }
 }
     
 ##' save file after deducing type from suffix
@@ -647,9 +723,14 @@ varlabTemplate <- function(obj, varlab = NULL){
 ##' @param obj a variable key object
 ##' @param file file name. must end in "csv", "xlsx" or "rds"
 ##' @param outdir directory path
-##' @param varlab character matrix of variable labels, with columns
-##'     \code{name_old} \code{name_new}, and \code{varlab}. If not
-##'     specified, a matrix is created with empty variable labels.
+##' @param varlab If a key object has a varlab already, it is saved
+##'     with the key, always. This parameter controls whether a new
+##'     varlab template should be created when the object is
+##'     saved. Default is FALSE, no new labels will be created. If
+##'     TRUE, the \code{varlabTemplate} function is called to fill in
+##'     new variable labels for all variables that do not currently
+##'     have labels. If TRUE and obj has no varlab attribute, a new
+##'     varlab template is created.
 ##' @return NULL if no file is created. Otherwise, a key object with
 ##'     an attribute varlab is returned. The files created incorporate
 ##'     the variable labels object in different ways. 1) XLSX:
@@ -658,20 +739,37 @@ varlabTemplate <- function(obj, varlab = NULL){
 ##'     RDS: varlab is an attribute of the key object.
 ##' @keywords internal
 ##' @author Paul Johnson <pauljohn@@ku.edu>
-smartSave <- function(obj, file, outdir, varlab = NULL){
+smartSave <- function(obj, file, outdir, varlab = FALSE){
     fp <- file
-    ## varlab neither provided with key nor as argument, so create
-    if (is.null(attr(obj, "varlab")) && is.null(varlab)) {
-        attr(obj, "varlab") <- varlabTemplate(obj, varlab)
+    if (!varlab %in% c(TRUE, FALSE)){
+        MESSG <- "smartSave varlab argument must be TRUE or FALSE"
+        stop(MESSG)
+    }
+    ## varlab neither provided with key nor varlab == FALSE, so create
+    if (is.null(attr(obj, "varlab")) && !identical(varlab, FALSE)) {
+        attr(obj, "varlab") <- varlabTemplate(obj, varlab = TRUE)
     }
     if (!missing(outdir) && !is.null(outdir))
         fp <- file.path(outdir, file)
     if (length(grep("csv$", tolower(file))) > 0){
         write.csv(obj, file = fp, row.names = FALSE)
-        write.csv(attr(obj, "varlab"),
-                  file = gsub(".csv$", "-varlab.csv", fp), row.names = FALSE) 
+        if(!identical(varlab, FALSE) && !is.null(attr(obj, "varlab"))){
+            varlab.orig <- attr(obj, "varlab.orig")
+            varlab.mat <- cbind("name_new" = names(varlab.orig),
+                                "varlab" = varlab.orig)
+            write.csv(varlab.mat,
+                      file = gsub(".csv$", "-varlab.csv", fp),
+                      row.names = FALSE)
+        }
     } else if (length(grep("xlsx$", tolower(file)))){
-        openxlsx::write.xlsx(list(key = obj, varlab = attr(obj, "varlab")), file = fp)
+        if(!identical(varlab, FALSE) && !is.null(attr(obj, "varlab"))){
+            varlab.orig <- attr(obj, "varlab.orig")
+            varlab.mat <- cbind("name_new" = names(varlab.orig),
+                            "varlab" = varlab.orig)
+            openxlsx::write.xlsx(list(key = obj, varlab = attr(obj, "varlab")), file = fp)
+        } else {
+            openxlsx::write.xlsx(list(key = obj), file = fp)
+        }
     } else if (length(grep("rds$", tolower(file)))){
         saveRDS(obj, file = fp)
     } else {
@@ -719,8 +817,7 @@ smartRead <- function(file, ...){
                 key[which(is.na(key[,i])), i] <- ""
             }
             xlsxargz[["sheet"]] <- "varlab"
-            attr(key, "varlab") <- tryCatch(do.call("read.xlsx", xlsxargz),
-                                            error = function(x) kutils::varlabTemplate(key),
+            attr(key, "varlab") <- tryCatch(as.matrix(do.call("read.xlsx", xlsxargz)),
                                             finally = NULL)
         } else if (length(grep("csv$", tolower(file))) > 0){
             csvargs <- list(file = file, stringsAsFactors = FALSE, colClasses = "character")
@@ -730,8 +827,6 @@ smartRead <- function(file, ...){
             if (file.exists(filevarlab)){
                 csvargs[["file"]] <- filevarlab
                 attr(key, "varlab") <- do.call("read.csv", csvargz) 
-            } else {
-                attr(key, "varlab") <- kutils::varlabTemplate(key)
             }
         } else if (length(grep("rds$", tolower(file))) > 0){
             key <- readRDS(file)
@@ -744,9 +839,10 @@ smartRead <- function(file, ...){
 ##' Convert nothing to R missing(NA).
 ##'
 ##' By "nothing", we mean white space or other indications of
-##' nothingness.  Character strings that are used for missing
-##' values. Those things, which are given default values in the
-##' argument nothings, will be changed to NA.
+##' nothingness.  Goal is to find character strings that users
+##' might insert in a key to indicate missing values. Those things,
+##' which are given default values in the argument nothings, will be
+##' changed to NA.
 ##'
 ##' Using regular expression matching, any value that has nothing
 ##' except for the indicated "nothing" values is converted to NA.  The
@@ -1525,6 +1621,7 @@ wide2long <- function(key, sep = c(character = "\\|", logical = "\\|",
 
     keylong <- do.call(rbind, lapply(ksl, as.data.frame, stringsAsFactors = FALSE))
     attr(keylong, "na.strings") <- attr(key, "na.strings")
+    attr(keylong, "varlab") <- attr(key, "varlab")
     class(keylong) <- c("keylong", "data.frame")
     keylong
 }
@@ -1586,8 +1683,46 @@ long2wide <- function(keylong){
     key <- do.call("rbind", lapply(keywide, data.frame, stringsAsFactors = FALSE))
     class(key) <- c("key", "data.frame")
     attr(key, "na.strings") <- attr(keylong, "na.strings")
+    attr(key, "varlab") <- attr(keylong, "varlab")
     key
 }
+
+##' An all.equal method for variable wide keys
+##'
+##' Disregards attributes by defaults. Before comparing the two keys,
+##' the values are sorted by \code{"name_new")}.
+##' @author Paul E. Johnson <pauljohn@@ku.edu>
+##' @method all.equal key
+##' @param target A wide variable key
+##' @param current A wide variable key
+##' @param ... Other arguments that are ignored
+##' @param check.attributes Default FALSE
+##' @export
+all.equal.key <- function(target, current, ..., check.attributes = FALSE){
+    target <- target[order(target[ , "name_new"]), ]
+    current <- current[order(current[ , "name_new"]), ]
+    base::all.equal.list(target, current, check.attributes = FALSE)
+}
+
+
+##' An all.equal method for variable wide keys
+##'
+##' Disregards attributes by defaults. Before comparing the two keys,
+##' the values are sorted by \code{"name_new")}.
+##' @author Paul E. Johnson <pauljohn@@ku.edu>
+##' @method all.equal keylong
+##' @export
+##' @param target A long variable key
+##' @param current A long variable key
+##' @param ... Other arguments that are ignored
+##' @param check.attributes Default FALSE
+all.equal.keylong <- function(target, current, ..., check.attributes = FALSE){
+    target <- target[order(target[ , "name_new"], target[ , "value_old"], target[ , "value_new"] ), ]
+    current <- current[order(current[ , "name_new"], current[ , "value_old"], current[ , "value_new"] ), ]
+    base::all.equal.list(target, current, check.attributes = FALSE)
+}
+
+
 
 ## PJ 20161006: this is not ready, project where we were planning to
 ## us it discontinued.
@@ -1641,17 +1776,17 @@ long2wide <- function(keylong){
 ##' "value_old" or "value_new" for variables that have no new
 ##' information.
 ##'
-##' This function deduces if the key provided is in the wide
-##' or long format from the class of the object.
+##' This function deduces if the key provided is in the wide or long
+##' format from the class of the object.
 ##' @param key A variable key
 ##' @param dframe A data.frame object.
-##' @param append If long key, should new rows be added to the
-##'     end of the updated key? Default is TRUE. If FALSE,
-##'     new rows will be sorted with the original values.
-##' @param safeNumericToInteger Default TRUE: Should we treat variables
-##'     which appear to be integers as integers? In many
-##'     csv data sets, the values coded c(1, 2, 3) are really
-##'     integers, not floats c(1.0, 2.0, 3.0). See
+##' @param append If long key, should new rows be added to the end of
+##'     the updated key? Default is TRUE. If FALSE, new rows will be
+##'     sorted with the original values.
+##' @param safeNumericToInteger Default TRUE: Should we treat
+##'     variables which appear to be integers as integers? In many csv
+##'     data sets, the values coded \code{c(1, 2, 3)} are really
+##'     integers, not floats \code{c(1.0, 2.0, 3.0)}. See
 ##'     \code{safeInteger}.
 ##' ## Need to consider implementing this:
 ##' ## @param ignoreCase
@@ -1660,29 +1795,39 @@ long2wide <- function(keylong){
 ##' @importFrom plyr rbind.fill
 ##' @author Ben Kite <bakite@ku.edu>
 ##' @examples
+##' ## Original data frame has 2 variables
 ##' dat1 <- data.frame("Score" = c(1, 2, 3, 42, 4, 2),
 ##'                    "Gender" = c("M", "M", "M", "F", "F", "F"))
-##' ## First try with a long key
-##' key1 <- keyTemplate(dat1, long = TRUE)
-##' key1[5, "value_new"] <- 10
-##' key1[6, "value_new"] <- "female"
-##' key1[7, "value_new"] <- "male"
-##' key1[key1$name_old == "Score", "name_new"] <- "NewScore"
-##' dat2 <- data.frame("Score" = 7, "Gender" = "other", "Weight" = rnorm(3))
-##' dat2 <- plyr::rbind.fill(dat1, dat2)
+##' ## New data has all of original dat1, plus a new variable "Weight"
+##' #and has new values for "Gender" and "Score"
+##' dat2 <- plyr::rbind.fill(dat1, data.frame("Score" = 7,
+##'            "Gender" = "other", "Weight" = rnorm(3)))
+##' ## Create a long key for the original data, specify some
+##' ## recodes for Score and Gender in value_new
+##' key1.long <- keyTemplate(dat1, long = TRUE, varlab = TRUE)
+##' key1.long[c(5, 6, 7), "value_new"] <- c(10, "female", "male")
+##' key1.long[key1.long$name_old == "Score", "name_new"] <- "NewScore"
+##' keyUpdate(key1.long, dat2, append = TRUE)
+##' ## Throw away one row, make sure key still has Score values
 ##' dat2 <- dat2[-1,]
-##' keyUpdate(key1, dat2, append = TRUE)
-##' keyUpdate(key1, dat2, append = FALSE)
-##' key1c <- key1
-##' key1c[key1c$name_old == "Score", "class_new"] <- "character"
-##' keyUpdate(key1c, dat2, append = TRUE)
-##' str(dat3 <- keyApply(dat2, key1c))
+##' (key1.long.u <- keyUpdate(key1.long, dat2, append = FALSE))
+##' ## Key change Score to character variable
+##' key1.longc <- key1.long
+##' key1.longc[key1.longc$name_old == "Score", "class_new"] <- "character"
+##' keyUpdate(key1.longc, dat2, append = TRUE)
+##' str(dat3 <- keyApply(dat2, key1.longc))
 ##' ## Now try a wide key
-##' key1 <- keyTemplate(dat1)
-##' (key1.u <- keyUpdate(key1, dat2))
-##' str(keyApply(dat2, key1.u))
-##' str(keyApply(dat2, key1c))
-##'
+##' key1.wide <- keyTemplate(dat1)
+##' ## Put in new values, same as in key1.long
+##' key1.wide["Score", c("name_new", "value_new")] <- c("NewScore",  "1|2|3|4|10")
+##' key1.wide["Gender", "value_new"] <- "female|male"
+##' ## Make sure key1.wide equivalent to key1.long: If this is not true, it is a fail
+##' all.equal(long2wide(key1.long), key1.wide, check.attributes = FALSE)
+##' (key1.wide.u <- keyUpdate(key1.wide, dat2))
+##' key1.long.to.wide <- long2wide(key1.long.u)
+##' all.equal(key1.long.to.wide, key1.wide.u, check.attributes = FALSE)
+##' str(keyApply(dat2, key1.wide.u))
+##' 
 ##' mydf.key.path <- system.file("extdata", "mydf.key.csv", package = "kutils")
 ##' mydf.key <-  keyImport(mydf.key.path)
 ##'
