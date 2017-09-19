@@ -1,3 +1,16 @@
+2017-09-19  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/utils.R (writeCSV): new function to create CSV
+	files with same quotation marks as Excel
+	(writeCSV): tidy up csv commentary
+
+	* ../R/variableKey.R (all.equal.keylong): all.equal methods for
+	keys, handle sorting of rows to make data.frames identical,
+	does not check attributes to avoid errors about row name and
+	varlab differences.
+	(varlabTemplate): varlab is now a named vector attribute. Stored
+	on disk differently, see smartRead and smartSave.
+
 2017-09-18  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (smartRead): tryCatch failed when varlab was
