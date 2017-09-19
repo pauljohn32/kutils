@@ -341,3 +341,43 @@ padW0 <- function (x, n = 0) {
     res
 }
 
+
+##' Write CSV files with quotes same as MS Excel 2013 or newer
+##'
+##' R's write.csv inserts quotes around all elements in a character
+##' vector (if quote = TRUE).  In contrast, MS Excel CSV export no
+##' longer inserts quotation marks on all elements in character
+##' variables, except when the cells include commas or quotation
+##' marks.  This function generates CSV files that are, so far as we
+##' know, exactly the same "quoted style" as MS Excel CSV export
+##' files.
+##'
+##' This works by manually inserting quotation marks where necessary and
+##' turning FALSE R's own method to insert quotation marks.
+##' @param x a data frame
+##' @param file character string for file name
+##' @param row.names Default FALSE for row.names
+##' @importFrom utils write.table
+##' @return the return from write.table, using revised quotes
+##' @export
+##' @author Paul Johnson
+##' @examples
+##' set.seed(234)
+##' x1 <- data.frame(x1 = c("a", "b,c", "b", "The \"Washington, DC\""),
+##'       x2 = rnorm(4), stringsAsFactors = FALSE)
+##' x1
+##' fn <- tempfile(pattern = "testcsv", fileext = ".csv")
+##' writeCSV(x1, file = fn)
+##' readLines(fn)
+##' x2 <- read.table(fn, sep = ",", header = TRUE, stringsAsFactors = FALSE)
+##' all.equal(x1,x2)
+writeCSV <- function(x, file, row.names = FALSE){
+    xischar <- colnames(x)[sapply(x, is.character)]
+    for(jj in xischar){
+        x[ , jj] <- gsub('"', '""', x[ , jj], fixed = TRUE)
+        needsquotes <- grep('[\",]', x[ ,jj])
+        x[needsquotes, jj] <- paste0("\"", x[needsquotes, jj], "\"")
+    }
+    write.table(x, file = file, sep = ",", quote = FALSE,
+                row.names = row.names)
+}
