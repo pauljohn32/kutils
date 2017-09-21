@@ -393,7 +393,8 @@ NULL
 ##'     theme information.
 ##' @param pkg Package name, default "crmda"
 ##' @return TRUE if succeeded
-##' @author Paul Johnson
+##' @author Paul Johnson <pauljohn@@ku.edu>
+##' @export 
 ##' @examples
 ##' getFiles(c("jayhawk.pdf", "CRMDAlogo.pdf"))
 getFiles <- function(fn, dn = "theme", pkg = "crmda"){
