@@ -2432,3 +2432,84 @@ keyCrossRef <- function(key, ignoreClass = NULL, verbose = FALSE, lowercase = FA
 
 }
 
+
+##' Look for old (or new) names in variable key
+##'
+##' Use the key to find the original name of a variable that has been
+##' renamed, or find the new name of an original variable.  The
+##' \code{get} argument indicates if the \code{name_old} or
+##' \code{name_new} is desired.
+##'
+##' If \code{get = "name_old"}, the return is a character vector, with
+##' one element per value of \code{x}.  If there is no match for a
+##' value of \code{x}, the value NA is returned for that
+##' value. However, if \code{get = "name_new"}, the return might be
+##' either a vector (one element per value of \code{x}) or a list with
+##' one element for each value of \code{x}.  The list is returned when
+##' a value of \code{x} corresponds to more than one element in
+##' \code{name_old}.
+##' @param x A variable name. If \code{get = "name_old"}, then
+##'     \code{x} is a value for \code{name_new}. If \code{get =
+##'     "name_new"}, \code{x} should be a value for \code{name_old}.
+##' @param key Which key should be used
+##' @param get Either "name_old" (to retrieve the original name) or
+##'     "name_new" (to get the new name)
+##' @return A vector or list of matches between x and either name_new
+##'     or name_old elements in the key.
+##' @author Paul Johnson
+##' @examples
+##' mydf.key.path <- system.file("extdata", "mydf.key.csv", package = "kutils")
+##' mydf.key <-  keyImport(mydf.key.path)
+##' mydf.key$name_new <- paste0("new_", mydf.key$name_new)
+##' keyLookup("new_x5", mydf.key, get = "name_old")
+##' keyLookup(c("new_x6", "new_x1"), mydf.key, get = "name_old")
+##' keyLookup(c("x6", "x1"), mydf.key, get = "name_new")
+##' keyLookup(c("asdf", "new_x1"), mydf.key, get = "name_old")
+##'
+##' mydf.key <- rbind(mydf.key,
+##'                  c("x3", "x3f",  "ordered", "factor", "","","",""))
+##' keyLookup(c("x3"), mydf.key, get = "name_new")
+##' keyLookup(c("x1", "x3", "x5"), mydf.key, get = "name_new")
+keyLookup <- function(x, key, get = "name_old"){
+    if(!length(match.arg(get, c("name_old", "name_new")))){
+        MESSG <- "keyLookup: get must be 'name_old' or 'name_new'"
+        stop(MESSG)
+    }
+    
+    if(class(key)[1] == "keylong"){
+        key <- long2wide(key)
+    }
+
+
+    if(get == "name_old"){
+        if (any(duplicated(key$name_new))){
+            MESSG <- paste0("keyLookup finds duplicates in 'name_new'")
+            stop(MESSG)
+        }
+        target <- key$name_new[match(x, key$name_new, nomatch = NA)]
+        return(target)
+    }
+
+    ## else get == "name_new"
+    target <- sapply(x, function(jj){
+        fits <- key[which(key$name_old %in% jj), "name_new"]
+        fits
+    })
+
+    for(jj in names(target)){
+        if(!length(target[[jj]])) {
+            MESSG <- paste("No value in name_old matches:", jj)
+            warning(MESSG)
+            target[jj] <- NULL
+        } else if (length(target[[jj]]) > 1){
+            MESSG <- paste0("Note: name_old '", jj,
+                            "' matches several values in name_new: ",
+                            paste(target[[jj]], collapse = ", "))
+            print(MESSG)
+        }
+    }
+    if(length(target) == 0 || is.null(target)){
+        return(NULL)
+    }
+    target
+}
