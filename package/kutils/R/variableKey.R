@@ -2513,3 +2513,40 @@ keyLookup <- function(x, key, get = "name_old"){
     }
     target
 }
+
+
+##' Import an SPSS file, create a key representing the numeric -> factor transition
+##'
+##' This is a way to keep track of the scores that are used in the SPSS file
+##' @param dat A character string path to the SPSS file
+##' @param long TRUE returns a long key, otherwise a wide key
+##' @return A variable key (long or wide)
+##' @author Paul Johnson <pauljohn@@ku.edu>
+keyTemplateSPSS <- function(dat, long = TRUE){
+    datf <- read.spss(dat, max.value.labels = 15, to.data.frame = TRUE, use.value.labels = TRUE)
+    datn <- read.spss(dat, to.data.frame = TRUE, use.value.labels = FALSE)
+    numericTF <- vapply(datf, is.numeric, logical(1)) 
+    notnumeric <- colnames(datf)[!numericTF]
+    isnumeric <- colnames(datf)[numericTF]
+    
+   
+    partA <- lapply(isnumeric, function(i) {
+        data.frame(name_old = i, name_new = i,
+                   class_old = class(datf[ , i])[1], class_new = class(datf[ , i])[1],
+                   value_old = ".", value_new = ".", stringsAsFactors = FALSE)
+    })
+    partB <- lapply(notnumeric, function(i) {
+        val <- unique(datn[ , i])
+        val <- val[order(val)]
+        val.level <- datf[match(val, datn[ , i]),  i]
+        data.frame(name_old = i, name_new = paste0(i, "f"),
+                                   class_old = class(datn[ , i])[1], class_new = class(datf[ , i])[1],
+                                   value_old = val, value_new = val.level, stringsAsFactors = FALSE)
+        ## match(datn[match(levels(datf$Q76), datf$Q76),"Q76"])
+    })
+    ##    if (direction == "num2fac"){
+    keylong <- rbind(do.call(rbind, partA), do.call(rbind, partB))
+    if (long) return(keylong)
+    else return(long2wide(keylong))
+}
+
