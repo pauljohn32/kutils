@@ -1,3 +1,30 @@
+2017-09-27  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (smartSave): Using workbook was probably
+	unnecessary, but does work now. Problem about finding sheet
+	names solved by "getWorkspaceNames" function in openxlsx.
+
+2017-09-26  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (assignMissing): if missings=NULL, return x.
+	(smartSave): na.strings new argument, "." default, will only
+	affect long keys
+	(smartRead): na.strings new argument, "." or space will be R
+	symbol NA.
+	(keyTemplate): delete the outdir argument. Was dumb!
+	(smartSave): use Excel Workbook.
+
+2017-09-25  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (keyLookup): new function to find name_new
+	or name_old values in key
+	(keyTemplateSPSS): new function to build keys for SPSS data transitions
+
+2017-09-21  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/utils.R (getFiles): file copy wrapper for theme files,
+	identical to same in crmda/utils
+
 2017-09-19  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/utils.R (writeCSV): new function to create CSV
