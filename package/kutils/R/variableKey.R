@@ -608,7 +608,6 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
         valoldnew <- shortenValues(value_old,
                                    max.levels = max.levels,
                                    missings = missings)
-        browser()
         valoldnew[is.na(valoldnew)] <- "."
         keysmall <- data.frame(name_old = xname, name_new = xname, 
                                class_old = df.class[[xname]],
