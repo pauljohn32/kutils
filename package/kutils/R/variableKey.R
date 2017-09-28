@@ -207,6 +207,13 @@ assignMissing <- function(x, missings = NULL, sep = ";"){
         x[x %in% missings] <- NA
         return(x)
     }
+
+    if (is.logical(x)){
+        missings <- as.logical(missings)
+        x[x %in% missings] <- NA
+        return(x)
+    }
+    
     if (is.factor(x)){
         levels(x)[which(levels(x) %in% missings)] <- NA
         return(x)
@@ -466,7 +473,7 @@ checkValue_new <- function(value_new, class_new){
 ##'     among the 3 storage formats. XLSX output requires the openxlsx
 ##'     package.
 ##' @param max.levels How high is the limit on the number of values
-##'     for discrete (integer, character, and Date) variables.
+##'     for discrete (integer, character, and Date) variables?
 ##'     Default = 15. If observed number exceeds max.levels, we
 ##'     conclude the author should not assign new values in the key
 ##'     and only the missing value will be included in the key as a
@@ -554,9 +561,11 @@ checkValue_new <- function(value_new, class_new){
 ##' if(interactive()) View(natlong.templwide2)
 ##'
 ##' all.equal(wide2long(natlong.templwide2), natlong.templlong2)
-##' 
-##' openxlsx::write.xlsx(natlong.templ, file = "natlongsurv.templ.xlsx")
-##' openxlsx::write.xlsx(natlong.templlong, file = "natlongsurv.templ_long.xlsx")
+##'
+##' keyTemplate(natlongsurv, file = "natlongsurv.templ.xlsx",
+##'                            max.levels = 15, varlab = TRUE, sort = TRUE)
+##' keyTemplate(natlongsurv, file = "natlongsurv.templ.xlsx", long = TRUE, 
+##'                            max.levels = 15, varlab = TRUE, sort = TRUE)
 ##'
 keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
                         file = NULL, max.levels = 15, missings = NULL, missSymbol = ".",
@@ -572,14 +581,15 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
     ## Also, always keep value that are missing according to missings
     shortenValues <- function(x, max.levels, missings){
         xmiss <- assignMissing(x, missings)
-        xnotmissing <- x[-which(is.na(xmiss))]
-        xismissing <- x[which(is.na(xmiss))]
+        xnotmissing <- if (length(temp <- x[-which(is.na(xmiss))]) > 0) temp else NULL
+        xismissing <- unique(x[which(is.na(xmiss))])
         if (!any(vapply(xismissing, is.na, logical(1)))) xismissing <- c(xismissing, NA)
-        if(length(x) <= max.levels) {
+        if (length(xnotmissing) <= max.levels) {
             xnotmissing <- xnotmissing[1:min(max.levels, length(xnotmissing))]
-            return(data.frame(value_old = c(xnotmissing, xismissing),
+            df <- data.frame(value_old = c(xnotmissing, xismissing),
                               value_new = c(xnotmissing, rep(NA, length(xismissing))),
-                   stringsAsFactors = FALSE))
+                              stringsAsFactors = FALSE)
+            return(df)
         } else {
             return(data.frame(value_old = NA, value_new = NA, stringsAsFactors = FALSE))
         }
@@ -587,7 +597,7 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
 
     ## Returns all unique values, inserts NA at end if not present
     getUnique <- function(xname){
-        if (df.class[[xname]] == "numeric") return (missSymbol)
+        if (df.class[[xname]] == "numeric") return (as.numeric(NA))
         if (df.class[[xname]] %in% c("integer", "character", "logical", "Date")){
             val <- unique(dframe[ , xname])
             ##pj 20170926: new sort method keeps missing on end, sets NA as missSymbol
@@ -632,7 +642,9 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
         ## else !long, so make a wide key
         key <- long2wide(key)
         rownames(key) <- NULL
-        key <- key[order(key$name_old), ]
+        if (sort) key <- key[order(key$name_old), ]
+        ## put in order of original data columns
+        else key <- key[cn, ]
     }
 
     attr(key, "missSymbol") <- missSymbol
@@ -646,6 +658,7 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
     }
     key
 }
+NULL
 
 ##' Create Variable Label Template
 ##'
@@ -731,7 +744,8 @@ varlabTemplate <- function(obj, varlab = TRUE){
             stop(MESSG)
     }
 }
-    
+NULL
+
 ##' save file after deducing type from suffix
 ##'
 ##' This is specialized to saving of key objects, it is not a
@@ -812,7 +826,7 @@ smartSave <- function(obj, file, na.string = ".", varlab){
     }
     invisible(obj)
 }
-
+NULL
 
 ##' read file after deducing file type from suffix.
 ##'
@@ -886,7 +900,7 @@ smartRead <- function(file, ..., na.strings = c("\\s+")){
     }
     invisible(key)
 }
-
+NULL
 
 ##' Convert nothing to R missing(NA).
 ##'
@@ -1403,8 +1417,6 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         ## Extract candidate variable to column, will recode xnew.
         xnew <- dframe[ , v$name_old]
 
-
-
         ## Apply missing codes
         if (length(v$missings) > 0){
             xnew <- assignMissing(xnew, v$missings)
@@ -1452,7 +1464,6 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             values <- rbind(values, data.frame(value_old = xnew.notinkey, value_new = xnew.notinkey))
             }
         }
-
 
         ## If output is ordered or factor, must be dealt with specially
         if(length(v$class_new) > 0 && v$class_new %in% c("ordered", "factor")) {
@@ -1578,8 +1589,8 @@ keyDiagnostic <- function(dfold, dfnew, keylist, max.values = 20,
 
     ## TODO think more deeply on warning signs of bad recoding.
     ## other summary of match and mismatch.
-    print(paste("We are going to run \"options(width=", wide, ")\"",
-          "Please make your output display window wide", "so you can see the tables"))
+    print(paste("Setting \"options(width=", wide, ")\"",
+          "Make your output display window wide"))
     width.orig <- options("width")
     options(width = wide)
     if (confidential) {
@@ -1914,38 +1925,27 @@ all.equal.keylong <- function(target, current, ..., check.attributes = FALSE){
 keyUpdate <- function(key, dframe, append = TRUE,
                       safeNumericToInteger = TRUE)
 {
-    if(class(key)[1] == "keylong") {
-        long <- TRUE
-    } else if (class(key)[1] == "key") {
-        long <- FALSE
-    } else {
-        messg <- paste("The key object is neither a longkey or key object")
+    if (class(key)[1] == "key") {
+        key <- wide2long(key)
+    }
+    if (class(key)[1] != "keylong") {
+        messg <- paste("The key object is from the wrong class.")
         stop(messg)
     }
 
     dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
-    if(!long){
-        key <- wide2long(key)
+    keynew <- keyTemplate2(dframe, long = TRUE)
+    if (all.equal(keynew, key)){
+        return(key)
     }
-    keynew <- keyTemplate(dframe, long = TRUE)
-    if (identical(keynew, key)){
-        return(keynew)
-    }
-
-    ## Work to do
-    ## 1. All new "variable-value" combinations must be added
-    ## to the new key, whether they are for variables currently listed
-    ## in "name_old" or not.
-    ## 2. New values for previous variables must be added to key
-    ## 3. name_new and class_new have to be copied over to key
-    ## rows that are added.
+   
+    ## pj 20170929 BIG QUESTION. If keyDiff is correct (still dont know),
+    ## can't we use it, and then just take the neworaltered object and
+    ## append to old key?  We never want to delete rows from key, just
+    ## add new ones.  Maybe then need check for contradictions.
 
     ## CHECK: what does "long2wide" do when rows in a long key are
     ## "shuffled" or if the new values all exist at end of long key.
-
-    ## TODO: Some danger here that key column names are not abstracted,
-    ## but I stopped abstracting them in other functions as well
-    ## because it is too much work.
 
     nameval.old <- paste0(key$name_old, key$value_old)
     nameval.new <- paste0(keynew$name_old, keynew$value_old)
@@ -1990,10 +1990,10 @@ keyUpdate <- function(key, dframe, append = TRUE,
 }
 
 
-##' Compares a key provided to keyUpdate with the return of keyUpdate
+##' Show difference between 2 keys
 ##'
-##' @param oldkey key that was provided to keyUpdate function
-##' @param newkey updated key returned by keyUpdate function
+##' @param oldkey key, original 
+##' @param newkey key, possibly created by keyUpdate or by user edits
 ##' @return NULL, or list with as many as 2 key difference data.frames,
 ##'  named "deleted" and "neworaltered"
 ##' @author Ben Kite <bakite@@ku.edu> and Paul Johnson <pauljohn@@ku.edu>
@@ -2004,16 +2004,15 @@ keyUpdate <- function(key, dframe, append = TRUE,
 ##'                    "Gender" = c("M", "M", "M", "F", "F", "F"))
 ##' ## First try with a long key
 ##' key1 <- keyTemplate(dat1, long = TRUE)
-##' key1[5, "value_new"] <- 10
-##' key1[6, "value_new"] <- "female"
-##' key1[7, "value_new"] <- "male"
+##' key1$value_new <- gsub("42", "10", key1$value_new)
+##' key1$value_new[key1$name_new == "Gender"] <-
+##'        mgsub(c("F", "M"), c("female", "male"),
+##'        key1$value_new[key1$name_new == "Gender"])  
 ##' key1[key1$name_old == "Score", "name_new"] <- "NewScore"
 ##' dat2 <- data.frame("Score" = 7, "Gender" = "other", "Weight" = rnorm(3))
 ##' dat2 <- plyr::rbind.fill(dat1, dat2)
 ##' dat2 <- dat2[-1,]
 ##' key2 <- keyUpdate(key1, dat2, append = TRUE)
-##' ## FIXME 20170928: keyUpdate adds redundant rows in key2
-##' key2 <- unique(key2)
 ##' (kdiff <- keyDiff(key1, key2))
 keyDiff <- function(oldkey, newkey){
     oldkey.name <- deparse(substitute(oldkey))
