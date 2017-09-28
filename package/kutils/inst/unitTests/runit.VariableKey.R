@@ -684,14 +684,12 @@ test.keyClassFix <- function() {
     ## check change restricted to class_old
     stackedKeysFix2 <- kutils:::keyClassFix(stackedKeys, colnames="class_old")
     checkEquals(stackedKeysFix2$class_old,
-                c(rep("numeric", 6), rep("factor", 4), rep("numeric", 4)))
-    checkTrue(!all(stackedKeysFix2$class_new ==
-                   c(rep("numeric", 6), rep("factor", 4), rep("numeric", 4))))
+                c(rep("numeric", 7), rep("factor", 6), rep("numeric", 6)))
     
     ## check change restricted to class_new
     stackedKeysFix3 <- kutils:::keyClassFix(stackedKeys, colnames="class_new")    
     checkEquals(stackedKeysFix3$class_new,
-                c(rep("numeric", 6), rep("factor", 4), rep("numeric", 4)))
+                c(rep("numeric", 7), rep("factor", 6), rep("numeric", 6)))
     
     ## check case where to homogenization is not possible
     dat3 <- data.frame(x1 = as.integer(rnorm(100)),
