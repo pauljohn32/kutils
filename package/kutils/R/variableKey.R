@@ -625,18 +625,22 @@ keyTemplate <- function(dframe, long = FALSE, sort = FALSE,
     key <- do.call("rbind", keyList)
 
     if(isTRUE(long)){
-        if (sort) key <- key[order(key$name_old), ]
+        if (sort) key <- key[order(key$name_old, key$name_new), ]
         class(key) <- c("keylong", class(key))
         return(key)
     } else {
         ## else !long, so make a wide key
         key <- long2wide(key)
+        rownames(key) <- NULL
+        key <- key[order(key$name_old), ]
     }
 
     attr(key, "missSymbol") <- missSymbol
     if (!missing(varlab) && !identical(varlab, FALSE)) {
         attr(key, "varlab") <- varlabTemplate(key, varlab)
+        varlab <- TRUE
     }
+   
     if (!missing(file) && !is.null(file)){
         smartSave(key, file, na.string = missSymbol, varlab = varlab)
     }
@@ -1430,9 +1434,9 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             }
             mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew1")
             eval(parse(text = mytext))
-            coercionWarning <- paste0("Coercing ",
-                                      v$class_old, " to ", v$class_new,
-                                      ". Check to be sure desired result is obtained.")
+            coercionWarning <- paste0("Coercing ", v$name_old, " from ",
+                                      v$class_old, " to ",
+                                      v$class_new, ". Check results.")
             if (v$class_old != v$class_new) warning(coercionWarning)
             next()
         }
@@ -1851,7 +1855,11 @@ all.equal.keylong <- function(target, current, ..., check.attributes = FALSE){
 ##' ## Create a long key for the original data, specify some
 ##' ## recodes for Score and Gender in value_new
 ##' key1.long <- keyTemplate(dat1, long = TRUE, varlab = TRUE)
-##' key1.long[c(5, 6, 7), "value_new"] <- c(10, "female", "male")
+##' 
+##' key1.long$value_new <- gsub("42", "10", key1.long$value_new)
+##' key1.long$value_new[key1.long$name_new == "Gender"] <-
+##'        mgsub(c("F", "M"), c("female", "male"),
+##'        key1.long$value_new[key1.long$name_new == "Gender"])  
 ##' key1.long[key1.long$name_old == "Score", "name_new"] <- "NewScore"
 ##' keyUpdate(key1.long, dat2, append = TRUE)
 ##' ## Throw away one row, make sure key still has Score values
@@ -1865,8 +1873,8 @@ all.equal.keylong <- function(target, current, ..., check.attributes = FALSE){
 ##' ## Now try a wide key
 ##' key1.wide <- keyTemplate(dat1)
 ##' ## Put in new values, same as in key1.long
-##' key1.wide["Score", c("name_new", "value_new")] <- c("NewScore", "1|2|3|4|10")
-##' key1.wide["Gender", "value_new"] <- "female|male"
+##' key1.wide[key1.wide$name_old == "Score", c("name_new", "value_new")] <- c("NewScore", "1|2|3|4|10|.")
+##' key1.wide[key1.wide$name_old == "Gender", "value_new"] <- "female|male|."
 ##' ## Make sure key1.wide equivalent to key1.long:
 ##' ## If this is not true, it is a fail
 ##' all.equal(long2wide(key1.long), key1.wide, check.attributes = FALSE)
@@ -1877,7 +1885,7 @@ all.equal.keylong <- function(target, current, ..., check.attributes = FALSE){
 ##' 
 ##' mydf.key.path <- system.file("extdata", "mydf.key.csv", package = "kutils")
 ##' mydf.key <-  keyImport(mydf.key.path)
-##'
+##' ##'
 ##' set.seed(112233)
 ##' N <- 20
 ##' ## The new Jan data arrived!
@@ -1893,9 +1901,9 @@ all.equal.keylong <- function(target, current, ..., check.attributes = FALSE){
 ##'                     stringsAsFactors = FALSE)
 ##' mydf.key2 <- keyUpdate(mydf.key, mydf2)
 ##' mydf.key2
-##' mydf.key2["x1", "value_old"] <- "cindy|bobby|jan|peter|marcia|greg"
-##' mydf.key2["x1", "value_new"] <- "Cindy<Bobby<Jan<Peter<Marcia<Greg"
-##'
+##' mydf.key2["x1", "value_old"] <- "cindy|bobby|jan|peter|marcia|greg|."
+##' mydf.key2["x1", "value_new"] <- "Cindy<Bobby<Jan<Peter<Marcia<Greg<."
+##' ##'
 ##' mydf.key.path <- system.file("extdata", "mydf.key.csv", package = "kutils")
 ##' mydf.path <- system.file("extdata", "mydf.csv", package = "kutils")
 ##' mydf <- read.csv(mydf.path, stringsAsFactors=FALSE)
@@ -1906,7 +1914,6 @@ all.equal.keylong <- function(target, current, ..., check.attributes = FALSE){
 keyUpdate <- function(key, dframe, append = TRUE,
                       safeNumericToInteger = TRUE)
 {
-
     if(class(key)[1] == "keylong") {
         long <- TRUE
     } else if (class(key)[1] == "key") {
@@ -1987,8 +1994,9 @@ keyUpdate <- function(key, dframe, append = TRUE,
 ##'
 ##' @param oldkey key that was provided to keyUpdate function
 ##' @param newkey updated key returned by keyUpdate function
-##' @return summary of differences between the two keys
-##' @author Ben Kite <bakite@@ku.edu>
+##' @return NULL, or list with as many as 2 key difference data.frames,
+##'  named "deleted" and "neworaltered"
+##' @author Ben Kite <bakite@@ku.edu> and Paul Johnson <pauljohn@@ku.edu>
 ##' @export
 ##' @examples
 ##' library(rockchalk)
@@ -2004,33 +2012,74 @@ keyUpdate <- function(key, dframe, append = TRUE,
 ##' dat2 <- plyr::rbind.fill(dat1, dat2)
 ##' dat2 <- dat2[-1,]
 ##' key2 <- keyUpdate(key1, dat2, append = TRUE)
-##' keyDiff(key1, key2)
+##' ## FIXME 20170928: keyUpdate adds redundant rows in key2
+##' key2 <- unique(key2)
+##' (kdiff <- keyDiff(key1, key2))
 keyDiff <- function(oldkey, newkey){
+    oldkey.name <- deparse(substitute(oldkey))
+    newkey.name <- deparse(substitute(newkey))
     rownames(oldkey) <- paste0(rownames(oldkey), ".old")
     rownames(newkey) <- paste0(rownames(newkey), ".new")
-    xx <- rbind(newkey, oldkey)
-    top <- duplicated(xx[,-ncol(xx)])
-    bot <- duplicated(xx[,-ncol(xx)], fromLast = TRUE)
-    yy <- ifelse(top + bot == 0, TRUE, FALSE)
-    changes <- xx[yy,]
-    if(nrow(changes) == 0) return("There are no differences between these keys!")
-    changes <- changes[order(changes[,"name_old"]),]
-    updated <- changes[,"name_old"][duplicated(changes[,"name_old"])]
-    new <- names(table(changes[,"name_old"]))[which(table(changes[,"name_old"]) == 1)]
-    messag <- paste0("The following variables are updated/added in the new key: ", paste0(paste0(updated, collapse = ", "), paste0(new, collapse = ", ")), "")
-    output <- list("changes" = messag, "updatedRows" = data.frame(changes))
-    class(output) <- "keyDiagnostic"
-    output
+    oldkey$key <- "old"
+    newkey$key <- "new"
+    xx <- rbind(oldkey, newkey)
+    ## xx$top: is a duplicate of one that went before
+    xx$top <- duplicated(xx[, -match("key", colnames(xx))])
+    ## xx$bot: will be duplicated below
+    xx$bot <- duplicated(xx[, -match(c("key", "top"), colnames(xx))], fromLast = TRUE)
+    ## lines that are in old key but not in new key:
+    deleted <- xx[xx$key == "old" & !xx$bot, -match(c("key", "top", "bot"), colnames(xx)) ]
+    ## in newkey but not old key
+    neworaltered <- xx[xx$key == "new" & !xx$top, -match(c("key", "top", "bot"), colnames(xx))]
+
+    if(NROW(deleted) == 0  && NROW(neworaltered)  == 0){
+        print("There are no differences between these keys!")
+        return(NULL)
+    }
+
+    if(NROW(deleted) > 0)  {
+        messg1 <- paste0("keyDiff: ", NROW(deleted),
+                         " rows in ", oldkey.name,
+                         " are not in ", newkey.name,
+                         "\n")
+        attr(deleted, "message") <- messg1
+        cat(messg1)
+    } else {
+        deleted <- NULL
+    }
+     if(NROW(neworaltered) > 0){
+         messg2 <- paste0("keyDiff: ", NROW(neworaltered),
+                          " rows in ", newkey.name,
+                          " are not in ", oldkey.name, "\n")
+         attr(neworaltered, "message") <- messg2
+         cat(messg2)
+     }
+      
+    output <- list(deleted = deleted,
+                   neworaltered = neworaltered)
+    class(output) <- "keyDiff"
+    invisible(output)
 }
 
-##' Print the "changes" component of a keyDiagnostic object
+##' Print a keyDiff object
 ##'
-##' @method print keyDiagnostic
+##' @method print keyDiff
 ##' @export
-##' @param x A keyDiagnostic object
+##' @param x A keyDiff object
 ##' @param ... Other arguments passed through to print
 ##' @author Ben Kite <bakite@@ku.edu>
-print.keyDiagnostic <- function(x, ...) print(x[["changes"]], ...)
+print.keyDiff <- function(x, ...){
+    if(!is.null(x[["deleted"]])){
+        dat <- x[["deleted"]]
+        cat(attr(dat, "message")) 
+        print(dat, ...)
+    }
+    if(!is.null(x[["neworaltered"]])){
+        dat <- x[["neworaltered"]]
+        cat(attr(dat, "message"))
+        print(x[["neworaltered"]], ...)
+    }
+}
 
 
 ####' Checks a variable key for possible errors.
@@ -2078,7 +2127,8 @@ print.keyDiagnostic <- function(x, ...) print(x[["changes"]], ...)
 
 
 
-##' Diagnose differences between keys
+##' Compares keys from different data sets for compatability
+##' of data classes. 
 ##'
 ##' When several supposedly "equivalent" data sets are used
 ##' to generate variable keys, there may be trouble. If variables
@@ -2088,7 +2138,7 @@ print.keyDiagnostic <- function(x, ...) print(x[["changes"]], ...)
 ##' looks for differences in "class_old", because that's where we
 ##' usually see trouble.
 ##'
-##' The output here is diagnostic.  The keys can be fixed manually, or the
+##' The output here is diagnostic. The keys can be fixed manually, or the
 ##' function keyClassFix can implement an automatic correction.
 ##' @param keys A list with variable keys.
 ##' @param col Name of key column to check for equivalence. Default is "class_old", but
@@ -2160,8 +2210,7 @@ keysPoolCheck <- function(keys, col = "class_old", excludere = "TEXT$"){
 ##' @return Profuse warnings will display problematic key portions. A list of failed key
 ##' blocks will be returned.
 ##' @export
-##' @author Paul Johnson <pauljohn@@ku.edu> and Ben Kite
-##'     <bakite@@ku.edu>
+##' @author Paul Johnson <pauljohn@@ku.edu> and Ben Kite <bakite@@ku.edu>
 keyCheck <- function(key,
                      colname = c("name_new", "class_old", "class_new"),
                      na.strings = c(".", "", "\\s",  "NA", "N/A")){
@@ -2504,6 +2553,7 @@ keyCrossRef <- function(key, ignoreClass = NULL, verbose = FALSE, lowercase = FA
 ##' @return A vector or list of matches between x and either name_new
 ##'     or name_old elements in the key.
 ##' @author Paul Johnson
+##' @export
 ##' @examples
 ##' mydf.key.path <- system.file("extdata", "mydf.key.csv", package = "kutils")
 ##' mydf.key <-  keyImport(mydf.key.path)
@@ -2526,8 +2576,7 @@ keyLookup <- function(x, key, get = "name_old"){
     if(class(key)[1] == "keylong"){
         key <- long2wide(key)
     }
-
-
+    
     if(get == "name_old"){
         if (any(duplicated(key$name_new))){
             MESSG <- paste0("keyLookup finds duplicates in 'name_new'")
@@ -2536,7 +2585,6 @@ keyLookup <- function(x, key, get = "name_old"){
         target <- key$name_new[match(x, key$name_new, nomatch = NA)]
         return(target)
     }
-
     ## else get == "name_new"
     target <- sapply(x, function(jj){
         fits <- key[which(key$name_old %in% jj), "name_new"]
