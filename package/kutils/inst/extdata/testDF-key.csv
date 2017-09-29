@@ -1,5 +1,5 @@
-name_old,name_new,class_old,class_new,value_old|.,value_new,missings,recodes
-varL,varLL,logical,logical,FALSE|TRUE|.|.,TRUE|FALSE|.,,
+name_old,name_new,class_old,class_new,value_old,value_new,missings,recodes
+varL,varLL,logical,logical,FALSE|TRUE|.,TRUE|FALSE|.,,
 varL,varLI1,logical,integer,FALSE|TRUE|.,,,
 varL,varLI2,logical,integer,FALSE|TRUE|.,0|1|.,,
 varL,varLN1,logical,numeric,FALSE|TRUE|.,,,
