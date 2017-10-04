@@ -1,8 +1,55 @@
+2017-10-04  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (checkCoercion): new function, implements
+	idea previously sketched as checkValue_new
+	(long2wide): na.strings and missSymbol args added, change
+	behavior of value_new when full new_value column is empty. No
+	longer creates ".|.|.|", now just "."
+
+	* ../R/variableKey.R (keyTemplate): re-trace data creation,
+	include RECOMPILE to flag to re-generate package files.
+	* ../R/variableKey.R (makeKeylist): completely worked over, avoids
+	duplication of effort using wide2long().
+	* ../R/variableKey.R (keyUpdate): rework
+
+2017-09-29  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (keyImport): replace if (wide) code
+	with wide2long, then trust the long key work. Cuts risk of error
+	in half.
+
+2017-09-28  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (shortenValues): in keyTemplate, was error
+	that caused redundant key lines. Hopefully corrected by
+	unique(xismissing)
+	(assignMissing): add treatment of logical variables.
+
+	* unitTests/runit.VariableKey.R (## test.keyDiff): testing
+	keyDiff fails now because i've restructured keyDiff output,
+	so comment this out.
+
+	* ../R/variableKey.R (keyDiff): recode around making a diff
+	structure composed of 2 data frames: "deleted" is lines
+	removed from oldkey and "neworaltered" are lines in newkey
+	that were not present in oldkey.
+
 2017-09-27  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (keyDiff): print message to user should be
+	an attribute.  output is a list of 2 data frames, one for deleted
+	lines from the old key and one for added or altered lines in new
+	key.
+
+	* unitTests/runit.VariableKey.R (test.keyClassFix): hard-coded
+	values needed revision to match current format of keys.
 
 	* ../R/variableKey.R (smartSave): Using workbook was probably
 	unnecessary, but does work now. Problem about finding sheet
 	names solved by "getWorkspaceNames" function in openxlsx.
+	(keyUpdate): Replace this line-dependent code, which caused
+	example to fail when data failed:
+	key1.long[c(5, 6, 7), "value_new"] <- c(10, "female", "male")
 
 2017-09-26  Paul Johnson  <pauljohn@delllap-16>
 

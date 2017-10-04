@@ -9,14 +9,14 @@ library(kutils)
 
 ## set data file paths (for internal testing)
 ## dfPath <- "../extdata/testDF.csv"
-## keyPath <- "../extdata/testDFkey.csv"
+## keyPath <- "../extdata/testDF-key.csv"
 ## widekeyPath <- "../extdata/wideKey.csv"
 ## longkeyPath <- "../extdata/longKey.csv"
 ## widekeyXLSPath <- "../extdata/wideKey.xlsx"
 
 ## set data file paths (for package build)
 dfPath <- system.file("extdata", "testDF.csv", package="kutils")
-keyPath <- system.file("extdata", "testDFkey.csv", package="kutils")
+keyPath <- system.file("extdata", "testDF-key.csv", package="kutils")
 widekeyPath <- system.file("extdata", "mydf.key.csv", package="kutils")
 longkeyPath <- system.file("extdata", "mydf.key_long2.csv", package="kutils")
 widekeyXLSPath <- system.file("extdata", "mydf.key.xlsx", package="kutils")
@@ -209,7 +209,6 @@ test.keyTemplate <- function(){
 ##   1. check that direct import produces same result as data.frame import
 ##   (all other parameters handled by separate functions)
 test.keyImport <- function() {
-
     ## check wide key direct import and import from read-in data
     widekey1 <- keyImport(widekeyPath, long=FALSE)
     widekeyDF <- read.csv(widekeyPath, stringsAsFactors=FALSE)
@@ -546,7 +545,6 @@ test.keyApply <- function() {
     cc0 <- plyr::mapvalues(c1, from=as.character(seq(0,1,0.1)),
                            to=letters[seq(1, 11)])
     checkIdentical(cc0, df1[,"varCC"])
-    
 }
 
 
@@ -577,7 +575,6 @@ test.long2wide <- function() {
     attr(wkey0, "varlab") <- NULL
     attr(wkey1, "varlab") <- NULL
     checkEquals(wkey0, wkey1)
-    
 }
 
 
@@ -592,8 +589,8 @@ test.keyUpdate <- function() {
     ##   setting up key
     key1 <- keyTemplate(dat1, long=TRUE)
     key1[5, "value_new"] <- 10
-    key1[6, "value_new"] <- "female"
-    key1[7, "value_new"] <- "male"
+    key1[7, "value_new"] <- "female"
+    key1[8, "value_new"] <- "male"
     ##   modifying data
     dat2 <- data.frame(Score = 7,
                        Gender = "other",
@@ -602,9 +599,9 @@ test.keyUpdate <- function() {
     ##   update key
     key2 <- keyUpdate(key1, dat2, append=FALSE)
     dat3 <- keyApply(dat2, key2)
-    checkEquals(levels(dat3$Gender), c("female", "male", "other"))
+    checkEquals(sort(levels(dat3$Gender)), sort(c("female", "male", "other", ".")))
     checkEquals(max(dat3$Score), 10)
-    checkEquals(length(which(is.na(dat3$Weight))), nrow(dat1))
+    checkEquals(sum(is.na(dat3$Weight)), nrow(dat1))
 
     ## check wide key
     key1 <- keyTemplate(dat1)
@@ -619,7 +616,6 @@ test.keyUpdate <- function() {
     key1$name_new <- c("ScoreVar", "GenderVar")
     key2 <- keyUpdate(key1, dat2)
     checkEquals(key1$name_new, key2$name_new[1:2])
-    
 }
 
 
@@ -662,7 +658,6 @@ test.smartRead <- function() {
 ##   1. Legal conversions (on both or a single class column)
 ##   2. Non-legal conversions result in warning
 test.keyClassFix <- function() {
-
     ## setup
     dat1 <- data.frame(x1 = as.integer(rnorm(100)),
                        x2 = sample(c("Apple", "Orange"), 100, replace = TRUE),
@@ -679,7 +674,7 @@ test.keyClassFix <- function() {
     stackedKeysFix <- kutils:::keyClassFix(stackedKeys)
     checkEquals(stackedKeysFix$class_old,
                 stackedKeysFix$class_new,
-                c(rep("numeric", 6), rep("factor", 2), rep("numeric", 4)))
+                c(rep("numeric", 4), rep("factor", 3), rep("numeric", 5)))
     
     ## check change restricted to class_old
     stackedKeysFix2 <- kutils:::keyClassFix(stackedKeys, colnames="class_old")
