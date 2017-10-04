@@ -455,6 +455,25 @@ checkCoercion <- function(value, targetclass,
     TRUE
 }
 
+##' Check if values are R NA symbol or any one of the na.strings
+##' elements
+##' @param x Input data vector
+##' @param na.strings Vector of string values to be considered as
+##'     missing. Defaults will match values that are equal to ., empty
+##'     string "", any number of white space elements, or charcter
+##'     string "N/A". We do not include "NA" by default because some
+##'     projects use "NA" to mean "not appropriate".
+##' @return Logical vector, TRUE if value is either NA or in na.strings.
+##' @keyword internal
+##' @examples
+##' x1 <- c("TRUE", "FALSE", FALSE, TRUE, NA, "NA", ".", "N/A", " ", "", "\t")
+##' x1na <- isNA(x1)
+##' cbind(x1, x1na)
+isNA <- function(x, na.strings = c("\\.", "", "\\s+",  "N/A")){
+    ismissing <- grepl(paste0("^", paste0(na.strings, collapse="$|^"), "$"), x)
+    ismissing[is.na(x)] <- TRUE
+    ismissing
+}
 
 ##' Create variable key template
 ##'
@@ -1311,7 +1330,7 @@ makeKeylist <- function(key,
                         sep = c(character = "\\|", logical = "\\|",
                               integer = "\\|", factor = "[\\|<]",
                               ordered = "[\\|<]", numeric = "\\|"),
-                        na.strings = c("\\.", "^$", "\\s+",  "N/A")
+                        na.strings = c("\\.", "", "\\s+",  "N/A")
                         )
 {
     ## if x is in na.strings, return NA
