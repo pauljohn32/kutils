@@ -232,8 +232,6 @@ test.keyImport <- function() {
 test.keyApply <- function() {
 
     df0 <- read.csv(dfPath, stringsAsFactors=TRUE)
-    df0$varO1 <- ordered(df0$varO1)
-    df0$varC1 <- as.character(df0$varN2)
     key <- keyImport(keyPath)
     df1 <- keyApply(df0, key)
 
