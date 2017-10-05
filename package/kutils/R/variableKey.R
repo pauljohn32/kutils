@@ -728,7 +728,7 @@ keyTemplate <-
     }
    
     if (!missing(file) && !is.null(file)){
-        smartSave(key, file, na.string = missSymbol, varlab = varlab)
+        keySave(key, file, na.string = missSymbol, varlab = varlab)
     }
     key
 }
@@ -820,7 +820,7 @@ varlabTemplate <- function(obj, varlab = TRUE){
 }
 NULL
 
-##' save key as file after deducing type from suffix
+##' Save key as file after deducing type from suffix
 ##'
 ##' This is specialized to saving of key objects, it is not a
 ##' general purpose function for saving things.  It scans the
@@ -850,12 +850,12 @@ NULL
 ##'     labels saved in a separate file suffixed "-varlab.csv". 3)
 ##'     RDS: varlab is an attribute of the key object.
 ##' @importFrom openxlsx  addWorksheet writeDataTable saveWorkbook
-##' @keywords internal
+##' @export
 ##' @author Paul Johnson <pauljohn@@ku.edu>
-smartSave <- function(obj, file, na.string = ".", varlab){
+keySave <- function(obj, file, na.string = ".", varlab){
     obj[is.na(obj)] <- "."
     if (!missing(varlab) && !varlab %in% c(TRUE, FALSE)){
-        MESSG <- "smartSave varlab argument must be TRUE or FALSE"
+        MESSG <- "keySave varlab argument must be TRUE or FALSE"
         stop(MESSG)
     }
     
@@ -895,14 +895,14 @@ smartSave <- function(obj, file, na.string = ".", varlab){
     } else if (length(grep("rds$", tolower(file)))){
         saveRDS(obj, file = file)
     } else {
-        warning("smartSave: unrecognized suffix. No file created")
+        warning("keySave: unrecognized suffix. No file created")
         NULL
     }
     invisible(obj)
 }
 NULL
 
-##' read file after deducing file type from suffix.
+##' Read file after deducing file type from suffix.
 ##'
 ##' If the input is XLSX, sheets named "key" and "varlab" are
 ##' imported if the exist. If input is CSV, then the key
@@ -919,9 +919,9 @@ NULL
 ##' @return A data frame or matrix.
 ##' @importFrom utils read.csv
 ##' @importFrom openxlsx read.xlsx getSheetNames readWorkbook
-##' @keywords internal
+##' @export
 ##' @author Paul Johnson <pauljohn@@ku.edu>
-smartRead <- function(file, ..., na.strings = c("\\s+")){
+keyRead <- function(file, ..., na.strings = c("\\s+")){
     ## TODO: implement code to sort out the dots arguments, find
     ## which are aimed at read.xlsx or read.csv, and divide them. See
     ## peek() function example.
@@ -931,7 +931,7 @@ smartRead <- function(file, ..., na.strings = c("\\s+")){
     dotsforxlsx <- dots[readxlsxFormals[readxlsxFormals %in% names(dots)]]
     dotsforcsv <- dots[readcsvFormals[readcsvFormals %in% names(dots)]]
     if (!is.character(file) || !file.exists(file)){
-        messg <- paste("smartRead: 'file' not found")
+        messg <- paste("keyRead: 'file' not found")
         stop(messg)
     } else {
         ## key is file name, so scan for suffix
@@ -1155,7 +1155,7 @@ keyImport <- function(key, ignoreCase = TRUE,
                       , ...
                       , keynames = NULL)
 {
-    if (is.character(key)) key <- smartRead(key)
+    if (is.character(key)) key <- keyRead(key)
 
     legalClasses = c("integer", "numeric", "double", "factor",
                      "ordered", "character", "logical")
@@ -2025,7 +2025,7 @@ all.equal.keylong <- function(target, current, ..., check.attributes = FALSE){
 ##     key_jumbo[!duplicated(keytest), ]
 
 ##     if (!missing(file) && !is.null(file)){
-##         smartSave(key_jumbo, file, outdir)
+##         keySave(key_jumbo, file, outdir)
 ##     }
 ##     key_jumbo
 ##  }
@@ -2304,7 +2304,7 @@ print.keyDiff <- function(x, ...){
 ####' @author Ben Kite <bakite@@ku.edu
 ##keyChecker <- function(key){
 ##    if (is.character(key)){
-##        key <- smartRead(key)
+##        key <- keyRead(key)
 ##    }
 ##    if (prod(c("name_old", "name_new", "class_old", "class_new",
 ##               "value_old", "value_new") %in% names(key)) != 1L){
@@ -2430,7 +2430,7 @@ keyCheck <- function(key,
                      colname = c("name_new", "class_old", "class_new"),
                      na.strings = c("\\.", "", "\\s+",  "N/A")){
     if (is.character(key)){
-        key <- smartRead(key)
+        key <- keyRead(key)
     }
     if (prod(c("name_old", "name_new", "class_old", "class_new",
                "value_old", "value_new") %in% names(key)) != 1L){
