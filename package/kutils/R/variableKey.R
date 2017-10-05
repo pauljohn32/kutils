@@ -728,7 +728,7 @@ keyTemplate <-
     }
    
     if (!missing(file) && !is.null(file)){
-        keySave(key, file, na.string = missSymbol, varlab = varlab)
+        keySave(key, file, na_ = missSymbol, varlab = varlab)
     }
     key
 }
@@ -827,12 +827,14 @@ NULL
 ##' suffix of the file name and then does the right thing.
 ##'
 ##' In updates 2017-09, a varlab element was introduced.  The varlab
-##' attribute of the object is saved.  It becomes a second sheet in
-##' XLS output, while for CSV files it is saved as a separate file
-##' suffixed "-varlab.csv".
+##' attribute of the object is saved.  The files created incorporate
+##' the variable labels object in different ways. 1) XLSX: variable
+##' labels a worksheet named "varlab" 2) CSV: variable labels saved in
+##' a separate file suffixed "-varlab.csv". 3) RDS: varlab is an
+##' attribute of the key object.
 ##' @param obj a variable key object
 ##' @param file file name. must end in "csv", "xlsx" or "rds"
-##' @param na.sting Character string to be saved for missing values,
+##' @param na_ Value to insert to represent a missing score. Default
 ##'     ".".
 ##' @param varlab FALSE or TRUE. Default is FALSE, no new labels will
 ##'     be created. If a key object has a varlab already, it is saved
@@ -844,15 +846,11 @@ NULL
 ##'     missing labels, then \code{varlabTemplate} is called to fill
 ##'     in new variable labels.
 ##' @return NULL if no file is created. Otherwise, a key object with
-##'     an attribute varlab is returned. The files created incorporate
-##'     the variable labels object in different ways. 1) XLSX:
-##'     variable labels a worksheet named "varlab" 2) CSV: variable
-##'     labels saved in a separate file suffixed "-varlab.csv". 3)
-##'     RDS: varlab is an attribute of the key object.
-##' @importFrom openxlsx  addWorksheet writeDataTable saveWorkbook
+##'     an attribute varlab is returned.
+##' @importFrom openxlsx addWorksheet writeDataTable saveWorkbook
 ##' @export
 ##' @author Paul Johnson <pauljohn@@ku.edu>
-keySave <- function(obj, file, na.string = ".", varlab){
+keySave <- function(obj, file, na_ = ".", varlab){
     obj[is.na(obj)] <- "."
     if (!missing(varlab) && !varlab %in% c(TRUE, FALSE)){
         MESSG <- "keySave varlab argument must be TRUE or FALSE"
@@ -871,14 +869,14 @@ keySave <- function(obj, file, na.string = ".", varlab){
     }
       
     if (length(grep("csv$", tolower(file))) > 0){
-        write.csv(obj, file = file, na = na.string, row.names = FALSE)
+        write.csv(obj, file = file, na = na_, row.names = FALSE)
         if(!identical(varlab, FALSE) && !is.null(attr(obj, "varlab"))){
             varlab.orig <- attr(obj, "varlab.orig")
             varlab.mat <- cbind("name_new" = names(varlab.orig),
                                 "varlab" = varlab.orig)
             write.csv(varlab.mat,
                       file = gsub(".csv$", "-varlab.csv", file),
-                      row.names = FALSE, na = na.string)
+                      row.names = FALSE, na = na_)
         }
     } else if (length(grep("xlsx$", tolower(file)))){
         wb <- openxlsx::createWorkbook()
@@ -1850,7 +1848,8 @@ wide2long <- function(key, sep = c(character = "\\|", logical = "\\|",
                          value_new = values[ , "value_new"],
                          missings = missings,
                          recodes = recodes, stringsAsFactors = FALSE)
-        ##zz <- lapply(zz, function(obj) if (length(obj) == 0) "" else x)
+        browser()
+        zz <- sortStanza(zz)
         zz
     }
 
@@ -1925,11 +1924,9 @@ long2wide <- function(keylong, na.strings = c("\\.", "", "\\s+",  "N/A"),
         recodes <- na.omit(recodes)
         values <- cbind(value_old = x$value_old, value_new = x$value_new)
         values <- unique(values)
-        
-        value_new.ismissing <-
-            grepl(paste0("^", paste0(na.strings, collapse="$|^"), "$"),
-                  na.omit(values[ , "value_new"]))
-        
+        values <- sortStanza(values)
+        value_new.ismissing <- isNA(values[ , "value_new"])
+                   
         if(any(!na.omit(value_new.ismissing))){
             newvalues <- paste(values[ , "value_new"], collapse = sep_new)
         } else {
@@ -1994,41 +1991,6 @@ all.equal.keylong <- function(target, current, ..., check.attributes = FALSE){
     reslt <- base::all.equal.list(target, current, check.attributes = FALSE)
     reslt
 }
-
-
-
-## PJ 20161006: this is not ready, project where we were planning to
-## us it discontinued.
-## ##' Stack together several separate key templates, make a "jumbo key".
-## ##'
-## ##' Try to homogenize classes and name_old
-## ##'
-## ##' Try to tolerate inconsistent capitalization in name_old
-## ##' @param aList list of key template objects
-## ##' @param file file name intended for output
-## ##' @param outdir directory name intended for output
-## ##' @return A stacked variable key in the long format
-## ##' @importFrom plyr rbind.fill
-## ##' @author Paul Johnson
-## keyStacker <- function(aList, file, outdir = "."){
-##     ## TODO: Must convert keys to long form for stacking
-
-##     key_jumbo <- rbind.fill(aList)
-##     key_jumbo <- key_jumbo[order(key_jumbo$name_old), ]
-##     key_jumbo <- unique(key_jumbo)
-
-##     ## check for capitalization differences, remove equivalent rows.
-
-##     keytest <- key_jumbo
-##     keytest$name_old <- tolower(keytest$name_old)
-##     keytest$name_new <- tolower(keytest$name_new)
-##     key_jumbo[!duplicated(keytest), ]
-
-##     if (!missing(file) && !is.null(file)){
-##         keySave(key_jumbo, file, outdir)
-##     }
-##     key_jumbo
-##  }
 
 
 ##' Update a key in light of a new data frame (add variables and
@@ -2197,6 +2159,7 @@ keyUpdate <- function(key, dframe, append = TRUE,
     } else {
         if (!append) {
             output <- output[order(output$name_old),]
+            output <- naLast(output)
         }
         row.names(output) <- seq(1, nrow(output), 1)
         return(output)
@@ -2205,6 +2168,56 @@ keyUpdate <- function(key, dframe, append = TRUE,
     output
 }
 
+##' Sort key so that non missing values are first in the
+##' value vector.
+##'
+##' @keywords internal
+##' @param key key, long or wide
+##' @param byvar Default is "name_new", the column for sorting.
+##' @param na.strings vector of characters to be treated as NA
+##' @return sorted key, with blocks that have the missings last
+naLast <- function(key, byvar = "name_new",
+                   na.strings = c("\\.", "", "\\s+",  "N/A"))
+{
+    ##keep attributes not equal to "names" and "row.names"
+    attrs <- attributes(key)[!names(attributes(key)) %in% c("names", "row.names")]
+    long <- if(inherits(key, "keylong")) TRUE else FALSE
+    if(!long) key <- wide2long(key)
+    keysplit <- split(key, key[ , byvar])
+    browser()
+    for(jj in names(keysplit)) {
+        keysplit[[jj]] <- sortStanza(keysplit[[jj]],
+                                     byvar,
+                                     na.strings)
+    }
+    key <- do.call(rbind, keysplit)
+    if(!long) return(long2wide(key))
+    ## else long return
+    key
+}
+
+
+##' Move missing values to last row in long key block
+##' 
+##' Receive key stanza and sort the rows so that the missing
+##' values are last in the list. Leaves ordering of other rows
+##' unchanged otherwise.
+##' 
+##' @param keyblock a variable key, or section of rows
+##' @param valvar Default is "value_new", the column for sorting.
+##' @param na.strings Stings to be treated as missing, along with R's
+##'     NA symbol
+##' @return keyblock, row re-arranged with missings last
+##' @keywords internal
+sortStanza <- function(keyblock, valvar = "value_new",
+                       na.strings = c("\\.", "", "\\s+",  "N/A"))
+{
+    ordr <- seq_along(keyblock[ , valvar])
+    ismissing <- isNA(keyblock[ , valvar])
+    neworder <- c(ordr[!ismissing], ordr[ismissing])
+    keyblock[neworder, , drop = FALSE]
+}
+    
 
 ##' Show difference between 2 keys
 ##'
