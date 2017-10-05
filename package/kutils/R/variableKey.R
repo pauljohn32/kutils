@@ -432,11 +432,12 @@ checkValue_old <- function(x, value_old, xname, diagnostic = FALSE){
 ##' x2 <- c(4, 5, 6, 9.2, ".", " ")
 ##' ## Should fail
 ##' checkCoercion(x2, "logical")
-##' x3 <- factor(c("bob", "emily", "bob", "jane"))
+##' x3 <- factor(c("bob", "emily", "bob", "jane", "N/A", " ", NA, "NA"))
 ##' checkCoercion(x3, "ordered")
 ##' checkCoercion(x3, "integer")
 ##' ## Should fail:
 ##' checkCoercion(x3, "logical")
+##' 
 checkCoercion <- function(value, targetclass,
                           na.strings = c("\\.", "", "\\s+",  "N/A") ){
     value.lab <-  deparse(substitute(value))
@@ -457,18 +458,25 @@ checkCoercion <- function(value, targetclass,
 
 ##' Check if values are R NA symbol or any one of the na.strings
 ##' elements
+##'
+##' A value vector in the key will generally be a character
+##' vector.  This utility is used to check if the characters
+##' are either R missing or values in a list of characters that
+##' represent missings.
+##' 
 ##' @param x Input data vector
 ##' @param na.strings Vector of string values to be considered as
 ##'     missing. Defaults will match values that are equal to ., empty
 ##'     string "", any number of white space elements, or charcter
 ##'     string "N/A". We do not include "NA" by default because some
 ##'     projects use "NA" to mean "not appropriate".
-##' @return Logical vector, TRUE if value is either NA or in na.strings.
-##' @keyword internal
-##' @examples
-##' x1 <- c("TRUE", "FALSE", FALSE, TRUE, NA, "NA", ".", "N/A", " ", "", "\t")
-##' x1na <- isNA(x1)
-##' cbind(x1, x1na)
+##' @return Logical vector, TRUE if a value is either NA or in
+##'     na.strings.
+##' @keywords internal
+##' ## @examples
+##' ## x1 <- c("TRUE", "FALSE", FALSE, TRUE, NA, "NA", ".", "N/A", " ", "")
+##' ## x1na <- isNA(x1)
+##' ## cbind(x1, x1na)
 isNA <- function(x, na.strings = c("\\.", "", "\\s+",  "N/A")){
     ismissing <- grepl(paste0("^", paste0(na.strings, collapse="$|^"), "$"), x)
     ismissing[is.na(x)] <- TRUE
@@ -479,7 +487,7 @@ isNA <- function(x, na.strings = c("\\.", "", "\\s+",  "N/A")){
 ##'
 ##' A variable key is a human readable document that describes the
 ##' variables in a data set. A key can be revised and re-imported by R
-##' so as to guide the re-importation and recoding of data. This might
+##' to recode data. This might
 ##' also be referred to as a "programmable codebook."  This function
 ##' inspects a data frame, takes notice of its variable names, their
 ##' classes, and legal values, and then it creates a table summarizing
@@ -629,20 +637,7 @@ isNA <- function(x, na.strings = c("\\.", "", "\\s+",  "N/A")){
 ##'
 ##' list.files(dn)
 ##'
-##' ## testDF is a slightly more elaborate version created for unit testing:
-##' testdf.path <- system.file("extdata", "testDF.csv", package = "kutils")
-##' testdf <- read.csv(testdf.path, header = TRUE)
-##' testdf$varO1 <- ordered(testdf$varO1)
-##' testdf$varC1 <- as.character(testdf$varN2)
-##' keytemp <- keyTemplate(testdf, file = "testDFkey-templatenew.csv", varlab = TRUE)
-##' ## A "hand edited key file:"
-##' keyPath <- system.file("extdata", "testDFkey.csv", package="kutils")
-##' key <- keyImport(keyPath)
-##' kutils:::smartSave(key, file = "testDF-key-proposed.csv")
-##' keydiff <- keyDiff(keytemp, key)
-##' key2 <- rbind(key, keydiff$neworaltered)
-##' key2 <- unique(key)
-##' if(interactive())View(key2)
+
 keyTemplate <-
     function(dframe, long = FALSE, sort = FALSE,
              file = NULL, max.levels = 15, missings = NULL, missSymbol = ".",
@@ -1138,6 +1133,19 @@ NULL
 ##' mydf.key3
 ##' mydf.keylong.path <- system.file("extdata", "mydf.key_long.csv", package = "kutils")
 ##' mydf.keylong <- keyImport(mydf.keylong.path)
+##'
+##' ## testDF is a slightly more elaborate version created for unit testing:
+##' testdf.path <- system.file("extdata", "testDF.csv", package = "kutils")
+##' testdf <- read.csv(testdf.path, header = TRUE)
+##' keytemp <- keyTemplate(testdf, long = TRUE)
+##' ## A "hand edited key file"
+##' keyPath <- system.file("extdata", "testDF-key.csv", package="kutils")
+##' key <- keyImport(keyPath)
+##' keydiff <- keyDiff(keytemp, key)
+##' key2 <- rbind(key, keydiff$neworaltered)
+##' key2 <- unique(key)
+##' if(interactive())View(key2)
+##' 
 keyImport <- function(key, ignoreCase = TRUE,
                       sep = c(character = "\\|", logical = "\\|",
                               integer = "\\|", factor = "[\\|<]",
@@ -1194,6 +1202,10 @@ keyImport <- function(key, ignoreCase = TRUE,
      }
 
     key.orig <- key
+
+    ## Omit key rows in which name_new is a missing or na.string
+    key <- key[!isNA(key$name_new), ]
+    
     ## Deduce if this is a long key. If separators | < assume it is wide
     if (any(grepl("[\\|<]", key$value_old))) {
         ## There are separators, this is almost surely a wide key
@@ -1201,25 +1213,28 @@ keyImport <- function(key, ignoreCase = TRUE,
     } else {
         long <- TRUE
     }
-
     
     if (!long){
-        browser()
         MESSG <- paste("keyImport guessed that is a wide format key.\n")
         cat(MESSG)
         ## Use the unique-ified key now
         key[ , "name_new"] <- uniquifyNameNew(key, long = FALSE)
         ## If wide key and value_new is empty/missing, make it a copy of value_old.
         ## Otherwise, the missing treatment sets all values as missing, which is pointless.
-        ismissing <- grepl(paste0("^", paste0(na.strings, collapse="$|^"), "$"), key[ , "value_new"])
+        ismissing <- isNA( key[ , "value_new"])
         key[ismissing, "value_new"] <- key[ismissing , "value_old"]
         key <- wide2long(key, sep)
         keysplit <- split(key, key[ , "name_new"])
-        valcheck <- vapply(keysplit, function(var) isTRUE(checkCoercion(var$value_new,
-                                                     var$class_new,
-                                                     na.strings = na.strings)), logical(1))
+        valcheck <- vapply(keysplit, function(keyvar){
+            keyclass <- unique(keyvar$class_new)
+            isTRUE(checkCoercion(keyvar$value_new,  unique(keyclass),
+                                 na.strings = na.strings))
+        }, logical(1))
         if(any(!valcheck)){
-            MESSG <- "value_new incorrect for class_new"
+            MESSG <- "value_new in key cannot be coerced to class_new\n"
+            cat(MESSG)
+            print(keysplit[!valcheck])
+            MESSG <- 
             stop(MESSG)
         }
         
@@ -1349,6 +1364,7 @@ makeKeylist <- function(key,
     } else if (inherits(key, "keylong")){
         long <- TRUE
     }
+    ## Allow arguments to override na.strings from key?
     if (is.null(na.strings <- attr(key, "na.strings"))){
         na.strings <- attr(key, "na.strings")
     }
@@ -1394,8 +1410,8 @@ makeKeylist <- function(key,
             value_new[value_new == "TRUE"] <- TRUE
             value_new[value_new == "FALSE"] <- FALSE
         }
-        value_new[value_new %in% na.strings] <- NA
-        value_old[value_old %in% na.strings] <- NA
+        value_new[isNA(value_new, na.strings)] <- NA
+        value_old[isNA(value_old, na.strings)] <- NA
         ## If not a factor, cast new values with class_new. Otherwise, leave as text,
         ## which will be understood as levels
         if (!class_new %in% c("factor", "ordered") && class(value_new) != class_old){
@@ -1474,10 +1490,11 @@ NULL
 ##'
 keyApply <- function(dframe, key, diagnostic = TRUE,
                      safeNumericToInteger = TRUE, ignoreCase = TRUE,
-                     drop = TRUE, debug = FALSE){
-    legalClasses = c("integer", "numeric", "double", "factor",
-                     "ordered", "character", "logical")
-
+                     drop = TRUE, debug = FALSE)
+{
+    legalClasses <- c("integer", "numeric", "double", "factor",
+                      "ordered", "character", "logical")
+    
     if(is.na(drop)) stop("keyApply: drop argument is NA.")
     if (is.character(drop)){
         stopifnot(drop %in%  c("vars","vals"))
@@ -1535,9 +1552,8 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         ## Extract values for convenience
         values <- v$values
         oldVals <- v$values$value_old
-        newVals <- as.character(v$values$value_new)
-        
-        ## keep spare copy of original name, in case it gets lowercased next
+        newVals <- v$values$value_new
+        ## keep spare copy of original name
         v$name_old.orig <- v$name_old
         if(ignoreCase) v$name_old <- tolower(v$name_old)
 
@@ -1547,19 +1563,18 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
 
         ## If variable name from key is not in the data frame, go to next variable.
         if (!v$name_old %in% colnames(dframe)){
-            messg <- paste("Notice: ", v$name_old.orig, "not in data")
-            warning(messg)
+            messg <- paste("keyApply: ", v$name_old.orig, "not in data.\n")
+            cat(messg)
             next()
         }
 
         ## DELETE VARIABLES from data frame
         ## name_new is empty, then ignore that variable
-        if (length(v$name_new) == 0 || is.na(v$name_new) || v$name_new %in% na.strings){
-            messg <- paste("keyApply: ", v$name_old, "dropped")
-            warning(messg)
+        if (length(v$name_new) == 0 || isTRUE(isNA(unique(v$name_new)))){
+            messg <- paste("keyApply: ", v$name_old.orig, "dropped.\n")
+            cat(messg)
             next()
         }
-
         ## Extract candidate variable to column, will recode xnew.
         xnew <- dframe[ , v$name_old]
 
@@ -1584,6 +1599,10 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         ## value_old and value_new are full of only NA, so
         ## only perform direct class conversions
         if (NROW(na.omit(values)) == 0 || length(na.omit(newVals)) == 0) {
+            ## if coercion not safe, stop
+            if(!isTRUE(checkCoercion(xnew, unique(v$class_new), na.strings))){
+                stop("keyApply: coercion failed, ", unique(v$name_old.orig))
+            }
             if (v$class_new %in% c("factor", "ordered")) {
                 # no direct conversion to factors
                 xnew1 <- factor(xnew, ordered=(v$class_new == "ordered"))  
@@ -1592,14 +1611,10 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             }
             mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- ", "xnew1")
             eval(parse(text = mytext))
-            coercionWarning <- paste0("Coercing ", v$name_old, " from ",
-                                      v$class_old, " to ",
-                                      v$class_new, ".")
-            if (v$class_old != v$class_new) warning(coercionWarning)
             next()
         }
 
-        if("vals" %in% drop){
+        if ("vals" %in% drop){
             xnew.notinkey <- setdiff(unique(xnew), values$value_old)
             if(length(xnew.notinkey)){
                 values_new.notinkey <- if("vals" %in% drop) NA else xnew.notinkey
@@ -1622,8 +1637,14 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
 
         ## if class from data frame is not same as class_old, then MUST cast
         ## as correct type. Could cast as character.
-        if((class(xnew)[1] != v$class_old) ||
+        if ((class(xnew)[1] != v$class_old) ||
            (v$class_old %in% c("ordered", "factor"))) {
+            if(!isTRUE(checkCoercion(unique(xnew), unique(v$class_old), na.strings))){
+                MESSG <- paste("keyApply:", unique(v$name_old.orig),
+                               "input data cannot be coerced to original class.")
+                print(v)
+                stop(MESSG)
+            }
             xnew.orig <- xnew
             if(v$class_old %in% c("ordered", "factor")){
                 ## creates factor with levels in value_old
@@ -1653,24 +1674,27 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         if (v$class_old %in% c("factor", "ordered") &&
             v$class_new %in% c("integer", "numeric", "double"))
         {
-            ## suppose they want the integers with values = value_new
-            if (v$class_new == "integer" && is.null(val_new_levels <- safeInteger(values$value_new))){
-                ## Value new cannot be coerced to an integer, user error, should stop
-                MESSG <- paste("key error:value_new should be integer:", paste(v, collapse = " "))
-                stop(MESSG)
-            }
-            ## New missings created by coercion, so stop with error
-            if (v$class_new == "numeric" && any(is.na(as.numeric(na.omit(values$value_new))))){
+            if(!isTRUE(checkCoercion(values$value_new, unique(v$class_new), na.strings))){
                 ## Value new cannot be coerced numeric, should stop
-                MESSG <- paste("key error: value_new should be numeric:\n", v$name_old)
+                MESSG <- paste("key error:", v$name_old.orig, "value_new not consistent with class_new:\n")
+                print(v)
                 stop(MESSG)
             }
+            if(!isTRUE(checkCoercion(xnew, unique(v$class_new), na.strings))){
+                ## Value new cannot be coerced numeric, should stop
+                MESSG <- paste("key error: values of", v$name_old.orig,
+                               "don't match class_new:\n")
+                print(v)
+                stop(MESSG)
+            }
+            
             ## otherwise continue
             xnew2 <- plyr::mapvalues(xnew, values[ , "value_old"],
                                      values[ , "value_new"],
                                      warn_missing = FALSE)
-            if(any(is.na(as(levels(xnew2), v$class_new)))){
-                MESSG <- paste("key value error:", v$name_old, "Missings created.")
+            if(!isTRUE(checkCoercion(levels(xnew2), unique(v$class_new), na.strings))){
+                MESSG <- paste("keyApply value error:", v$name_old, "levels don't match class_new.")
+                print(v)
                 warning(MESSG)
             }
             xnew3 <- as(levels(xnew2)[xnew2], v$class_new)
@@ -1683,7 +1707,6 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         ## need to run this if values differ or one is NA but other not
         valueDiff <- v$values$value_old != v$values$value_new
         if (any(valueDiff, na.rm = TRUE) || any(is.na(valueDiff))) {
-        ##if (1) {
             xnew <- plyr::mapvalues(xnew, values$value_old, values$value_new, warn_missing = FALSE)
             mytext1 <- paste0("xnew2 <- as.", v$class_new, "(xnew)")
             eval(parse(text = mytext1))
