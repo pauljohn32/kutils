@@ -1,3 +1,11 @@
+2017-10-05  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (keySave): rename "smartSave" -> "keySave"
+	and "smartRead" -> "keyRead". Export both functions.
+	(sortStanza): new function
+	(naLast): new function. Put values that are missing last.
+	(sortStanza): Drop Gotcha Again! How many times...
+
 2017-10-04  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (checkCoercion): new function, implements
@@ -5,6 +13,8 @@
 	(long2wide): na.strings and missSymbol args added, change
 	behavior of value_new when full new_value column is empty. No
 	longer creates ".|.|.|", now just "."
+	(isNA): new function, regular expression matching, for convenience
+	of data checking.
 
 	* ../R/variableKey.R (keyTemplate): re-trace data creation,
 	include RECOMPILE to flag to re-generate package files.

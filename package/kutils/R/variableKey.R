@@ -1327,6 +1327,8 @@ keyImport <- function(key, ignoreCase = TRUE,
 ##'     used only if the key object does not have an na.strings
 ##'     attribute.  keys will have that attribute, but it may be lost
 ##'     when users revise the key in memory.
+##' @param na_ Value to insert to represent a missing score. Default
+##'     ".".
 ##' @keywords internal
 ##' @return A list with one element per variable name, along with some
 ##'     attributes like class_old and class_new. The class is set as
@@ -1343,7 +1345,8 @@ makeKeylist <- function(key,
                         sep = c(character = "\\|", logical = "\\|",
                               integer = "\\|", factor = "[\\|<]",
                               ordered = "[\\|<]", numeric = "\\|"),
-                        na.strings = c("\\.", "", "\\s+",  "N/A")
+                        na.strings = c("\\.", "", "\\s+",  "N/A"),
+                        na_ = "."
                         )
 {
     ## if x is in na.strings, return NA
@@ -1363,8 +1366,8 @@ makeKeylist <- function(key,
         long <- TRUE
     }
     ## Allow arguments to override na.strings from key?
-    if (is.null(na.strings <- attr(key, "na.strings"))){
-        na.strings <- attr(key, "na.strings")
+    if (missing(na.strings) && !is.null(attr.na.strings <- attr(key, "na.strings"))){
+        na.strings <- attr.na.strings
     }
     if (!long){
         key <- wide2long(key)
@@ -1408,8 +1411,8 @@ makeKeylist <- function(key,
             value_new[value_new == "TRUE"] <- TRUE
             value_new[value_new == "FALSE"] <- FALSE
         }
-        value_new[isNA(value_new, na.strings)] <- NA
-        value_old[isNA(value_old, na.strings)] <- NA
+        value_new[isNA(value_new, na.strings)] <- na_
+        value_old[isNA(value_old, na.strings)] <- na_
         ## If not a factor, cast new values with class_new. Otherwise, leave as text,
         ## which will be understood as levels
         if (!class_new %in% c("factor", "ordered") && class(value_new) != class_old){
@@ -1815,8 +1818,7 @@ keyDiagnostic <- function(dfold, dfnew, keylist, max.values = 20,
 ##' mydf <- read.csv(mydf.path, stringsAsFactors=FALSE)
 ##' ## Target we are trying to match:
 ##' mydf.keylong <- keyTemplate(mydf, long = TRUE, sort = FALSE)
-##' ## View(mydf.keylong)
-##'
+##' 
 ##' mydf.key <- keyTemplate(mydf)
 ##' mydf.keywide2long <- wide2long(mydf.key)
 ##'
@@ -1848,7 +1850,6 @@ wide2long <- function(key, sep = c(character = "\\|", logical = "\\|",
                          value_new = values[ , "value_new"],
                          missings = missings,
                          recodes = recodes, stringsAsFactors = FALSE)
-        browser()
         zz <- sortStanza(zz)
         zz
     }
@@ -2173,10 +2174,11 @@ keyUpdate <- function(key, dframe, append = TRUE,
 ##'
 ##' @keywords internal
 ##' @param key key, long or wide
-##' @param byvar Default is "name_new", the column for sorting.
+##' @param byvar Default is "name_new", the column for sorting into blocks.
+##' @param valvar The value variable on which sorting is to be done, "value_new".
 ##' @param na.strings vector of characters to be treated as NA
 ##' @return sorted key, with blocks that have the missings last
-naLast <- function(key, byvar = "name_new",
+naLast <- function(key, byvar = "name_new", valvar = "value_new", 
                    na.strings = c("\\.", "", "\\s+",  "N/A"))
 {
     ##keep attributes not equal to "names" and "row.names"
@@ -2184,11 +2186,9 @@ naLast <- function(key, byvar = "name_new",
     long <- if(inherits(key, "keylong")) TRUE else FALSE
     if(!long) key <- wide2long(key)
     keysplit <- split(key, key[ , byvar])
-    browser()
     for(jj in names(keysplit)) {
         keysplit[[jj]] <- sortStanza(keysplit[[jj]],
-                                     byvar,
-                                     na.strings)
+                                     na.strings = na.strings)
     }
     key <- do.call(rbind, keysplit)
     if(!long) return(long2wide(key))
