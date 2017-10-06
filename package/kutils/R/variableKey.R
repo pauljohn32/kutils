@@ -588,7 +588,7 @@ isNA <- function(x, na.strings = c("\\.", "", "\\s+",  "N/A")){
 ##'
 ##' ## This puts copy in temp working directory, unless package build flag
 ##' ## is set
-##' RECOMPILE <- FALSE
+##' RECOMPILE <- TRUE
 ##' dn <- if(!RECOMPILE) tempdir() else "../inst/extdata"
 ##' write.csv(mydf, file = file.path(dn, "mydf.csv"), row.names = FALSE)
 ##' mydf.templ <- keyTemplate(mydf, file = file.path(dn, "mydf.templ.csv"),
@@ -711,8 +711,7 @@ keyTemplate <-
     if(isTRUE(long)){
         if (sort) key <- key[order(key$name_old, key$name_new), ]
         class(key) <- c("keylong", class(key))
-        return(key)
-    } else {
+     } else {
         ## else !long, so make a wide key
         key <- long2wide(key)
         rownames(key) <- key$name_old
@@ -1604,7 +1603,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             if(!isTRUE(checkCoercion(xnew, unique(v$class_new), na.strings))){
                 stop("keyApply: coercion failed, ", unique(v$name_old.orig))
             }
-            if (v$class_new %in% c("factor", "ordered")) {
+            if (v$class_new %in% c("factor", "ordered")){
                 # no direct conversion to factors
                 xnew1 <- factor(xnew, ordered=(v$class_new == "ordered"))  
             } else {
@@ -1628,9 +1627,11 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         ## If output is ordered or factor, must be dealt with specially
         if(length(v$class_new) > 0 && v$class_new %in% c("ordered", "factor")){
             xnew2 <- plyr::mapvalues(xnew, from = values$value_old,
-                                     to = values$value_new)
-            xnew2 <- factor(xnew2, levels = unique(values$value_new),
-                            ordered=(v$class_new == "ordered"))
+                                     to = values$value_new, warn_missing = FALSE)
+            ## 201710unique erases missing values, here we want preserve period
+            ## unobserved value levels in key are lost without exclude
+            xnew2 <- factor(xnew2, levels = unique(values$value_new), 
+                            ordered=(v$class_new == "ordered"), exclude = NULL)
             mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew2")
             eval(parse(text = mytext))
             next()
@@ -2101,7 +2102,7 @@ all.equal.keylong <- function(target, current, ..., check.attributes = FALSE){
 keyUpdate <- function(key, dframe, append = TRUE,
                       safeNumericToInteger = TRUE)
 {
-    ## it is a long key
+    ## it is a long key, or convert it into one
     long <- TRUE
     if (class(key)[1] == "key") {
         key <- wide2long(key)
@@ -2139,7 +2140,6 @@ keyUpdate <- function(key, dframe, append = TRUE,
 
     ## Tricky if new variable arrived with data, can't just copy
     ## name_new without checking
-    ## Tried hard to find an index way to do this, but frustrating
     keynew2$name_new <- ifelse(keynew2$name_old %in% name.old.new[ , "name_old"],
                                name.old.new[keynew2$name_old, "name_new"],
                                keynew2$name_new)
@@ -2256,9 +2256,9 @@ keyDiff <- function(oldkey, newkey){
     ## xx$bot: will be duplicated below
     xx$bot <- duplicated(xx[, -match(c("key", "top"), colnames(xx))], fromLast = TRUE)
     ## lines that are in old key but not in new key:
-    deleted <- xx[xx$key == "old" & !xx$bot, -match(c("key", "top", "bot"), colnames(xx)) ]
+    deleted <- xx[xx$key == "old" & !xx$bot, -match(c("key", "top", "bot"), colnames(xx)) , drop = FALSE]
     ## in newkey but not old key
-    neworaltered <- xx[xx$key == "new" & !xx$top, -match(c("key", "top", "bot"), colnames(xx))]
+    neworaltered <- xx[xx$key == "new" & !xx$top, -match(c("key", "top", "bot"), colnames(xx)), drop = FALSE]
 
     if(NROW(deleted) == 0  && NROW(neworaltered)  == 0){
         print("There are no differences between these keys!")
