@@ -1324,10 +1324,7 @@ keyImport <- function(key, ignoreCase = TRUE,
 ##' @param sep Separator regular expressions
 ##' @param na.strings Strings that will be treated as NA. This will be
 ##'     used only if the key object does not have an na.strings
-##'     attribute.  keys will have that attribute, but it may be lost
-##'     when users revise the key in memory.
-##' @param na_ Value to insert to represent a missing score. Default
-##'     ".".
+##'     attribute.
 ##' @keywords internal
 ##' @return A list with one element per variable name, along with some
 ##'     attributes like class_old and class_new. The class is set as
@@ -1344,9 +1341,7 @@ makeKeylist <- function(key,
                         sep = c(character = "\\|", logical = "\\|",
                               integer = "\\|", factor = "[\\|<]",
                               ordered = "[\\|<]", numeric = "\\|"),
-                        na.strings = c("\\.", "", "\\s+",  "N/A"),
-                        na_ = "."
-                        )
+                        na.strings = c("\\.", "", "\\s+",  "N/A"))
 {
     ## if x is in na.strings, return NA
     ## if "split" is NA or blank space or TAB, return unchanged x
@@ -1410,11 +1405,11 @@ makeKeylist <- function(key,
             value_new[value_new == "TRUE"] <- TRUE
             value_new[value_new == "FALSE"] <- FALSE
         }
-        value_new[isNA(value_new, na.strings)] <- na_
-        value_old[isNA(value_old, na.strings)] <- na_
-        ## If not a factor, cast new values with class_new. Otherwise, leave as text,
-        ## which will be understood as levels
-        if (!class_new %in% c("factor", "ordered") && class(value_new) != class_old){
+        value_new[isNA(value_new, na.strings)] <- NA
+        value_old[isNA(value_old, na.strings)] <- NA
+        ## If not a factor, cast new values with class_new. Don't do this to
+        ## factors, though, leave as text
+        if (!class_new %in% c("factor", "ordered") && class(value_new) != class_new){
             mytext <- paste0("value_new <- as.", class_new, "(value_new)")
             value_new <- eval(parse(text = mytext))
         }
@@ -1495,7 +1490,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
     legalClasses <- c("integer", "numeric", "double", "factor",
                       "ordered", "character", "logical")
     
-    if(is.na(drop)) stop("keyApply: drop argument is NA.")
+    if(is.na(drop)|| is.null(drop)) stop("keyApply: drop argument is NA.")
     if (is.character(drop)){
         stopifnot(drop %in%  c("vars","vals"))
     }
@@ -1506,7 +1501,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
     dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
     if (diagnostic) dforig <- dframe
 
-    ## Need to snapshot class of input variables before changing anything
+    ## Need to snapshot class of input variables
     class_old.dframe <- sapply(dframe, function(x) class(x)[1])
 
     ## implement ignoreCase by keeping vector dfname_old.orig that we
@@ -1519,8 +1514,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         colnames(dframe) <- tolower(colnames(dframe))
     }
     names(dfname_old.orig) <- colnames(dframe)
-
-    ## Wait till now to assign names, so will be lower if needed
+    ## Create vector to use for re-assignment later
     names(class_old.dframe) <- colnames(dframe)
 
     na.strings <- attr(key, "na.strings")
@@ -1535,7 +1529,9 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
     names_in_key <- unique(key$name_old)
     if (ignoreCase) names_in_key <- tolower(names_in_key)
     names_not_in_key <- setdiff(colnames(dframe), names_in_key)
-    ## names_old omitted should not be dropped, so add to dframe now
+
+    ## B/c "vars" in drop, copy over the variables that are
+    ## not in the key.
     if(length(names_not_in_key) && (!"vars" %in% drop)){
         for(jj in names_not_in_key){
             mytext <- paste0("xlist[[\"", jj, "\"]] <- ", "dframe[ , jj]")
@@ -1569,7 +1565,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         }
 
         ## DELETE VARIABLES from data frame
-        ## name_new is empty, then ignore that variable
+        ## If name_new is empty, then ignore that variable
         if (length(v$name_new) == 0 || isTRUE(isNA(unique(v$name_new)))){
             messg <- paste("keyApply: ", v$name_old.orig, "dropped.\n")
             cat(messg)
@@ -1583,7 +1579,8 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             xnew <- assignMissing(xnew, v$missings)
         }
 
-        ## Be simple. If they have "recodes" in key, apply them. Ignore value_new. next().
+        ## Be simple. If they have "recodes" in key, apply them.
+        ## Ignore value_new. next().
         if (length(v$recodes) > 0 && !all(is.na(v$recodes))) {
             for (cmd in v$recodes) xnew <- assignRecode(xnew, cmd)
             if(!inherits(xnew, v$class_new)) {
@@ -1601,6 +1598,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         if (NROW(na.omit(values)) == 0 || length(na.omit(newVals)) == 0) {
             ## if coercion not safe, stop
             if(!isTRUE(checkCoercion(xnew, unique(v$class_new), na.strings))){
+                print(v)
                 stop("keyApply: coercion failed, ", unique(v$name_old.orig))
             }
             if (v$class_new %in% c("factor", "ordered")){
@@ -1614,22 +1612,16 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             next()
         }
 
-        if ("vals" %in% drop){
-            xnew.notinkey <- setdiff(unique(xnew), values$value_old)
-            if(length(xnew.notinkey)){
-                values_new.notinkey <- if("vals" %in% drop) NA else xnew.notinkey
-                values <- rbind(values,
-                                data.frame(value_old = xnew.notinkey,
-                                           value_new = values_new.notinkey))
-            }
+        ## if vals is drop, following SHOULD set as missing scores in xnew that
+        ## are not in the key 
+        if("vals" %in% drop){
+            xnew <- ifelse(!x %in% values$value_old, xnew,  NA)
         }
 
-        ## If output is ordered or factor, must be dealt with specially
+        ## If output is ordered or factor
         if(length(v$class_new) > 0 && v$class_new %in% c("ordered", "factor")){
             xnew2 <- plyr::mapvalues(xnew, from = values$value_old,
                                      to = values$value_new, warn_missing = FALSE)
-            ## 201710unique erases missing values, here we want preserve period
-            ## unobserved value levels in key are lost without exclude
             xnew2 <- factor(xnew2, levels = unique(values$value_new), 
                             ordered=(v$class_new == "ordered"), exclude = NULL)
             mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew2")
