@@ -659,9 +659,9 @@ ROWINFORMATION"
                   x)
         x <- gsub("_BR_", ifelse(LATEX, "", "<tr><td>"), x)
         if (longtable){
-            x <- gsub("_BT_", ifelse(LATEX, "\\\\begin{longtable}{lrrrr}", "<table>\n"), x)
+            x <- gsub("_BT_", ifelse(LATEX, paste0("\\\\begin{longtable}{l", paste0(rep("r", length(report)), collapse = ""), "}"), "<table>\n"), x)
         }else{
-            x <- gsub("_BT_", ifelse(LATEX, "\\\\begin{tabular}{lrrrr}", "<table>\n"), x)
+            x <- gsub("_BT_", ifelse(LATEX, paste0("\\\\begin{tabular}{l", paste0(rep("r", length(report)), collapse = ""), "}"), "<table>\n"), x)
         }
         x <- gsub("_EOL_", "\n", x)
         x <- gsub("_HL_", ifelse(LATEX, "\\\\hline", ""), x)
