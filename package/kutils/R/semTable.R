@@ -243,9 +243,9 @@ Note. IDENTNOTEFITINFORMATION
         holder <- "_BOCU_NAME_EOC_"
         reportx <- list()
         columnNames <- c("Estimate", "SE", "Estimate", "SE")
-        if(isTRUE(includeGroup)){
-            report <- c(columnNames, "Group")
-        }
+        #if(isTRUE(includeGroup)){
+        #    report <- c(report, "Group") ## replaced column names here with report.
+        #}
         for(i in 1:length(columnNames)){
             reportx[i] <- gsub("NAME", columnNames[i], holder)
 
