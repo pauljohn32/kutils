@@ -72,12 +72,15 @@
 ##'     needed, set single_spaced = FALSE.
 ##' @param type Type of output table ("latex" or "html"). Defaults to
 ##'     "latex".
+##' @param includeGroup Should group membership be reported for parameters
+##'     in a column on the right? Defaults to FALSE.
 ##' @param group Group for which parameters should be
 ##'     reported. Provide the value in the data that indicates the
 ##'     desired group. Only necessary for multiple group
 ##'     models. Defaults to NULL. If multiple groups are present but
 ##'     no group is specified, a column indicating the group for each
-##'     parameter estimate will be added to the output table.
+##'     parameter estimate will be added to the output table
+##'     (if includeGroup = TRUE).
 ##' @param longtable Should a latex longtable be generated? Defaults
 ##'     to FALSE, which makes the table tabular. Ignored if type =
 ##'     "html".
@@ -133,6 +136,7 @@ semTable <-
              fit = c("chi-square", "cfi", "tli", "rmsea"),
              names_fit = fit, standardized= FALSE,
              names_upper = TRUE, single_spaced = TRUE, type = "latex",
+             includeGroup = FALSE,
              group = NULL, longtable = FALSE)
 {
     if(class(object)[1] != "lavaan"){
@@ -201,22 +205,24 @@ semTable <-
     }
 
     ## Handle which group to make the table for here
-    if (!is.null(group)){
-        includeGroup <- FALSE
-        if (!is.null(parameters$group)){
-            gval <- which(object@Data@group.label %in% as.character(group))
-            if (!gval%in% unique(parameters$group)){
-                stop(paste0("The value provided to the group argument is not valid."))
-            }
-            parameters <- parameters[parameters$group == gval,]
-        }
-    } else {
-        if (!is.null(parameters$group)){
-            includeGroup <- TRUE
-        } else {
-            includeGroup <- FALSE
-        }
-    }
+    #if (!is.null(group)){
+    #    includeGroup <- FALSE
+    #    if (!is.null(parameters$group)){
+    #        gval <- which(object@Data@group.label %in% as.character(group))
+    #        if (!gval%in% unique(parameters$group)){
+    #            stop(paste0("The value provided to the group argument is not valid."))
+    #        }
+    #        parameters <- parameters[parameters$group == gval,]
+    #    }
+    #} else {
+    #    if (!is.null(parameters$group)){
+    #        includeGroup <- TRUE
+    #    } else {
+    #        includeGroup <- FALSE
+    #    }
+    #}
+
+
 
     template <- "
 _BT_
