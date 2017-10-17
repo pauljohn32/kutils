@@ -7,18 +7,12 @@
 library(RUnit)
 library(kutils)
 
-## set data file paths (for internal testing)
-## dfPath <- "../extdata/testDF.csv"
-## keyPath <- "../extdata/testDF-key.csv"
-## widekeyPath <- "../extdata/wideKey.csv"
-## longkeyPath <- "../extdata/longKey.csv"
-## widekeyXLSPath <- "../extdata/wideKey.xlsx"
 
 ## set data file paths (for package build)
 dfPath <- system.file("extdata", "testDF.csv", package="kutils")
 keyPath <- system.file("extdata", "testDF-key.csv", package="kutils")
 widekeyPath <- system.file("extdata", "mydf.key.csv", package="kutils")
-longkeyPath <- system.file("extdata", "mydf.key_long2.csv", package="kutils")
+longkeyPath <- system.file("extdata", "mydf.key_long.csv", package="kutils")
 widekeyXLSPath <- system.file("extdata", "mydf.key.xlsx", package="kutils")
 
 ## define precision level for float comparisons
@@ -399,8 +393,8 @@ test.keyApply <- function() {
     ## checkIdentical(fl0, df1[,"varFL1"])
     
     ## factor --> logical (2)
-    fl0 <- ifelse(f1 == "yes", TRUE, FALSE)
-    checkIdentical(fl0, df1[,"varFL2"])
+    ## fl0 <- ifelse(f1 == "yes", TRUE, FALSE)
+    ## checkIdentical(fl0, df1[,"varFL2"])
 
     ## factor --> integer (1)
     ## fi0 <- as.integer(f1)
@@ -550,7 +544,11 @@ test.keyApply <- function() {
 
 ## test wide2long() function
 test.wide2long <- function() {
+    ## confirm round-trip
     wkey <- keyImport(widekeyPath, long=FALSE)
+    wkeylong <- wide2long(wkey)
+    checkEquals(wkey, long2wide(wkeylong))
+    ## Import supposedly equivalent long key
     lkey0 <- keyImport(longkeyPath, long=TRUE)
     lkey1 <- wide2long(wkey)
     ## Ignore differences in attributes
@@ -566,15 +564,21 @@ test.wide2long <- function() {
 
 ## test long2wide() function
 test.long2wide <- function() {
-    lkey <- keyImport(longkeyPath, long=TRUE)
+    ## confirm round trip
+    keylong <- keyImport(longkeyPath, long=TRUE)
+    keylong2wide <- long2wide(keylong)
+    checkEquals(keylong, wide2long(keylong2wide))
+    ## Import supposedly equivalent wide key
     wkey0 <- keyImport(widekeyPath, long=FALSE)
+    ## Confirm wkey0 equivalent to keylongwide
+    checkEquals(wkey0, keylong2wide)
+    ## confirm can convert long2wide output
     row.names(wkey0) <- NULL
     attr(wkey0, "ignoreCase") <- NULL
-    wkey1 <- long2wide(lkey)
-    row.names(wkey1) <- NULL
+    row.names(keylong2wide) <- NULL
     attr(wkey0, "varlab") <- NULL
-    attr(wkey1, "varlab") <- NULL
-    checkEquals(wkey0, wkey1)
+    attr(keylong2wide, "varlab") <- NULL
+    checkEquals(wkey0, keylong2wide)
 }
 
 
@@ -585,34 +589,49 @@ test.long2wide <- function() {
 test.keyUpdate <- function() {
     ## check long key
     dat1 <- data.frame(Score = c(1, 2, 3, 42, 4, 2),
-                       Gender = c("M", "M", "M", "F", "F", "F"))
+                       Gender = c("M", "M", NA, "F", "F", "F"))
     ##   setting up key
     key1 <- keyTemplate(dat1, long=TRUE)
     key1[5, "value_new"] <- 10
     key1[7, "value_new"] <- "female"
     key1[8, "value_new"] <- "male"
     ##   modifying data
-    dat2 <- data.frame(Score = 7,
-                       Gender = "other",
+    dat2 <- data.frame(Score = c(7, 13, NA),
+                       Gender = c("other", NA, "F"),
                        Weight = rnorm(3))
     dat2 <- plyr::rbind.fill(dat1, dat2)
     ##   update key
     key2 <- keyUpdate(key1, dat2, append=FALSE)
-    dat3 <- keyApply(dat2, key2)
-    checkEquals(sort(levels(dat3$Gender)), sort(c("female", "male", "other", ".")))
-    checkEquals(max(dat3$Score), 10)
-    checkEquals(sum(is.na(dat3$Weight)), nrow(dat1))
+    ## difference should be 
+    alteredrows <-
+        structure(list(name_old = c("Gender", "Score", "Score", "Weight"
+), name_new = c("Gender", "Score", "Score", "Weight"), class_old = c("factor", 
+"integer", "integer", "numeric"), class_new = c("factor", "integer", 
+"integer", "numeric"), value_old = c("other", "7", "13", "."), 
+    value_new = c("other", "7", "13", "."), missings = c("", 
+    "", "", ""), recodes = c("", "", "", "")), .Names = c("name_old", 
+"name_new", "class_old", "class_new", "value_old", "value_new", 
+"missings", "recodes"), row.names = c("3.new", "10.new", "11.new", 
+"13.new"), class = c("keylong", "data.frame"))
+    checkEquals(keyDiff(key1, key2)[[2]], alteredrows)
 
     ## check wide key
     key1 <- keyTemplate(dat1)
     key2 <- keyUpdate(key1, dat2)
-    dat3 <- keyApply(dat2, key2)
-    checkEquals(levels(dat3$Gender), c("F", "M", "other"))
-    checkEquals(max(dat3$Score), 42)
-    checkEquals(length(which(is.na(dat3$Weight))), 6)
-
+    keydelta <- keyDiff(key1, key2)
+    checkEquals(2, NROW(keydelta[[1]]))
+    checkEquals(3, NROW(keydelta[[2]]))
+    neworaltered <- structure(list(name_old = c("Score", "Gender", "Weight"), name_new = c("Score", 
+"Gender", "Weight"), class_old = c("integer", "factor", "numeric"
+), class_new = c("integer", "factor", "numeric"), value_old = c("1|2|3|4|42|7|13|.", 
+"F|M|other|.", "."), value_new = c("1|2|3|4|42|7|13|.", "F|M|other|.", 
+"."), missings = c("", "", ""), recodes = c("", "", "")), .Names = c("name_old", 
+"name_new", "class_old", "class_new", "value_old", "value_new", 
+"missings", "recodes"), row.names = c("Score.new", "Gender.new", 
+"Weight.new"), class = c("key", "data.frame"))
+     checkEquals(neworaltered, keydelta[[2]])
+        
     ## check name preservation
-    key1 <- keyTemplate(dat1)
     key1$name_new <- c("ScoreVar", "GenderVar")
     key2 <- keyUpdate(key1, dat2)
     checkEquals(key1$name_new, key2$name_new[1:2])
@@ -643,11 +662,11 @@ test.keyUpdate <- function() {
 ## }
 
 
-## test smartRead() function:
+## test keyRead() function:
 ##   1. xlsx and csv imports should be equivalent
-test.smartRead <- function() {
-    key1 <- kutils:::smartRead(widekeyPath)
-    key2 <- kutils:::smartRead(widekeyXLSPath)
+test.keyRead <- function() {
+    key1 <- kutils:::keyRead(widekeyPath)
+    key2 <- kutils:::keyRead(widekeyXLSPath)
     attr(key1, "varlab") <- NULL
     attr(key2, "varlab") <- NULL
     checkEquals(key1, key2)

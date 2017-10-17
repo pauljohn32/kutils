@@ -1,3 +1,16 @@
+2017-10-06  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (keyApply): mapvalues insert warn_missing =
+	FALSE on factor changes.
+	(keyDiff): drop = FALSE inside row chooser, avoiding drop gotcha
+	(makeOneVar): in makeKeyList, warnings about coercion of "." to
+	integer were causing errors, so silence them by rephrasing coercion.
+	(makeKeylist): Do not set NA's strings as ".", but rather R NA
+	symbol. Hoping to quiet coercion errors & warnings.
+
+	* ../R/runit.VariableKey.R: test.long2wide, test.wide2long, and
+	keyUpdate.  keyUpdate has hard coded "right answers" :(
+
 2017-10-05  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (keySave): rename "smartSave" -> "keySave"

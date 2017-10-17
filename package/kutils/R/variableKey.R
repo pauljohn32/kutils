@@ -588,7 +588,7 @@ isNA <- function(x, na.strings = c("\\.", "", "\\s+",  "N/A")){
 ##'
 ##' ## This puts copy in temp working directory, unless package build flag
 ##' ## is set
-##' RECOMPILE <- TRUE
+##' RECOMPILE <- FALSE
 ##' dn <- if(!RECOMPILE) tempdir() else "../inst/extdata"
 ##' write.csv(mydf, file = file.path(dn, "mydf.csv"), row.names = FALSE)
 ##' mydf.templ <- keyTemplate(mydf, file = file.path(dn, "mydf.templ.csv"),
@@ -630,10 +630,10 @@ isNA <- function(x, na.strings = c("\\.", "", "\\s+",  "N/A")){
 ##'
 ##' all.equal(wide2long(natlong.templwide2), natlong.templlong2)
 ##'
-##' keyTemplate(natlongsurv, file = file.path(dn, "natlongsurv.templ.xlsx"),
-##'              max.levels = 15, varlab = TRUE, sort = TRUE)
-##' keyTemplate(natlongsurv, file = file.path(dn, "natlongsurv.templ.xlsx"),
-##'              long = TRUE, max.levels = 15, varlab = TRUE, sort = TRUE)
+##' head(keyTemplate(natlongsurv, file = file.path(dn, "natlongsurv.templ.xlsx"),
+##'              max.levels = 15, varlab = TRUE, sort = TRUE), 10)
+##' head(keyTemplate(natlongsurv, file = file.path(dn, "natlongsurv.templ.xlsx"),
+##'              long = TRUE, max.levels = 15, varlab = TRUE, sort = TRUE), 10)
 ##'
 ##' list.files(dn)
 ##'
@@ -1615,7 +1615,9 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         ## if vals is drop, following SHOULD set as missing scores in xnew that
         ## are not in the key 
         if("vals" %in% drop){
-            xnew <- ifelse(!x %in% values$value_old, xnew,  NA)
+            xnew[!xnew %in% values$value_old] <- NA
+            ## pj 20171006 the factor gotca killed this:
+            ## xnew <- ifelse(xnew %in% values$value_old, xnew,  NA)
         }
 
         ## If output is ordered or factor
@@ -1623,7 +1625,7 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
             xnew2 <- plyr::mapvalues(xnew, from = values$value_old,
                                      to = values$value_new, warn_missing = FALSE)
             xnew2 <- factor(xnew2, levels = unique(values$value_new), 
-                            ordered=(v$class_new == "ordered"), exclude = NULL)
+                            ordered=(v$class_new == "ordered"))
             mytext <- paste0("xlist[[\"", v$name_new, "\"]] <- xnew2")
             eval(parse(text = mytext))
             next()
