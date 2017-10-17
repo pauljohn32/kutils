@@ -243,9 +243,9 @@ Note. IDENTNOTEFITINFORMATION
         holder <- "_BOCU_NAME_EOC_"
         reportx <- list()
         columnNames <- c("Estimate", "SE", "Estimate", "SE")
-        if(isTRUE(includeGroup)){
-            report <- c(columnNames, "Group")
-        }
+        #if(isTRUE(includeGroup)){
+        #    report <- c(report, "Group") ## replaced column names here with report.
+        #}
         for(i in 1:length(columnNames)){
             reportx[i] <- gsub("NAME", columnNames[i], holder)
 
@@ -659,9 +659,9 @@ ROWINFORMATION"
                   x)
         x <- gsub("_BR_", ifelse(LATEX, "", "<tr><td>"), x)
         if (longtable){
-            x <- gsub("_BT_", ifelse(LATEX, "\\\\begin{longtable}{lrrrr}", "<table>\n"), x)
+            x <- gsub("_BT_", ifelse(LATEX, paste0("\\\\begin{longtable}{l", paste0(rep("r", length(report)), collapse = ""), "}"), "<table>\n"), x)
         }else{
-            x <- gsub("_BT_", ifelse(LATEX, "\\\\begin{tabular}{lrrrr}", "<table>\n"), x)
+            x <- gsub("_BT_", ifelse(LATEX, paste0("\\\\begin{tabular}{l", paste0(rep("r", length(report)), collapse = ""), "}"), "<table>\n"), x)
         }
         x <- gsub("_EOL_", "\n", x)
         x <- gsub("_HL_", ifelse(LATEX, "\\\\hline", ""), x)
