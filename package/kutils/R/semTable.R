@@ -651,7 +651,7 @@ ROWINFORMATION"
         if (type == "latex")
             LATEX <- TRUE
         else LATEX <- FALSE
-        x <- gsub("_LB_", ifelse(LATEX, "\n", "<br>"), x)
+        x <- gsub("_LB_", ifelse(LATEX, "//\n", "<br>"), x)
         x <- gsub("_EOC_", ifelse(LATEX, "", "</td>"), x)
         x <- gsub("_BOC_", ifelse(LATEX, "& ", "<td>"), x)
         x <- gsub("_EOMC_", ifelse(LATEX, "}", "</td>"), x)
