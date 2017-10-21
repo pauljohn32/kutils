@@ -48,17 +48,25 @@
 ##' standardized = TRUE will yield two identical sets of two columns.
 ##'
 ##' @param object A lavaan object returned by cfa() or sem().
-##' @param file Character string for file name.  Default is NULL,
-##'     meaning no output file.
+##' @param file Output file name.  Default is NULL, meaning no output
+##'     file.
 ##' @param params Parameters to be included. Valid values are
 ##'     "loadings", "slopes", "intercepts", "means", "residuals",
 ##'     "covariances", "latentvariances", "latentmeans" and
-##'     "thresholds". Defaults to "all" which includes all available
-##'     parameters (but excludes "means"). See Details.
-##' @param fit A vector of fit measures that to be included in the
-##'     note. Listing "chi-square" will do special formatting to the
-##'     chi-square value in the note. Any other measures listed must
-##'     correspond to measures found in fitMeasures(object).
+##'     "thresholds". Default is "all" (but excludes "means"). See
+##'     Details.
+##' @param fit Names of fit measures to be included in the
+##'     table. Can be "chi-square", a specially formated element, or
+##'     any of the other fit diagnistics provided by
+##'     \code{lavaan::fitMeasures(object)}. Currently, they are
+##'     "npar", "fmin", "chisq", "df", "pvalue", "baseline.chisq",
+##'     "baseline.df", "baseline.pvalue", "cfi", "tli", "nnfi", "rfi",
+##'     "nfi", "pnfi", "ifi", "rni", "logl", "unrestricted.logl",
+##'     "aic", "bic", "ntotal", "bic2", "rmsea", "rmsea.ci.lower",
+##'     "rmsea.ci.upper", "rmsea.pvalue", "rmr", "rmr_nomean", "srmr",
+##'     "srmr_bentler", "srmr_bentler_nomean", "srmr_bollen",
+##'     "srmr_bollen_nomean", "srmr_mplus", "srmr_mplus_nomean",
+##'     "cn_05", "cn_01", "gfi", "agfi", "pgfi", "mfi", "ecvi".
 ##' @param names_fit Names for the fit measures requested by the fit
 ##'     parameter.  Must have same number of elements as fit.  For
 ##'     example, fit = c("cfi.scaled", "tli.scaled"), names_fit =
@@ -70,22 +78,20 @@
 ##'     affect whatever is specified in names_fit.
 ##' @param single_spaced Default = TRUE. If a double-spaced table is
 ##'     needed, set single_spaced = FALSE.
-##' @param type Type of output table ("latex" or "html"). Defaults to
-##'     "latex".
-##' @param includeGroup Should group membership be reported for parameters
-##'     in a column on the right? Defaults to FALSE.
+##' @param type Choose either "latex" or "html".
+##' @param includeGroup Should group membership be reported for
+##'     parameters in a column on the right? Defaults to FALSE.
 ##' @param group Group for which parameters should be
 ##'     reported. Provide the value in the data that indicates the
 ##'     desired group. Only necessary for multiple group
-##'     models. Defaults to NULL. If multiple groups are present but
+##'     models. If multiple groups are present but
 ##'     no group is specified, a column indicating the group for each
-##'     parameter estimate will be added to the output table
-##'     (if includeGroup = TRUE).
-##' @param longtable Should a latex longtable be generated? Defaults
-##'     to FALSE, which makes the table tabular. Ignored if type =
-##'     "html".
+##'     parameter estimate will be added to the output table (if
+##'     includeGroup = TRUE).
+##' @param longtable If TRUE, use longtable for LaTeX documents. Default
+##'     is FALSE.
 ##' @importFrom stats pnorm
-##' @return SEM table of desired type.
+##' @return Markup for SEM table. Use cat to display it.
 ##' @export
 ##' @author Ben Kite <bakite@@ku.edu>
 ##' @examples
@@ -93,38 +99,42 @@
 ##' ## These run longer than 5 seconds
 ##' ## CFA model
 ##' require(lavaan)
+##' ## The example from lavaan's docs
 ##' HS.model <- ' visual  =~ x1 + x2 + x3
-##' textual =~ x4 + x5 + x6
-##' speed   =~ x7 + x8 + x9'
-##' output1 <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE)
-##' semTable(output1, fit = "rmsea",
-##' standardized = TRUE, type = "latex")
-##' ## Basic SEM model
+##'               textual =~ x4 + x5 + x6
+##'               speed   =~ x7 + x8 + x9'
+##' fit1 <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE)
+##' fit1.1 <- semTable(fit1, fit = c("chi-square", "rmsea"))
+##' cat(fit1.1)
+##' fit1.2 <- semTable(fit1, fit = c("chisq", "rmsea"), standardized = TRUE)
+##' cat(fit1.2)
+##' ## Can create file if desired
+##' ## cat(fit1.2, file = "table1.2.tex")
+##' ## Basic SEM
 ##' regmodel <- "x1 ~ x2 + x3
 ##' x1 ~1"
-##' output1a <- sem(regmodel, data = HolzingerSwineford1939, std.lv = TRUE)
-##' semTable(output1a, fit = "rmsea", type = "html")
+##' fit2 <- sem(regmodel, data = HolzingerSwineford1939, std.lv = TRUE)
+##' fit2.1 <- semTable(fit2, fit = "rmsea", type = "html")
+##' cat(fit2.1)
 ##' #### Example with file output
 ##' ##semTable(output1, file = "exampleTable.html", fit = "rmsea",
 ##' ##standardized = TRUE, params = c("loadings", "latentvariances"),
 ##' ##type = "html")
 ##'
 ##' model <- "factor =~ .7*y1 + .7*y2 + .7*y3 + .7*y4
-##' y1 | -1*t1 + 1*t2
-##' y2 | -.5*t1 + 1*t2
-##' y3 | -.2*t1 + 1*t2
-##' y4 | -1*t1 + 1*t2
-##' "
+##'           y1 | -1*t1 + 1*t2
+##'           y2 | -.5*t1 + 1*t2
+##'           y3 | -.2*t1 + 1*t2
+##'           y4 | -1*t1 + 1*t2"
 ##' dat <- simulateData(model, sample.nobs = 300)
 ##' testmodel <- "ExampleFactor =~ y1 + y2 + y3 + y4"
-##' output2 <- cfa(testmodel, data = dat, ordered = colnames(dat),
+##' fit3 <- cfa(testmodel, data = dat, ordered = colnames(dat),
 ##'     std.lv = FALSE)
-##' semTable(output2,
-##'     params = c("loadings", "thresholds", "residuals"),
+##' fit3.1 <- semTable(fit3, params = c("loadings", "thresholds", "residuals"),
 ##'     fit = c("tli", "chi-square"),
 ##'     names_fit = c("TLI", "chi-square"), type = "html")
 ##'
-##' ## Example with file output
+##' ## Example with file output requested in the command
 ##' ## semTable(output, file = "catTable.tex",
 ##' ##    params = c("loadings", "thresholds", "residuals"),
 ##' ##    fit = c("tli", "chi-square"),
@@ -712,7 +722,6 @@ ROWINFORMATION"
     if(!is.null(file)){
         write(template, file)
     }
-    cat(template)
-    invisible(template)
+    template
 }
 
