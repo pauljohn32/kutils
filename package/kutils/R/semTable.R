@@ -158,7 +158,21 @@ semTable <-
     frnd <- function(x, rnd = 3, digits = 2) {
         formatC(round(x, rnd), format = 'f', digits = digits)
     }
-    
+
+    ## 20171021
+    ## The Maker functions all had copies of a standard stanza
+    ## that used formatC and round in this way. Aggregate those
+    ## actions
+    ## TODO: safety check for operations on columns that don't exist
+    ## trows must be a row subset of the parameters table
+    roundSubtable <- function(trows){
+        for (i in c("est", "se", "stdest", "stdse", "z")) trows[ , i] <- frnd(trows[ , i])
+        trows$p <- frnd(trows$p, 3, 3)
+        trows$p <- gsub("0\\.", "\\.", trows$p)
+        trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
+        trows[trows$free == 0, c("z", "p")] <- ""
+        trows
+    }
 
     if(class(object)[1] != "lavaan"){
         stop(paste("The object does not appear to be",
@@ -194,7 +208,7 @@ semTable <-
     variables <- unlist(object@Data@ov.names)
     latents <- unique(unlist(object@pta$vnames$lv))
     if (length(params) == 1){
-        if (params == "all"){
+        if (params == "all") {
             params <- unique(as.character(parameters$op))
             paramops <- c("=~" = "loadings", "~" = "slopes", "~1" = "means",
                           "~~" = "variances", "|" = "thresholds")
@@ -316,19 +330,11 @@ Note. IDENTNOTEFITINFORMATION
     dvs <- unique(regs$lhs)
     ivs <- unique(regs$rhs)
 
+    
     loadingMaker <- function(loads, report = c("est", "se", "z", "p")){
         lvname <- loads
         trows <- parameters[which(parameters$rhs %in% variables & parameters$lhs %in% lvname & parameters$op == "=~"),]
-        for (i in c("est", "se", "stdest", "stdse", "z")) trows[ , i] <- frnd(trows[ , i])
-        ## trows$est <- frnd(trows$est)
-        ## trows$se <- frnd(trows$se)
-        ## trows$stdest <- frnd(trows$stdest)
-        ## trows$stdse <- frnd(trows$stdse)
-        ## trows$z <- frnd(trows$z)
-        trows$p <- frnd(trows$p, 3, 3)
-        trows$p <- gsub("0\\.", "\\.", trows$p)
-        trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
-        trows[trows$free == 0, c("z", "p")] <- ""
+        trows <- roundSubtable(trows)
         tmpx <- "_BR__UL_FACTOR_EOUL__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _EOR_
 ROWINFORMATION"
         tmpx <- gsub("FACTOR", lvname, tmpx)
@@ -346,18 +352,7 @@ ROWINFORMATION"
             stop("Intercept estimates are requested in the table, but I can't find them in the output!")
             #return(print("It appears that no intercept estimates are present in the lavaan output"))
         }else{
-            for (i in c("est", "se", "stdest", "stdse", "z")) trows[ , i] <- frnd(trows[ , i])
-            ## trows$est <- frnd(trows$est)
-            ## trows$se <- frnd(trows$se)
-            ## trows$stdest <- frnd(trows$stdest)
-            ## trows$stdse <- frnd(trows$stdse)
-            ## trows$z <- frnd(trows$z)
-            trows$p <- frnd(trows$p, 3, 3)
-            trows$p <- gsub("0\\.", "\\.", trows$p)
-            trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
-            trows[trows$free == 0, c("z", "p")] <- ""
-            ## trows$z <- ifelse(trows$free == 0, "", trows$z)
-            ## trows$p <- ifelse(trows$free == 0, "", trows$p)
+            trows <- roundSubtable(trows)
             tmpx <- "_BR__EOC_ _BOMC4__UL_Intercepts_EOUL__EOMC_ _EOR_
 ROWINFORMATION"
             rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
@@ -377,18 +372,7 @@ ROWINFORMATION"
             stop("Predictor variable mean estimates are requested in the table, but I can't find them in the output!")
             #return(print("It appears that no intercept estimates are present in the lavaan output"))
         }else{
-            for (i in c("est", "se", "stdest", "stdse", "z")) trows[ , i] <- frnd(trows[ , i])
-            ## trows$est <- frnd(trows$est)
-            ## trows$se <- frnd(trows$se)
-            ## trows$stdest <- frnd(trows$stdest)
-            ## trows$stdse <- frnd(trows$stdse)
-            ## trows$z <- frnd(trows$z)
-            trows$p <- frnd(trows$p, 3, 3)
-            trows$p <- gsub("0\\.", "\\.", trows$p)
-            trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
-            trows[trows$free == 0, c("z", "p")] <- ""
-            ## trows$z <- ifelse(trows$free == 0, "", trows$z)
-            ## trows$p <- ifelse(trows$free == 0, "", trows$p)
+            trows <- roundSubtable(trows)
             tmpx <- "_BR__EOC_ _BOMC4__UL_Means_EOUL__EOMC_ _EOR_
 ROWINFORMATION"
             rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
@@ -405,18 +389,7 @@ ROWINFORMATION"
     slopeMaker <- function(dv, regs, report = c("est", "se", "z", "p")){
         dvname <- dv
         trows <- regs[which(regs$lhs == dvname),]
-        for (i in c("est", "se", "stdest", "stdse", "z")) trows[ , i] <- frnd(trows[ , i])
-        ## trows$est <- frnd(trows$est)
-        ## trows$se <- frnd(trows$se)
-        ## trows$stdest <- frnd(trows$stdest)
-        ## trows$stdse <- frnd(trows$stdse)
-        ## trows$z <- frnd(trows$z)
-        trows$p <- frnd(trows$p, 3, 3)
-        trows$p <- gsub("0\\.", "\\.", trows$p)
-        trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
-        trows[trows$free == 0, c("z", "p")] <- ""
-        ## trows$z <- ifelse(trows$free == 0, "", trows$z)
-        ## trows$p <- ifelse(trows$free == 0, "", trows$p)
+        trows <- roundSubtable(trows)
         tmpx <- "_BR__UL_DEPENDENTVAR_EOUL__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _EOR_
 ROWINFORMATION"
         tmpx <- gsub("DEPENDENTVAR", dvname, tmpx)
@@ -437,18 +410,7 @@ ROWINFORMATION"
         }else{
         thresnum <- substring(trows$rhs, 2, nchar(trows$rhs))
         trows$lhs <- paste0(trows$lhs, "(", thresnum, ")")
-        for (i in c("est", "se", "stdest", "stdse", "z")) trows[ , i] <- frnd(trows[ , i])
-        ## trows$est <- frnd(trows$est)
-        ## trows$se <- frnd(trows$se)
-        ## trows$stdest <- frnd(trows$stdest)
-        ## trows$stdse <- frnd(trows$stdse)
-        ## trows$z <- frnd(trows$z)
-        trows$p <- frnd(trows$p, 3, 3)
-        trows$p <- gsub("0\\.", "\\.", trows$p)
-        trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
-        trows[trows$free == 0, c("z", "p")] <- ""
-        ## trows$z <- ifelse(trows$free == 0, "", trows$z)
-        ## trows$p <- ifelse(trows$free == 0, "", trows$p)
+        trows <- roundSubtable(trows)
         tmpx <- "_BR__EOC_ _BOMC4__UL_Thresholds_EOUL__EOMC_ _EOR_
 ROWINFORMATION"
         rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
@@ -477,16 +439,8 @@ ROWINFORMATION"
                 stop("Variance estimates are requested in the table, but I can't find them in the output!")
             }
         }
-        for (i in c("est", "se", "stdest", "stdse", "z")) trows[ , i] <- frnd(trows[ , i])
-        ## trows$se <- frnd(trows$se)
-        ## trows$stdest <- frnd(trows$stdest)
-        ## trows$stdse <- frnd(trows$stdse)
-        ## trows$z <- frnd(trows$z)
-        trows$p <- frnd(trows$p, 3, 3)
-        trows$p <- gsub("0\\.", "\\.", trows$p)
-        trows[trows$free == 0, c("z", "p")] <- ""
-        ## trows$z <- ifelse(trows$free == 0, "", trows$z)
-        ## trows$p <- ifelse(trows$free == 0, "", trows$p)
+        trows <- roundSubtable(trows)
+
         if (isTRUE(covariance)){
             rowinfo <- paste0("_BR_", trows[1,"lhs"], " with ", trows[1,"rhs"], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
             if (nrow(trows) > 1){
@@ -513,14 +467,7 @@ ROWINFORMATION"
             stop("Latent variance/covariance estimates are requested in the table, but I can't find them in the output!")
             #return(print("It appears that no intercept estimates are present in the lavaan output"))
         }else{
-            for (i in c("est", "se", "stdest", "stdse", "z")) trows[ , i] <- frnd(trows[ , i])
-            ## trows$est <- frnd(trows$est)
-            ## trows$se <- frnd(trows$se)
-            ## trows$stdest <- frnd(trows$stdest)
-            ## trows$stdse <- frnd(trows$stdse)
-            ## trows$z <- frnd(trows$z)
-            trows$p <- frnd(trows$p, 3, 3)
-            trows$p <- gsub("0\\.", "\\.", trows$p)
+            trows <- roundSubtable(trows)
             trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
             trows[trows$free == 0, c("z", "p")] <- ""
             ##  trows$z <- ifelse(trows$free == 0, "", trows$z)
@@ -544,18 +491,7 @@ ROWINFORMATION"
             stop("Latent mean estimates are requested in the table, but I can't find them in the output!")
             #return(print("It appears that no intercept estimates are present in the lavaan output"))
         }else{
-            for (i in c("est", "se", "stdest", "stdse", "z")) trows[ , i] <- frnd(trows[ , i])
-            ## trows$est <- frnd(trows$est)
-            ## trows$se <- frnd(trows$se)
-            ## trows$stdest <- frnd(trows$stdest))
-            ## trows$stdse <- frnd(trows$stdse)
-            ## trows$z <- frnd(trows$z)
-            trows$p <- frnd(trows$p, 3, 3)
-            trows$p <- gsub("0\\.", "\\.", trows$p)
-            trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
-            trows[trows$free == 0, c("z", "p")] <- ""
-            ## trows$z <- ifelse(trows$free == 0, "", trows$z)
-            ## trows$p <- ifelse(trows$free == 0, "", trows$p)
+            trows <- roundSubtable(trows)
             tmpx <- "_BR__EOC_ _BOMC4__UL_Latent Means/Intercepts_EOUL__EOMC_ _EOR_
 ROWINFORMATION"
             rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
