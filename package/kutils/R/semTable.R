@@ -149,6 +149,17 @@ semTable <-
              includeGroup = FALSE,
              group = NULL, longtable = FALSE)
 {
+
+    ##local shorthand to replace the verbose
+    ## formatC(round(chimeas$stat, 3), format = 'f', digits = 2)
+    ## with frnd(chimeas$stat)
+    ## For reasons I don't understand, most prevalent example here
+    ## is round to 3, then show 2 digits
+    frnd <- function(x, rnd = 3, digits = 2) {
+        formatC(round(x, rnd), format = 'f', digits = digits)
+    }
+    
+
     if(class(object)[1] != "lavaan"){
         stop(paste("The object does not appear to be",
                    "a lavaan object.  Only lavaan cfa object can be",
@@ -162,23 +173,22 @@ semTable <-
         }
 
         fitmeas <- lavaan::fitMeasures(object)[]
-        fitmeas <- sapply(fitmeas, function(x) formatC(round(x, 3),
-                                                       format = 'f', digits = 2))
+        fitmeas <- sapply(fitmeas, frnd)
     }
     chimeas <- object@Fit@test[[1]]
-    chimeas$stat <- formatC(round(chimeas$stat, 3), format = 'f', digits = 2)
-    chimeas$pvalue <- formatC(round(chimeas$pvalue, 3), format = 'f', digits = 3)
+    chimeas$stat <- frnd(chimeas$stat, 3)
+    chimeas$pvalue <- frnd(chimeas$pvalue, 3,  3)
     chimeas$pvalue <- gsub("0\\.", "\\.", chimeas$pvalue)
     parameters <- data.frame(object@ParTable)[,c("lhs", "op", "rhs", "free", "group")[c("lhs", "op", "rhs", "free", "group") %in% names(object@ParTable)]]
     parameters$est <- object@Fit@est
     parameters$se <- object@Fit@se
-    ##parameters <- parameters[which(parameters$free > 0),]
     parameters$z <- parameters$est/parameters$se
     parameters$p <- 2*pnorm(abs(parameters$z), lower.tail = FALSE)
-    parameters[,"est"] <- round(parameters[,"est"], 2)
-    parameters[,"se"] <- round(parameters[,"se"], 2)
-    parameters[,"z"] <- round(parameters[,"z"], 2)
-    parameters[,"p"] <- round(parameters[,"p"], 3)
+    ## pj 20171021: following not needed, will round later
+    ## parameters[,"est"] <- round(parameters[,"est"], 2)
+    ## parameters[,"se"] <- round(parameters[,"se"], 2)
+    ## parameters[,"z"] <- round(parameters[,"z"], 2)
+    ## parameters[,"p"] <- round(parameters[,"p"], 3)
     parameters[,"rhs"] <- as.character(parameters[,"rhs"])
     parameters[,"lhs"] <- as.character(parameters[,"lhs"])
     variables <- unlist(object@Data@ov.names)
@@ -309,16 +319,16 @@ Note. IDENTNOTEFITINFORMATION
     loadingMaker <- function(loads, report = c("est", "se", "z", "p")){
         lvname <- loads
         trows <- parameters[which(parameters$rhs %in% variables & parameters$lhs %in% lvname & parameters$op == "=~"),]
-        trows$est <- formatC(round(trows$est, 3), format = 'f', digits = 2)
-        trows$se <- formatC(round(trows$se, 3), format = 'f', digits = 2)
-        trows$stdest <- formatC(round(trows$stdest, 3), format = 'f', digits = 2)
-        trows$stdse <- formatC(round(trows$stdse, 3), format = 'f', digits = 2)
-        trows$z <- formatC(round(trows$z, 3), format = 'f', digits = 2)
-        trows$p <- formatC(round(trows$p, 3), format = 'f', digits = 3)
+        for (i in c("est", "se", "stdest", "stdse", "z")) trows[ , i] <- frnd(trows[ , i])
+        ## trows$est <- frnd(trows$est)
+        ## trows$se <- frnd(trows$se)
+        ## trows$stdest <- frnd(trows$stdest)
+        ## trows$stdse <- frnd(trows$stdse)
+        ## trows$z <- frnd(trows$z)
+        trows$p <- frnd(trows$p, 3, 3)
         trows$p <- gsub("0\\.", "\\.", trows$p)
         trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
-        trows$z <- ifelse(trows$free == 0, "", trows$z)
-        trows$p <- ifelse(trows$free == 0, "", trows$p)
+        trows[trows$free == 0, c("z", "p")] <- ""
         tmpx <- "_BR__UL_FACTOR_EOUL__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _EOR_
 ROWINFORMATION"
         tmpx <- gsub("FACTOR", lvname, tmpx)
@@ -336,26 +346,28 @@ ROWINFORMATION"
             stop("Intercept estimates are requested in the table, but I can't find them in the output!")
             #return(print("It appears that no intercept estimates are present in the lavaan output"))
         }else{
-        trows$est <- formatC(round(trows$est, 3), format = 'f', digits = 2)
-        trows$se <- formatC(round(trows$se, 3), format = 'f', digits = 2)
-        trows$stdest <- formatC(round(trows$stdest, 3), format = 'f', digits = 2)
-        trows$stdse <- formatC(round(trows$stdse, 3), format = 'f', digits = 2)
-        trows$z <- formatC(round(trows$z, 3), format = 'f', digits = 2)
-        trows$p <- formatC(round(trows$p, 3), format = 'f', digits = 3)
-        trows$p <- gsub("0\\.", "\\.", trows$p)
-        trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
-        trows$z <- ifelse(trows$free == 0, "", trows$z)
-        trows$p <- ifelse(trows$free == 0, "", trows$p)
-        tmpx <- "_BR__EOC_ _BOMC4__UL_Intercepts_EOUL__EOMC_ _EOR_
+            for (i in c("est", "se", "stdest", "stdse", "z")) trows[ , i] <- frnd(trows[ , i])
+            ## trows$est <- frnd(trows$est)
+            ## trows$se <- frnd(trows$se)
+            ## trows$stdest <- frnd(trows$stdest)
+            ## trows$stdse <- frnd(trows$stdse)
+            ## trows$z <- frnd(trows$z)
+            trows$p <- frnd(trows$p, 3, 3)
+            trows$p <- gsub("0\\.", "\\.", trows$p)
+            trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
+            trows[trows$free == 0, c("z", "p")] <- ""
+            ## trows$z <- ifelse(trows$free == 0, "", trows$z)
+            ## trows$p <- ifelse(trows$free == 0, "", trows$p)
+            tmpx <- "_BR__EOC_ _BOMC4__UL_Intercepts_EOUL__EOMC_ _EOR_
 ROWINFORMATION"
-        rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
-        if (nrow(trows) > 1){
-            for (i in 2:nrow(trows)){
-                rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+            rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
+            if (nrow(trows) > 1){
+                for (i in 2:nrow(trows)){
+                    rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+                }
             }
-        }
-        tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
-        tmpx
+            tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
+            tmpx
         }
     }
 
@@ -365,42 +377,46 @@ ROWINFORMATION"
             stop("Predictor variable mean estimates are requested in the table, but I can't find them in the output!")
             #return(print("It appears that no intercept estimates are present in the lavaan output"))
         }else{
-        trows$est <- formatC(round(trows$est, 3), format = 'f', digits = 2)
-        trows$se <- formatC(round(trows$se, 3), format = 'f', digits = 2)
-        trows$stdest <- formatC(round(trows$stdest, 3), format = 'f', digits = 2)
-        trows$stdse <- formatC(round(trows$stdse, 3), format = 'f', digits = 2)
-        trows$z <- formatC(round(trows$z, 3), format = 'f', digits = 2)
-        trows$p <- formatC(round(trows$p, 3), format = 'f', digits = 3)
-        trows$p <- gsub("0\\.", "\\.", trows$p)
-        trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
-        trows$z <- ifelse(trows$free == 0, "", trows$z)
-        trows$p <- ifelse(trows$free == 0, "", trows$p)
-        tmpx <- "_BR__EOC_ _BOMC4__UL_Means_EOUL__EOMC_ _EOR_
+            for (i in c("est", "se", "stdest", "stdse", "z")) trows[ , i] <- frnd(trows[ , i])
+            ## trows$est <- frnd(trows$est)
+            ## trows$se <- frnd(trows$se)
+            ## trows$stdest <- frnd(trows$stdest)
+            ## trows$stdse <- frnd(trows$stdse)
+            ## trows$z <- frnd(trows$z)
+            trows$p <- frnd(trows$p, 3, 3)
+            trows$p <- gsub("0\\.", "\\.", trows$p)
+            trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
+            trows[trows$free == 0, c("z", "p")] <- ""
+            ## trows$z <- ifelse(trows$free == 0, "", trows$z)
+            ## trows$p <- ifelse(trows$free == 0, "", trows$p)
+            tmpx <- "_BR__EOC_ _BOMC4__UL_Means_EOUL__EOMC_ _EOR_
 ROWINFORMATION"
-        rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
-        if (nrow(trows) > 1){
-            for (i in 2:nrow(trows)){
-                rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
-            }
-        }
-        tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
-        tmpx
+            rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
+             if (nrow(trows) > 1){
+                 for (i in 2:nrow(trows)){
+                     rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+                 }
+             }
+             tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
+             tmpx
         }
     }
 
     slopeMaker <- function(dv, regs, report = c("est", "se", "z", "p")){
         dvname <- dv
         trows <- regs[which(regs$lhs == dvname),]
-        trows$est <- formatC(round(trows$est, 3), format = 'f', digits = 2)
-        trows$se <- formatC(round(trows$se, 3), format = 'f', digits = 2)
-        trows$stdest <- formatC(round(trows$stdest, 3), format = 'f', digits = 2)
-        trows$stdse <- formatC(round(trows$stdse, 3), format = 'f', digits = 2)
-        trows$z <- formatC(round(trows$z, 3), format = 'f', digits = 2)
-        trows$p <- formatC(round(trows$p, 3), format = 'f', digits = 3)
+        for (i in c("est", "se", "stdest", "stdse", "z")) trows[ , i] <- frnd(trows[ , i])
+        ## trows$est <- frnd(trows$est)
+        ## trows$se <- frnd(trows$se)
+        ## trows$stdest <- frnd(trows$stdest)
+        ## trows$stdse <- frnd(trows$stdse)
+        ## trows$z <- frnd(trows$z)
+        trows$p <- frnd(trows$p, 3, 3)
         trows$p <- gsub("0\\.", "\\.", trows$p)
         trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
-        trows$z <- ifelse(trows$free == 0, "", trows$z)
-        trows$p <- ifelse(trows$free == 0, "", trows$p)
+        trows[trows$free == 0, c("z", "p")] <- ""
+        ## trows$z <- ifelse(trows$free == 0, "", trows$z)
+        ## trows$p <- ifelse(trows$free == 0, "", trows$p)
         tmpx <- "_BR__UL_DEPENDENTVAR_EOUL__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _EOR_
 ROWINFORMATION"
         tmpx <- gsub("DEPENDENTVAR", dvname, tmpx)
@@ -421,16 +437,18 @@ ROWINFORMATION"
         }else{
         thresnum <- substring(trows$rhs, 2, nchar(trows$rhs))
         trows$lhs <- paste0(trows$lhs, "(", thresnum, ")")
-        trows$est <- formatC(round(trows$est, 3), format = 'f', digits = 2)
-        trows$se <- formatC(round(trows$se, 3), format = 'f', digits = 2)
-        trows$stdest <- formatC(round(trows$stdest, 3), format = 'f', digits = 2)
-        trows$stdse <- formatC(round(trows$stdse, 3), format = 'f', digits = 2)
-        trows$z <- formatC(round(trows$z, 3), format = 'f', digits = 2)
-        trows$p <- formatC(round(trows$p, 3), format = 'f', digits = 3)
+        for (i in c("est", "se", "stdest", "stdse", "z")) trows[ , i] <- frnd(trows[ , i])
+        ## trows$est <- frnd(trows$est)
+        ## trows$se <- frnd(trows$se)
+        ## trows$stdest <- frnd(trows$stdest)
+        ## trows$stdse <- frnd(trows$stdse)
+        ## trows$z <- frnd(trows$z)
+        trows$p <- frnd(trows$p, 3, 3)
         trows$p <- gsub("0\\.", "\\.", trows$p)
         trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
-        trows$z <- ifelse(trows$free == 0, "", trows$z)
-        trows$p <- ifelse(trows$free == 0, "", trows$p)
+        trows[trows$free == 0, c("z", "p")] <- ""
+        ## trows$z <- ifelse(trows$free == 0, "", trows$z)
+        ## trows$p <- ifelse(trows$free == 0, "", trows$p)
         tmpx <- "_BR__EOC_ _BOMC4__UL_Thresholds_EOUL__EOMC_ _EOR_
 ROWINFORMATION"
         rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
@@ -459,15 +477,16 @@ ROWINFORMATION"
                 stop("Variance estimates are requested in the table, but I can't find them in the output!")
             }
         }
-        trows$est <- formatC(round(trows$est, 3), format = 'f', digits = 2)
-        trows$se <- formatC(round(trows$se, 3), format = 'f', digits = 2)
-        trows$stdest <- formatC(round(trows$stdest, 3), format = 'f', digits = 2)
-        trows$stdse <- formatC(round(trows$stdse, 3), format = 'f', digits = 2)
-        trows$z <- formatC(round(trows$z, 3), format = 'f', digits = 2)
-        trows$p <- formatC(round(trows$p, 3), format = 'f', digits = 3)
-        trows$z <- ifelse(trows$free == 0, "", trows$z)
-        trows$p <- ifelse(trows$free == 0, "", trows$p)
+        for (i in c("est", "se", "stdest", "stdse", "z")) trows[ , i] <- frnd(trows[ , i])
+        ## trows$se <- frnd(trows$se)
+        ## trows$stdest <- frnd(trows$stdest)
+        ## trows$stdse <- frnd(trows$stdse)
+        ## trows$z <- frnd(trows$z)
+        trows$p <- frnd(trows$p, 3, 3)
         trows$p <- gsub("0\\.", "\\.", trows$p)
+        trows[trows$free == 0, c("z", "p")] <- ""
+        ## trows$z <- ifelse(trows$free == 0, "", trows$z)
+        ## trows$p <- ifelse(trows$free == 0, "", trows$p)
         if (isTRUE(covariance)){
             rowinfo <- paste0("_BR_", trows[1,"lhs"], " with ", trows[1,"rhs"], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
             if (nrow(trows) > 1){
@@ -494,16 +513,18 @@ ROWINFORMATION"
             stop("Latent variance/covariance estimates are requested in the table, but I can't find them in the output!")
             #return(print("It appears that no intercept estimates are present in the lavaan output"))
         }else{
-            trows$est <- formatC(round(trows$est, 3), format = 'f', digits = 2)
-            trows$se <- formatC(round(trows$se, 3), format = 'f', digits = 2)
-            trows$stdest <- formatC(round(trows$stdest, 3), format = 'f', digits = 2)
-            trows$stdse <- formatC(round(trows$stdse, 3), format = 'f', digits = 2)
-            trows$z <- formatC(round(trows$z, 3), format = 'f', digits = 2)
-            trows$p <- formatC(round(trows$p, 3), format = 'f', digits = 3)
+            for (i in c("est", "se", "stdest", "stdse", "z")) trows[ , i] <- frnd(trows[ , i])
+            ## trows$est <- frnd(trows$est)
+            ## trows$se <- frnd(trows$se)
+            ## trows$stdest <- frnd(trows$stdest)
+            ## trows$stdse <- frnd(trows$stdse)
+            ## trows$z <- frnd(trows$z)
+            trows$p <- frnd(trows$p, 3, 3)
             trows$p <- gsub("0\\.", "\\.", trows$p)
             trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
-            trows$z <- ifelse(trows$free == 0, "", trows$z)
-            trows$p <- ifelse(trows$free == 0, "", trows$p)
+            trows[trows$free == 0, c("z", "p")] <- ""
+            ##  trows$z <- ifelse(trows$free == 0, "", trows$z)
+            ##  trows$p <- ifelse(trows$free == 0, "", trows$p)
             tmpx <- "_BR__EOC__BOMC4__UL_Latent Variances/Covariances_EOUL__EOMC__EOR_
 ROWINFORMATION"
             rowinfo <- paste0("_BR_", trows[1,1], " with ", trows[1,3], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
@@ -523,16 +544,18 @@ ROWINFORMATION"
             stop("Latent mean estimates are requested in the table, but I can't find them in the output!")
             #return(print("It appears that no intercept estimates are present in the lavaan output"))
         }else{
-            trows$est <- formatC(round(trows$est, 3), format = 'f', digits = 2)
-            trows$se <- formatC(round(trows$se, 3), format = 'f', digits = 2)
-            trows$stdest <- formatC(round(trows$stdest, 3), format = 'f', digits = 2)
-            trows$stdse <- formatC(round(trows$stdse, 3), format = 'f', digits = 2)
-            trows$z <- formatC(round(trows$z, 3), format = 'f', digits = 2)
-            trows$p <- formatC(round(trows$p, 3), format = 'f', digits = 3)
+            for (i in c("est", "se", "stdest", "stdse", "z")) trows[ , i] <- frnd(trows[ , i])
+            ## trows$est <- frnd(trows$est)
+            ## trows$se <- frnd(trows$se)
+            ## trows$stdest <- frnd(trows$stdest))
+            ## trows$stdse <- frnd(trows$stdse)
+            ## trows$z <- frnd(trows$z)
+            trows$p <- frnd(trows$p, 3, 3)
             trows$p <- gsub("0\\.", "\\.", trows$p)
             trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
-            trows$z <- ifelse(trows$free == 0, "", trows$z)
-            trows$p <- ifelse(trows$free == 0, "", trows$p)
+            trows[trows$free == 0, c("z", "p")] <- ""
+            ## trows$z <- ifelse(trows$free == 0, "", trows$z)
+            ## trows$p <- ifelse(trows$free == 0, "", trows$p)
             tmpx <- "_BR__EOC_ _BOMC4__UL_Latent Means/Intercepts_EOUL__EOMC_ _EOR_
 ROWINFORMATION"
             rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
