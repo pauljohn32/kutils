@@ -150,7 +150,12 @@ semTable <-
              group = NULL, longtable = FALSE)
 {
 
-    ##local shorthand to replace the verbose
+    ## do.call(rbind, alist) does not accept stringsAsFactors=FALSE,
+    ## must set globally to avoid problems.
+    options.orig <- options()
+    options(stringsAsFactors = FALSE)
+    
+    ## local shorthand to replace the verbose
     ## formatC(round(chimeas$stat, 3), format = 'f', digits = 2)
     ## with frnd(chimeas$stat)
     ## For reasons I don't understand, most prevalent example here
@@ -193,18 +198,12 @@ semTable <-
     chimeas$stat <- frnd(chimeas$stat, 3)
     chimeas$pvalue <- frnd(chimeas$pvalue, 3,  3)
     chimeas$pvalue <- gsub("0\\.", "\\.", chimeas$pvalue)
-    parameters <- data.frame(object@ParTable)[,c("lhs", "op", "rhs", "free", "group")[c("lhs", "op", "rhs", "free", "group") %in% names(object@ParTable)]]
+    parTable <- object@ParTable[intersect(names(object@ParTable), c("lhs", "op", "rhs", "free", "group"))]
+    parameters <- as.data.frame(parTable, stringsAsFactors=FALSE)
     parameters$est <- object@Fit@est
     parameters$se <- object@Fit@se
     parameters$z <- parameters$est/parameters$se
     parameters$p <- 2*pnorm(abs(parameters$z), lower.tail = FALSE)
-    ## pj 20171021: following not needed, will round later
-    ## parameters[,"est"] <- round(parameters[,"est"], 2)
-    ## parameters[,"se"] <- round(parameters[,"se"], 2)
-    ## parameters[,"z"] <- round(parameters[,"z"], 2)
-    ## parameters[,"p"] <- round(parameters[,"p"], 3)
-    parameters[,"rhs"] <- as.character(parameters[,"rhs"])
-    parameters[,"lhs"] <- as.character(parameters[,"lhs"])
     variables <- unlist(object@Data@ov.names)
     latents <- unique(unlist(object@pta$vnames$lv))
     if (length(params) == 1){
@@ -331,356 +330,477 @@ Note. IDENTNOTEFITINFORMATION
     ivs <- unique(regs$rhs)
 
     
+
     loadingMaker <- function(loads, report = c("est", "se", "z", "p")){
         lvname <- loads
-        trows <- parameters[which(parameters$rhs %in% variables & parameters$lhs %in% lvname & parameters$op == "=~"),]
+        trows <- parameters[which(parameters$rhs %in% variables & parameters$lhs %in% lvname & parameters$op == "=~"), ,
+                            drop = FALSE]
         trows <- roundSubtable(trows)
-        tmpx <- "_BR__UL_FACTOR_EOUL__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _EOR_
-ROWINFORMATION"
-        tmpx <- gsub("FACTOR", lvname, tmpx)
-        rowinfo <- paste0("_BR_", paste0(trows[1,c("rhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
-        for (i in 2:nrow(trows)){
-            rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("rhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
-        }
-        tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
-        tmpx
+        trows <- trows[ , c("rhs", report)]
+        rownames(trows) <- paste(lvname, trows[ , "rhs"], sep = ".")
+        rowempty <- matrix("", nrow=1, ncol = NCOL(trows), dimnames = list(c(lvname), colnames(trows)))
+        rowempty[1, 1] <- lvname
+        trows <- rbind(rowempty, trows)
+        colnames(trows)[1] <- "col1" ## first col name must be homogeneous
+        trows
+        ##         tmpx <- "_BR__UL_FACTOR_EOUL__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _EOR_
+        ## ROWINFORMATION"
+        ##         tmpx <- gsub("FACTOR", lvname, tmpx)
+        ##         ## 20171021 testing way to tighten up what follows
+        ##         ## trows <- trows[ , c("rhs", report)]
+        ##         ## apply(cbind("_BR_", vapply(trows, function(x) paste0("_BOC_", x, "_EOC_"), character(NROW(trows))), "_EOR_\n"), 1, paste, collapse = " ")
+        ##         ## 
+        ##         rowinfo <- paste0("_BR_", paste0(trows[1,c("rhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
+        ##         for (i in 2:nrow(trows)){
+        ##             rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("rhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+        ##         }
+        ##         tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
+        ##         tmpx
     }
 
     interceptMaker <- function(variables, report = c("est", "se", "z", "p")){
-        trows <- parameters[which(parameters$lhs %in% ints & parameters$op == "~1"),]
-        if(dim(trows)[1] == 0){
+        trows <- parameters[which(parameters$lhs %in% ints & parameters$op == "~1"),, drop = FALSE]
+        if(dim(trows)[1] == 0)
             stop("Intercept estimates are requested in the table, but I can't find them in the output!")
-            #return(print("It appears that no intercept estimates are present in the lavaan output"))
-        }else{
-            trows <- roundSubtable(trows)
-            tmpx <- "_BR__EOC_ _BOMC4__UL_Intercepts_EOUL__EOMC_ _EOR_
-ROWINFORMATION"
-            rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
-            if (nrow(trows) > 1){
-                for (i in 2:nrow(trows)){
-                    rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
-                }
-            }
-            tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
-            tmpx
-        }
+        trows <- roundSubtable(trows)
+        trows <- trows[ , c("lhs", report)]
+        rowempty <- matrix("", nrow=1, ncol = NCOL(trows), dimnames = list(c(lvname), colnames(trows)))
+        rowempty[1, 2] <- "_BOMC4__UL_Intercepts_EOUL__EOMC_" 
+        trows <- rbind(rowempty, trows)
+        colnames(trows)[1] <- " " ## first column name is blank. WHOA! How to fix?
+        trows
+        ## rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
+        ## if (nrow(trows) > 1){
+        ##     for (i in 2:nrow(trows)){
+        ##         rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+        ##     }
+        ## }
+        ## tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
+            ## tmpx
     }
 
     observedMeanMaker <- function(variables, report = c("est", "se", "z", "p")){
-        trows <- parameters[which(parameters$lhs %in% ivs & parameters$op == "~1"),]
-        if(dim(trows)[1] == 0){
-            stop("Predictor variable mean estimates are requested in the table, but I can't find them in the output!")
-            #return(print("It appears that no intercept estimates are present in the lavaan output"))
-        }else{
-            trows <- roundSubtable(trows)
-            tmpx <- "_BR__EOC_ _BOMC4__UL_Means_EOUL__EOMC_ _EOR_
-ROWINFORMATION"
-            rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
-             if (nrow(trows) > 1){
-                 for (i in 2:nrow(trows)){
-                     rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
-                 }
-             }
-             tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
-             tmpx
-        }
+        trows <- parameters[which(parameters$lhs %in% ivs & parameters$op == "~1"),, drop = FALSE]
+        if(dim(trows)[1] == 0)
+            stop("Predictor variable mean estimates missing in output!")
+        
+        trows <- roundSubtable(trows)
+        trows <- trows[ , c("lhs", report)]
+        rowempty <- character(NCOL(trows))
+        rowempty[2] <- "_BOMC4__UL_Means_EOUL__EOMC_" 
+        trows <- rbind(rowempty, trows)
+        colnames(trows)[1] <- " " ## first column name is blank. WHOA! How to fix?
+        trows
+        ##             tmpx <- "_BR__EOC_ _BOMC4__UL_Means_EOUL__EOMC_ _EOR_
+        ## ROWINFORMATION"
+        ##             rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
+        ##              if (nrow(trows) > 1){
+        ##                  for (i in 2:nrow(trows)){
+        ##                      rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+        ##                  }
+        ##              }
+        ##              tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
+        ##              tmpx
     }
 
     slopeMaker <- function(dv, regs, report = c("est", "se", "z", "p")){
         dvname <- dv
-        trows <- regs[which(regs$lhs == dvname),]
+        trows <- regs[which(regs$lhs == dvname), , drop = FALSE]
         trows <- roundSubtable(trows)
-        tmpx <- "_BR__UL_DEPENDENTVAR_EOUL__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _EOR_
-ROWINFORMATION"
-        tmpx <- gsub("DEPENDENTVAR", dvname, tmpx)
-        rowinfo <- paste0("_BR_", paste0(trows[1,c("rhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
-        if (nrow(trows) > 1){
-            for (i in 2:nrow(trows)){
-                rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("rhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
-            }
-        }
-        tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
-        tmpx
+        trows <- trows[ , c("rhs", report)]
+        rowempty <- character(NCOL(trows))
+        rowempty[2] <- "UL_dvname_EOUL_" 
+        trows <- rbind(rowempty, trows)
+        colnames(trows)[1] <- " " ## first column name is blank. WHOA! How to fix?
+        trows
+        
+##         tmpx <- "_BR__UL_DEPENDENTVAR_EOUL__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _EOR_
+## ROWINFORMATION"
+##         tmpx <- gsub("DEPENDENTVAR", dvname, tmpx)
+##         rowinfo <- paste0("_BR_", paste0(trows[1,c("rhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
+##         if (nrow(trows) > 1){
+##             for (i in 2:nrow(trows)){
+##                 rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("rhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+##             }
+##         }
+##         tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
+##         tmpx
     }
 
     thresholdMaker <- function(variables, report = c("est", "se", "z", "p")){
-        trows <- parameters[which(parameters$op == "|" & parameters$lhs %in% variables),]
-        if(dim(trows)[1] == 0){
-            stop("Threshold estimates are requested in the table, but I can't find them in the output!")
-        }else{
+        trows <- parameters[which(parameters$op == "|" & parameters$lhs %in% variables),,
+                            drop = FALSE]
+        if(dim(trows)[1] == 0)
+            stop("Threshold estimates are missing in output!")
         thresnum <- substring(trows$rhs, 2, nchar(trows$rhs))
         trows$lhs <- paste0(trows$lhs, "(", thresnum, ")")
         trows <- roundSubtable(trows)
-        tmpx <- "_BR__EOC_ _BOMC4__UL_Thresholds_EOUL__EOMC_ _EOR_
-ROWINFORMATION"
-        rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
-        for (i in 2:nrow(trows)){
-            rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i, c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
-        }
-        tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
-        tmpx
-        }
+        trows <- trows[ , c("lhs", report)]
+        rowempty <- character(NCOL(trows))
+        rowempty[2] <- "_BOMC4__UL_Thresholds_EOUL__EOMC_" 
+        trows <- rbind(rowempty, trows)
+        trows
+        ##         tmpx <- "_BR__EOC_ _BOMC4__UL_Thresholds_EOUL__EOMC_ _EOR_
+        ## ROWINFORMATION"
+        ##         rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
+        ##         for (i in 2:nrow(trows)){
+        ##             rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i, c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+        ##         }
+        ##         tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
+        ##         tmpx
     }
+    
 
     residualMaker <- function(variables, covariance = FALSE, report = c("est", "se", "z", "p")){
-        trows <- parameters[which(parameters$rhs %in% variables & parameters$lhs %in% variables & parameters$op == "~~"),]
+        trows <- parameters[which(parameters$rhs %in% variables & parameters$lhs %in% variables & parameters$op == "~~"),,
+                            drop = FALSE ]
+        if(dim(trows)[1] == 0) stop("residualMaker failure")
+        trows <- roundSubtable(trows)
         if (isTRUE(covariance)){
             trows <- trows[which(trows$rhs != trows$lhs),]
-            tmpx <- "_BR__EOC_ _BOMC4__UL_Covariances_EOUL__EOMC__EOR_
-ROWINFORMATION"
-            if(dim(trows)[1] == 0){
-                stop("Observed variable covariance estimates are requested in the table, but I can't find them in the output!")
-            }
+            trows <- trows[ , c("lhs", report)]
+            rowempty <- character(NCOL(trows))
+            rowempty[2] <- "_BOMC4__UL_Covariances_EOUL__EOMC_" 
+            trows <- rbind(rowempty, trows)
+            colnames(trows)[1] <- " " ## first column name is blank. WHOA! How to fix?
+            return(trows)
+            
+##             tmpx <- "_BR__EOC_ _BOMC4__UL_Covariances_EOUL__EOMC__EOR_
+## ROWINFORMATION"
+##             if(dim(trows)[1] == 0){
+##                 stop("Observed variable covariance estimates are requested in the table, but I can't find them in the output!")
+##             }
+##             trows <- roundSubtable(trows)
+##             rowinfo <- paste0("_BR_", trows[1,"lhs"], " with ", trows[1,"rhs"], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
+##             if (nrow(trows) > 1){
+##                 for (i in 2:nrow(trows)){
+##                     rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,"lhs"], " with ", trows[i,"rhs"], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+##                 }
+##             }
+##             tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
+##            return(tmpx)
         } else {
-            trows <- trows[which(trows$rhs == trows$lhs),]
-            tmpx <- "_BR__EOC_ _BOMC4__UL_Variances_EOUL__EOMC__EOR_
-ROWINFORMATION"
-            if(dim(trows)[1] == 0){
-                stop("Variance estimates are requested in the table, but I can't find them in the output!")
-            }
-        }
-        trows <- roundSubtable(trows)
+            trows <- trows[which(trows$rhs == trows$lhs),, drop = FALSE]
+            trows <- trows[ , c("lhs", report)]
+            rowempty <- character(NCOL(trows))
+            rowempty[2] <- "_BOMC4__UL_Variances_EOUL__EOMC_" 
+            trows <- rbind(rowempty, trows)
+            colnames(trows)[1] <- " " ## first column name is blank. WHOA! How to fix?
+            return(trows)
 
-        if (isTRUE(covariance)){
-            rowinfo <- paste0("_BR_", trows[1,"lhs"], " with ", trows[1,"rhs"], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
-            if (nrow(trows) > 1){
-                for (i in 2:nrow(trows)){
-                    rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,"lhs"], " with ", trows[i,"rhs"], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
-                }
-            }
-        } else {
-            rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
-            if (nrow(trows) > 1){
-                for (i in 2:nrow(trows)){
-                    rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
-                }
-            }
+            
+##             tmpx <- "_BR__EOC_ _BOMC4__UL_Variances_EOUL__EOMC__EOR_
+## ROWINFORMATION"
+##             if(dim(trows)[1] == 0){
+##                 stop("Variance estimates are requested in the table, but I can't find them in the output!")
+##             }
+##             trows <- roundSubtable(trows)
+
+            
+##             rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
+##             if (nrow(trows) > 1){
+##                 for (i in 2:nrow(trows)){
+##                     rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+##                 }
+##             }
+##             tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
+##             tmpx
+##         }
 
         }
-        tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
-        tmpx
     }
 
     latentMaker <- function(latents, report = c("est", "se", "z", "p")){
-        trows <- parameters[which(parameters$rhs %in% latents & parameters$lhs %in% latents & parameters$op == "~~"),]
+        trows <- parameters[which(parameters$rhs %in% latents & parameters$lhs %in% latents & parameters$op == "~~"),,
+                            drop = FALSE]
         if(dim(trows)[1] == 0){
-            stop("Latent variance/covariance estimates are requested in the table, but I can't find them in the output!")
-            #return(print("It appears that no intercept estimates are present in the lavaan output"))
-        }else{
-            trows <- roundSubtable(trows)
-            trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
-            trows[trows$free == 0, c("z", "p")] <- ""
-            ##  trows$z <- ifelse(trows$free == 0, "", trows$z)
-            ##  trows$p <- ifelse(trows$free == 0, "", trows$p)
-            tmpx <- "_BR__EOC__BOMC4__UL_Latent Variances/Covariances_EOUL__EOMC__EOR_
-ROWINFORMATION"
-            rowinfo <- paste0("_BR_", trows[1,1], " with ", trows[1,3], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
-            if (nrow(trows) > 1){
-                for (i in 2:nrow(trows)){
-                    rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,1], " with ", trows[i,3], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
-                }
-            }
-            tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
-            tmpx
+            stop("Latent variance/covariance estimates missing in output!")
         }
+        trows <- roundSubtable(trows)
+        ## trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
+        trows[trows$free == 0, c("z", "p")] <- ""
+        trows[ , "lhs"] <- paste(trows[ , "lhs"], " with ", trows[ , "rhs"])
+        trows <- trows[ , c("lhs", report)]
+        rowempty <- character(NCOL(trows))
+        rowempty[2] <- "_BOMC4__UL_Latent Variances/Covariances_EOUL__EOMC_" 
+        trows <- rbind(rowempty, trows)
+        colnames(trows)[1] <- " " ## first column name is blank. WHOA! How to fix?
+        trows
+
+        
+ ##        tmpx <- "_BR__EOC__BOMC4__UL_Latent Variances/Covariances_EOUL__EOMC__EOR_
+## ROWINFORMATION"
+##         rowinfo <- paste0("_BR_", trows[1,1], " with ", trows[1,3], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
+##             if (nrow(trows) > 1){
+##                 for (i in 2:nrow(trows)){
+##                     rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,1], " with ", trows[i,3], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+##                 }
+##             }
+##             tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
+##         tmpx
+    
     }
 
     latentMeanMaker <- function(latents, report = c("est", "se", "z", "p")){
-        trows <- parameters[which(parameters$lhs %in% latents & parameters$op == "~1"),]
-        if(dim(trows)[1] == 0){
-            stop("Latent mean estimates are requested in the table, but I can't find them in the output!")
-            #return(print("It appears that no intercept estimates are present in the lavaan output"))
-        }else{
-            trows <- roundSubtable(trows)
-            tmpx <- "_BR__EOC_ _BOMC4__UL_Latent Means/Intercepts_EOUL__EOMC_ _EOR_
-ROWINFORMATION"
-            rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
-            if (nrow(trows) > 1){
-                for (i in 2:nrow(trows)){
-                    rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
-                }
-            }
-            tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
-            tmpx
-        }
+        trows <- parameters[which(parameters$lhs %in% latents & parameters$op == "~1"),,
+                            drop = FALSE]
+        if(dim(trows)[1] == 0)
+            stop("Latent mean estimates missing in output!")
+        
+        trows <- roundSubtable(trows)
+        trows <- trows[ , c("lhs", report)]
+        rowempty <- character(NCOL(trows))
+        rowempty[2] <- "_BOMC4__UL_Latent Means/Intercepts_EOUL__EOMC_" 
+        trows <- rbind(rowempty, trows)
+        colnames(trows)[1] <- " " ## first column name is blank. WHOA! How to fix?
+        trows
+        
+        ##         tmpx <- "_BR__EOC_ _BOMC4__UL_Latent Means/Intercepts_EOUL__EOMC_ _EOR_
+        ## ROWINFORMATION"
+        ##             rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
+        ##             if (nrow(trows) > 1){
+        ##                 for (i in 2:nrow(trows)){
+        ##                     rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+        ##                 }
+        ##             }
+        ##             tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
+        ##             tmpx
+        
     }
 
+    reslt <- list()
     if("loadings" %in% params){
         loadingInfo <- lapply(loads, loadingMaker, report)
-        loadingInfo <- paste0(unlist(loadingInfo), collapse = "")
-        loadingInfo <- paste0("_BR__EOC__BOMC4__UL_Factor Loadings_EOUL__EOMC__EOR_", loadingInfo)
-        template <- gsub("_FACTORLOADINGS_", loadingInfo, template)
-    }else{
-        template <- gsub("_FACTORLOADINGS_", "", template)
+        loadingInfo <- do.call(rbind, loadingInfo)
+        emptyrow <- character(NCOL(loadingInfo))
+        emptyrow[2] <- "_BOMC4__UL_Factor Loadings_EOUL__EOMC"
+        loadingInfo <- rbind(emptyrow, loadingInfo)
+        reslt[["loadings"]] <- loadingInfo
     }
-
     if("slopes" %in% params){
         slopeInfo <- lapply(dvs, slopeMaker, regs, report)
-        slopeInfo <- paste0(unlist(slopeInfo), collapse = "")
-        slopeInfo <- paste0("_BR__EOC__BOMC4__UL_Regression Slopes_EOUL__EOMC__EOR_", slopeInfo)
-        template <- gsub("_SLOPES_", slopeInfo, template)
-    }else{
-        template <- gsub("_SLOPES_", "", template)
+        slopeInfo <- do.call(rbind, slopeInfo)
+        emptyrow <- character(NCOL(slopeInfo))
+        emptyrow[2] <- "_BOMC4__UL_Regression Slopes_EOUL__EOMC"
+        slopeInfo <- rbind(emptyrow, slopeInfo)
+        reslt[["slopes"]] <- slopeInfo
+        
+##        slopeInfo <- paste0(unlist(slopeInfo), collapse = "")
+##        slopeInfo <- paste0("_BR__EOC__BOMC4__UL_Regression Slopes_EOUL__EOMC__EOR_", slopeInfo)
+##        template <- gsub("_SLOPES_", slopeInfo, template)
+##    }else{
+##        template <- gsub("_SLOPES_", "", template)
     }
 
     if("intercepts" %in% params){
-        interceptInfo <- interceptMaker(variables, report)
-        template <- gsub("_INTERCEPTS_", interceptInfo, template)
-    }else{
-        template <- gsub("_INTERCEPTS_", "", template)
+        reslt[["intercepts"]] <- interceptMaker(variables, report)
     }
 
     if("means" %in% params){
-        interceptInfo <- observedMeanMaker(variables, report)
-        template <- gsub("_MEANS_", interceptInfo, template)
-    }else{
-        template <- gsub("_MEANS_", "", template)
+        reslt[["means"]] <- observedMeanMaker(variables, report)
     }
 
     if("thresholds" %in% params){
-        thresholdInfo <- thresholdMaker(variables, report)
-        template <- gsub("_THRESHOLDS_", thresholdInfo, template)
-    }else{
-        template <- gsub("_THRESHOLDS_", "", template)
+        reslt[["thresholds"]] <- thresholdMaker(variables, report)
     }
     if("residuals" %in% params){
-        residualInfo <- residualMaker(variables, report)
-        template <- gsub("_RESIDUALS_", residualInfo, template)
-    }else{
-        template <- gsub("_RESIDUALS_", "", template)
+       reslt[["residuals"]] <- residualMaker(variables, report)
     }
-
     if("covariances" %in% params){
-        residualInfo <- residualMaker(variables, covariance = TRUE, report)
-        template <- gsub("_COVARIANCES_", residualInfo, template)
-    }else{
-        template <- gsub("_COVARIANCES_", "", template)
+        reslt[["covariances"]] <- residualMaker(variables, covariance = TRUE, report)
     }
 
     if("latentvariances" %in% params){
-        latentInfo <- latentMaker(latents, report)
-        template <- gsub("_LATENTVARS_", latentInfo, template)
-    }else{
-        template <- gsub("_LATENTVARS_", "", template)
+        reslt[["latentvariances"]] <- latentMaker(latents, report)
     }
 
     if("latentmeans" %in% params){
-        latentMeans <- latentMeanMaker(latents, report)
-        template <- gsub("_LATENTMEANS_", latentMeans, template)
-    }else{
-        template <- gsub("_LATENTMEANS_", "", template)
+        reslt[["latentmeans"]] <- latentMeanMaker(latents, report)
     }
 
+    ## #template <- gsub("TITLE", caption, template)
+    ## if("chi-square" %in% fit){
+    ##     if (type == "latex"){
+    ##         fitinfotmpchi <- "$\\\\chi^{2}$(DF)= CHI, \\\\textit{p} = PVAL"
+    ##         fitinfotmpchi <- gsub("CHI", chimeas$stat, fitinfotmpchi)
+    ##         fitinfotmpchi <- gsub("DF", chimeas$df, fitinfotmpchi)
+    ##         fitinfotmpchi <- gsub("PVAL", chimeas$pvalue, fitinfotmpchi)
+    ##     }else{
+    ##         fitinfotmpchi <- paste0("&chi;(", chimeas$df, ") = ", chimeas$stat, ", p = ", chimeas$pvalue)
+    ##     }
+    ## } else {
+    ##     fitinfotmpchi <- NULL
+    ## }
+    ## if(length(grep("[0-9]\\* ", template))){
+    ##    template <- gsub("IDENTNOTE", "* Indicates parameters fixed for model identification._LB_", template)
+    ## }else{
+    ##     template <- gsub("IDENTNOTE", "", template)
+    ## }
 
-    #template <- gsub("TITLE", caption, template)
-    if("chi-square" %in% fit){
-        if (type == "latex"){
-            fitinfotmpchi <- "$\\\\chi^{2}$(DF)= CHI, \\\\textit{p} = PVAL"
-            fitinfotmpchi <- gsub("CHI", chimeas$stat, fitinfotmpchi)
-            fitinfotmpchi <- gsub("DF", chimeas$df, fitinfotmpchi)
-            fitinfotmpchi <- gsub("PVAL", chimeas$pvalue, fitinfotmpchi)
-        }else{
-            fitinfotmpchi <- paste0("&chi;(", chimeas$df, ") = ", chimeas$stat, ", p = ", chimeas$pvalue)
-        }
-    } else {
-        fitinfotmpchi <- NULL
-    }
-    if(length(grep("[0-9]\\* ", template))){
-       template <- gsub("IDENTNOTE", "* Indicates parameters fixed for model identification._LB_", template)
-    }else{
-        template <- gsub("IDENTNOTE", "", template)
-    }
+    ## xxx <- list()
+    ## if (!is.null(fit)){
+    ##     for(i in names(fit)[fit != "chi-square"]){
+    ##         tmp <- paste0(i, " = value")
+    ##         if(fit[i] %in% names(fitmeas)){
+    ##             fitmeastmp <- fitmeas[fit[i]]
+    ##             xxx[i] <- gsub("value",  fitmeas[fit[i]], tmp)
+    ##         }else{
+    ##             stop(paste0("I can't find the model fit index \"", i, "\" in the lavaan output."))
+    ##         }
+    ##     }
 
-    xxx <- list()
-    if (!is.null(fit)){
-        for(i in names(fit)[fit != "chi-square"]){
-            tmp <- paste0(i, " = value")
-            if(fit[i] %in% names(fitmeas)){
-                fitmeastmp <- fitmeas[fit[i]]
-                xxx[i] <- gsub("value",  fitmeas[fit[i]], tmp)
-            }else{
-                stop(paste0("I can't find the model fit index \"", i, "\" in the lavaan output."))
-            }
-        }
+    ##     fitinfoothers <- paste0(unlist(xxx), collapse = "; ")
 
-        fitinfoothers <- paste0(unlist(xxx), collapse = "; ")
+    ##     measures <- c(fitinfotmpchi, fitinfoothers)
+    ##     if(length(xxx) > 0){
+    ##         fitinfo <- paste0(measures, collapse = "; ")
+    ##     }else{
+    ##         fitinfo <- fitinfotmpchi
+    ##     }
+    ##     template <- gsub("FITINFORMATION", paste0(fitinfo, "."), template)
+    ## } else {
+    ##     template <- gsub("FITINFORMATION", "", template)
+    ## }
 
-        measures <- c(fitinfotmpchi, fitinfoothers)
-        if(length(xxx) > 0){
-            fitinfo <- paste0(measures, collapse = "; ")
-        }else{
-            fitinfo <- fitinfotmpchi
-        }
-        template <- gsub("FITINFORMATION", paste0(fitinfo, "."), template)
-    } else {
-        template <- gsub("FITINFORMATION", "", template)
-    }
+    ## Replacement strings for LaTeX output
+    latexreplace <- c(
+        "_LB_" = "//\n",
+        "_EOC_" =  "</td>",
+        "_BOC_" = "& ", 
+        "_EOMC_" = "}",
+        "_EOR_" = "\\\\tabularnewline",
+        "_BRU_" = "",
+        "_BRT_" = "", 
+        "_BOCU_" = "& ",
+        "_BR_" = "",
+        "_BT_" = if(longtable) paste0("\\\\begin{longtable}{l", paste0(rep("r", length(report)), collapse = ""), "}")
+                 else paste0("\\\\begin{tabular}{l", paste0(rep("r", length(report)), collapse = ""), "}"),
+        "_EOL_", "\n",
+        "_HL_" = "\\\\hline", 
+        "_UL_" = "\\\\underline{",
+        "_EOUL_" = "}",
+        "_SEPU_" = " &", 
+        "_SEP_" = " &", 
+        "_EOT_" = if (longtable) "\\\\end{longtable}" else "\\\\end{tabular}",
+        "_BOMR1_" = "& \\\\multirow{1}{c}{",
+        "_BOMR2_" = "& \\\\multirow{2}{c}{",
+        "_BOMC1_" = "& \\\\multicolumn{1}{c}{",
+        "_BOMC2_" = "& \\\\multicolumn{2}{c}{",
+        "_BOMC4_" = "& \\\\multicolumn{4}{c}{",
+        "_BOMCT1_" = "& \\\\multicolumn{1}{c}{",
+        "_BOMCT2_" = "& \\\\multicolumn{2}{c}{",
+        "_BOMCT4_" = "& \\\\multicolumn{4}{c}{",
+        "_HTMLHL_" = "",
+        "_X2_" = "$-2LLR (Model \\chi^2)$",
+        "_R2_" = "$R^2$",
+        "_SIGMA_" = "$\\\\sigma$",
+        "_NBSP_" = " "
+    )
 
-    markup <- function(x, type) {
-        if (type == "latex")
-            LATEX <- TRUE
-        else LATEX <- FALSE
-        x <- gsub("_LB_", ifelse(LATEX, "//\n", "<br>"), x)
-        x <- gsub("_EOC_", ifelse(LATEX, "", "</td>"), x)
-        x <- gsub("_BOC_", ifelse(LATEX, "& ", "<td>"), x)
-        x <- gsub("_EOMC_", ifelse(LATEX, "}", "</td>"), x)
-        x <- gsub("_EOR_", ifelse(LATEX, "\\\\tabularnewline",
-            "</tr>"), x)
-        x <- gsub("_BRU_", ifelse(LATEX, "", paste("<tr><td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;")),
-                  x)
-        x <- gsub("_BRT_", ifelse(LATEX, "", paste("<tr><td style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;")),
-                  x)
-        x <- gsub("_BOCU_", ifelse(LATEX, "& ", paste("<td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;")),
-                  x)
-        x <- gsub("_BR_", ifelse(LATEX, "", "<tr><td>"), x)
-        if (longtable){
-            x <- gsub("_BT_", ifelse(LATEX, paste0("\\\\begin{longtable}{l", paste0(rep("r", length(report)), collapse = ""), "}"), "<table>\n"), x)
-        }else{
-            x <- gsub("_BT_", ifelse(LATEX, paste0("\\\\begin{tabular}{l", paste0(rep("r", length(report)), collapse = ""), "}"), "<table>\n"), x)
-        }
-        x <- gsub("_EOL_", "\n", x)
-        x <- gsub("_HL_", ifelse(LATEX, "\\\\hline", ""), x)
-        x <- gsub("_UL_", ifelse(LATEX, "\\\\underline{", "<span style=\"text-decoration: underline;\">"), x)
-        x <- gsub("_EOUL_", ifelse(LATEX, "}", "</span>"), x)
-        x <- gsub("_SEPU_", ifelse(LATEX, " &", paste("</td><td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;")),
-            x)
-        x <- gsub("_SEP_", ifelse(LATEX, " &", "</td><td>"),
-            x)
-        if (longtable){
-            x <- gsub("_EOT_", ifelse(LATEX, "\\\\end{longtable}", "</table>"), x)
-        }else{
-            x <- gsub("_EOT_", ifelse(LATEX, "\\\\end{tabular}", "</table>"), x)
-        }
-        x <- gsub("_BOMR1_", ifelse(LATEX, "& \\\\multirow{1}{c}{",
-            "<td rowspan = '1'>"), x)
-        x <- gsub("_BOMR2_", ifelse(LATEX, "& \\\\multirow{2}{c}{",
-            "<td rowspan = '2'>"), x)
-        x <- gsub("_BOMC1_", ifelse(LATEX, "& \\\\multicolumn{1}{c}{",
-            "<td colspan = '1'>"), x)
-        x <- gsub("_BOMC2_", ifelse(LATEX, "& \\\\multicolumn{2}{c}{",
-                                    "<td colspan = '2'>"), x)
-        x <- gsub("_BOMC4_", ifelse(LATEX, "& \\\\multicolumn{4}{c}{",
-                                    "<td colspan = '4'; align = 'center'>"), x)
-        x <- gsub("_BOMCT1_", ifelse(LATEX, "& \\\\multicolumn{1}{c}{",
-            "<td colspan = '1'; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;"), x)
-        x <- gsub("_BOMCT2_", ifelse(LATEX, "& \\\\multicolumn{2}{c}{",
-                                    "<td colspan = '2'; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;"), x)
-        x <- gsub("_BOMCT4_", ifelse(LATEX, "& \\\\multicolumn{4}{c}{",
-                                     "<td colspan = '4'; align = 'center'; ; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;"), x)
-        x <- gsub("_HTMLHL_", ifelse(LATEX, "",
-            "<tr><td colspan = '5'; align = 'center'; ; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;</tr>"), x)
-        x <- gsub("_X2_", ifelse(LATEX, "$-2LLR (Model \\chi^2)$",
-            "&chi;<sup>2</sup>"), x)
-        x <- gsub("_R2_", ifelse(LATEX, "$R^2$", "R<sup>2</sup>"),
-            x)
-        x <- gsub("_SIGMA_", ifelse(LATEX, "$\\\\sigma$", "&sigma;"),
-            x)
-        x <- gsub("_NBSP_", ifelse(LATEX, " ", "&nbsp;"), x)
-    }
-    template <- markup(template, type)
-    if(!is.null(file)){
-        write(template, file)
-    }
-    template
+    ## Replacement strings for HTML output
+    htmlreplace <- c(
+        "_LB_" = "<br>",
+        "_EOC_" = "</td>",
+        "_BOC_" = "<td>",
+        "_EOMC_" = "</td>",
+        "_EOR_", "</tr>",
+        "_BRU_" = paste("<tr><td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;"),
+        "_BRT_" = paste("<tr><td style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;"),
+        "_BOCU_", paste("<td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;"),
+        "_BR_" = "<tr><td>",
+        "_BT_" =  "<table>\n",
+        "_EOL_" = "\n",
+        "_HL_" =  "",
+        "_UL_" =  "<span style=\"text-decoration: underline;\">",
+        "_EOUL_" = "</span>",
+        "_SEPU_" = paste("</td><td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;"),
+        "_SEP_" = "</td><td>",
+        "_EOT_" = "</table>",
+        "_BOMR1_" = "<td rowspan = '1'>",
+        "_BOMR2_" = "<td rowspan = '2'>",
+        "_BOMC1_" = "<td colspan = '1'>",
+        "_BOMC2_" = "<td colspan = '2'>",
+        "_BOMC4_" = "<td colspan = '4'; align = 'center'>",
+        "_BOMCT1_" = "<td colspan = '1'; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;",
+        "_BOMCT2_" = "<td colspan = '2'; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;",
+        "_BOMCT4_" = "<td colspan = '4'; align = 'center'; ; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;",
+        "_HTMLHL_" = "<tr><td colspan = '5'; align = 'center'; ; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;</tr>",
+        "_X2_" = "&chi;<sup>2</sup>",
+        "_R2_" = "R<sup>2</sup>",
+        "_SIGMA_" = "&sigma;",
+        "_NBSP_" = "&nbsp;"
+    )
+
+    
+    
+
+    
+    ## markup <- function(x, type) {
+    ##     if (type == "latex")
+    ##         LATEX <- TRUE
+    ##     else LATEX <- FALSE
+    ##     x <- gsub("_LB_", ifelse(LATEX, "//\n", "<br>"), x)
+    ##     x <- gsub("_EOC_", ifelse(LATEX, "", "</td>"), x)
+    ##     x <- gsub("_BOC_", ifelse(LATEX, "& ", "<td>"), x)
+    ##     x <- gsub("_EOMC_", ifelse(LATEX, "}", "</td>"), x)
+    ##     x <- gsub("_EOR_", ifelse(LATEX, "\\\\tabularnewline",
+    ##         "</tr>"), x)
+    ##     x <- gsub("_BRU_", ifelse(LATEX, "", paste("<tr><td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;")),
+    ##               x)
+    ##     x <- gsub("_BRT_", ifelse(LATEX, "", paste("<tr><td style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;")),
+    ##               x)
+    ##     x <- gsub("_BOCU_", ifelse(LATEX, "& ", paste("<td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;")),
+    ##               x)
+    ##     x <- gsub("_BR_", ifelse(LATEX, "", "<tr><td>"), x)
+    ##     if (longtable){
+    ##         x <- gsub("_BT_", ifelse(LATEX, paste0("\\\\begin{longtable}{l", paste0(rep("r", length(report)), collapse = ""), "}"), "<table>\n"), x)
+    ##     }else{
+    ##         x <- gsub("_BT_", ifelse(LATEX, paste0("\\\\begin{tabular}{l", paste0(rep("r", length(report)), collapse = ""), "}"), "<table>\n"), x)
+    ##     }
+    ##     x <- gsub("_EOL_", "\n", x)
+    ##     x <- gsub("_HL_", ifelse(LATEX, "\\\\hline", ""), x)
+    ##     x <- gsub("_UL_", ifelse(LATEX, "\\\\underline{", "<span style=\"text-decoration: underline;\">"), x)
+    ##     x <- gsub("_EOUL_", ifelse(LATEX, "}", "</span>"), x)
+    ##     x <- gsub("_SEPU_", ifelse(LATEX, " &", paste("</td><td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;")),
+    ##         x)
+    ##     x <- gsub("_SEP_", ifelse(LATEX, " &", "</td><td>"),
+    ##         x)
+    ##     if (longtable){
+    ##         x <- gsub("_EOT_", ifelse(LATEX, "\\\\end{longtable}", "</table>"), x)
+    ##     }else{
+    ##         x <- gsub("_EOT_", ifelse(LATEX, "\\\\end{tabular}", "</table>"), x)
+    ##     }
+    ##     x <- gsub("_BOMR1_", ifelse(LATEX, "& \\\\multirow{1}{c}{",
+    ##         "<td rowspan = '1'>"), x)
+    ##     x <- gsub("_BOMR2_", ifelse(LATEX, "& \\\\multirow{2}{c}{",
+    ##         "<td rowspan = '2'>"), x)
+    ##     x <- gsub("_BOMC1_", ifelse(LATEX, "& \\\\multicolumn{1}{c}{",
+    ##         "<td colspan = '1'>"), x)
+    ##     x <- gsub("_BOMC2_", ifelse(LATEX, "& \\\\multicolumn{2}{c}{",
+    ##                                 "<td colspan = '2'>"), x)
+    ##     x <- gsub("_BOMC4_", ifelse(LATEX, "& \\\\multicolumn{4}{c}{",
+    ##                                 "<td colspan = '4'; align = 'center'>"), x)
+    ##     x <- gsub("_BOMCT1_", ifelse(LATEX, "& \\\\multicolumn{1}{c}{",
+    ##         "<td colspan = '1'; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;"), x)
+    ##     x <- gsub("_BOMCT2_", ifelse(LATEX, "& \\\\multicolumn{2}{c}{",
+    ##                                 "<td colspan = '2'; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;"), x)
+    ##     x <- gsub("_BOMCT4_", ifelse(LATEX, "& \\\\multicolumn{4}{c}{",
+    ##                                  "<td colspan = '4'; align = 'center'; ; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;"), x)
+    ##     x <- gsub("_HTMLHL_", ifelse(LATEX, "",
+    ##         "<tr><td colspan = '5'; align = 'center'; ; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;</tr>"), x)
+    ##     x <- gsub("_X2_", ifelse(LATEX, "$-2LLR (Model \\chi^2)$",
+    ##         "&chi;<sup>2</sup>"), x)
+    ##     x <- gsub("_R2_", ifelse(LATEX, "$R^2$", "R<sup>2</sup>"),
+    ##         x)
+    ##     x <- gsub("_SIGMA_", ifelse(LATEX, "$\\\\sigma$", "&sigma;"),
+    ##         x)
+    ##     x <- gsub("_NBSP_", ifelse(LATEX, " ", "&nbsp;"), x)
+    ## }
+    ## template <- markup(template, type)
+    ## if(!is.null(file)){
+    ##     write(template, file)
+    ## }
+    ## template
+    reslt
 }
 
