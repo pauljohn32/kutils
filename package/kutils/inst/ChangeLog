@@ -1,3 +1,16 @@
+2017-10-23  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (semTable): trow is now just results, does not
+	embed markup. Except for Row 1, which needs fixing.
+
+2017-10-21  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (frnd): frnd: new formatC(round wrapper
+	used to shorten code, replace all longer uses of format(round.
+	(observedMeanMaker): abbreviate trows stanzas
+	(roundSubtable): a common series of roundings is extracted from
+	the maker functions.
+
 2017-10-06  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (keyApply): mapvalues insert warn_missing =
