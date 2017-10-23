@@ -120,7 +120,9 @@
 ##' ##semTable(output1, file = "exampleTable.html", fit = "rmsea",
 ##' ##standardized = TRUE, params = c("loadings", "latentvariances"),
 ##' ##type = "html")
-##'
+##' fit3 <- sem(regmodel, data = HolzingerSwineford1939, group = "school")
+##' fit3.t <- semTable(fit3, fit = c("chisq", "rmsea", "cli"))
+##' 
 ##' model <- "factor =~ .7*y1 + .7*y2 + .7*y3 + .7*y4
 ##'           y1 | -1*t1 + 1*t2
 ##'           y2 | -.5*t1 + 1*t2
@@ -198,10 +200,13 @@ semTable <-
     chimeas$stat <- frnd(chimeas$stat, 3)
     chimeas$pvalue <- frnd(chimeas$pvalue, 3,  3)
     chimeas$pvalue <- gsub("0\\.", "\\.", chimeas$pvalue)
-    parTable <- object@ParTable[intersect(names(object@ParTable), c("lhs", "op", "rhs", "free", "group"))]
+    browser()
+    parTable <- object@ParTable[
+                           intersect(names(object@ParTable),
+                                     c("lhs", "op", "rhs", "free", "group", "est", "se", "stdest", "stdse"))]
     parameters <- as.data.frame(parTable, stringsAsFactors=FALSE)
-    parameters$est <- object@Fit@est
-    parameters$se <- object@Fit@se
+    ## parameters$est <- object@Fit@est
+    ## parameters$se <- object@Fit@se
     parameters$z <- parameters$est/parameters$se
     parameters$p <- 2*pnorm(abs(parameters$z), lower.tail = FALSE)
     variables <- unlist(object@Data@ov.names)
@@ -215,13 +220,20 @@ semTable <-
             names(params) <- NULL
             if ("variances" %in% params){
                 params <- params[!params %in% "variances"]
-                if (length(which(parameters$rhs %in% variables & parameters$lhs %in% variables & parameters$op == "~~")) > 0){
+                if (length(which(parameters$rhs %in% variables &
+                                 parameters$lhs %in% variables &
+                                 parameters$op == "~~")) > 0){
                     params <- c(params, "residuals")
                 }
-                if (length(which(parameters$lhs %in% variables & parameters$rhs %in% variables & parameters$lhs != parameters$rhs & parameters$op == "~~")) > 0){
+                if (length(which(parameters$lhs %in% variables &
+                                 parameters$rhs %in% variables &
+                                 parameters$lhs != parameters$rhs &
+                                 parameters$op == "~~")) > 0){
                     params <- c(params, "covariances")
                 }
-                if (length(which(parameters$rhs %in% latents & parameters$lhs %in% latents & parameters$op == "~~")) > 0){
+                if (length(which(parameters$rhs %in% latents &
+                                 parameters$lhs %in% latents &
+                                 parameters$op == "~~")) > 0){
                     params <- c(params, "latentvariances")
                 }
             }
@@ -309,7 +321,6 @@ Note. IDENTNOTEFITINFORMATION
         }
         for(i in 1:length(columnNames)){
             reportx[i] <- gsub("NAME", columnNames[i], holder)
-
         }
 
         columnnames <- paste0(paste0(reportx, collapse = " "), "_EOR_")
@@ -333,7 +344,9 @@ Note. IDENTNOTEFITINFORMATION
 
     loadingMaker <- function(loads, report = c("est", "se", "z", "p")){
         lvname <- loads
-        trows <- parameters[which(parameters$rhs %in% variables & parameters$lhs %in% lvname & parameters$op == "=~"), ,
+        trows <- parameters[which(parameters$rhs %in% variables &
+                                  parameters$lhs %in% lvname &
+                                  parameters$op == "=~"), ,
                             drop = FALSE]
         trows <- roundSubtable(trows)
         trows <- trows[ , c("rhs", report)]
@@ -364,7 +377,7 @@ Note. IDENTNOTEFITINFORMATION
             stop("Intercept estimates are requested in the table, but I can't find them in the output!")
         trows <- roundSubtable(trows)
         trows <- trows[ , c("lhs", report)]
-        rowempty <- matrix("", nrow=1, ncol = NCOL(trows), dimnames = list(c(lvname), colnames(trows)))
+        rowempty <- matrix("", nrow=1, ncol = NCOL(trows), dimnames = list(c("intercept"), colnames(trows)))
         rowempty[1, 2] <- "_BOMC4__UL_Intercepts_EOUL__EOMC_" 
         trows <- rbind(rowempty, trows)
         colnames(trows)[1] <- " " ## first column name is blank. WHOA! How to fix?
@@ -414,17 +427,17 @@ Note. IDENTNOTEFITINFORMATION
         colnames(trows)[1] <- " " ## first column name is blank. WHOA! How to fix?
         trows
         
-##         tmpx <- "_BR__UL_DEPENDENTVAR_EOUL__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _EOR_
-## ROWINFORMATION"
-##         tmpx <- gsub("DEPENDENTVAR", dvname, tmpx)
-##         rowinfo <- paste0("_BR_", paste0(trows[1,c("rhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
-##         if (nrow(trows) > 1){
-##             for (i in 2:nrow(trows)){
-##                 rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("rhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
-##             }
-##         }
-##         tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
-##         tmpx
+        ##         tmpx <- "_BR__UL_DEPENDENTVAR_EOUL__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _EOR_
+        ## ROWINFORMATION"
+        ##         tmpx <- gsub("DEPENDENTVAR", dvname, tmpx)
+        ##         rowinfo <- paste0("_BR_", paste0(trows[1,c("rhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
+        ##         if (nrow(trows) > 1){
+        ##             for (i in 2:nrow(trows)){
+        ##                 rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("rhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+        ##             }
+        ##         }
+        ##         tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
+        ##         tmpx
     }
 
     thresholdMaker <- function(variables, report = c("est", "se", "z", "p")){
@@ -465,20 +478,20 @@ Note. IDENTNOTEFITINFORMATION
             colnames(trows)[1] <- " " ## first column name is blank. WHOA! How to fix?
             return(trows)
             
-##             tmpx <- "_BR__EOC_ _BOMC4__UL_Covariances_EOUL__EOMC__EOR_
-## ROWINFORMATION"
-##             if(dim(trows)[1] == 0){
-##                 stop("Observed variable covariance estimates are requested in the table, but I can't find them in the output!")
-##             }
-##             trows <- roundSubtable(trows)
-##             rowinfo <- paste0("_BR_", trows[1,"lhs"], " with ", trows[1,"rhs"], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
-##             if (nrow(trows) > 1){
-##                 for (i in 2:nrow(trows)){
-##                     rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,"lhs"], " with ", trows[i,"rhs"], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
-##                 }
-##             }
-##             tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
-##            return(tmpx)
+            ##             tmpx <- "_BR__EOC_ _BOMC4__UL_Covariances_EOUL__EOMC__EOR_
+            ## ROWINFORMATION"
+            ##             if(dim(trows)[1] == 0){
+            ##                 stop("Observed variable covariance estimates are requested in the table, but I can't find them in the output!")
+            ##             }
+            ##             trows <- roundSubtable(trows)
+            ##             rowinfo <- paste0("_BR_", trows[1,"lhs"], " with ", trows[1,"rhs"], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
+            ##             if (nrow(trows) > 1){
+            ##                 for (i in 2:nrow(trows)){
+            ##                     rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,"lhs"], " with ", trows[i,"rhs"], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+            ##                 }
+            ##             }
+            ##             tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
+            ##            return(tmpx)
         } else {
             trows <- trows[which(trows$rhs == trows$lhs),, drop = FALSE]
             trows <- trows[ , c("lhs", report)]
@@ -489,29 +502,31 @@ Note. IDENTNOTEFITINFORMATION
             return(trows)
 
             
-##             tmpx <- "_BR__EOC_ _BOMC4__UL_Variances_EOUL__EOMC__EOR_
-## ROWINFORMATION"
-##             if(dim(trows)[1] == 0){
-##                 stop("Variance estimates are requested in the table, but I can't find them in the output!")
-##             }
-##             trows <- roundSubtable(trows)
-
+            ##             tmpx <- "_BR__EOC_ _BOMC4__UL_Variances_EOUL__EOMC__EOR_
+            ## ROWINFORMATION"
+            ##             if(dim(trows)[1] == 0){
+            ##                 stop("Variance estimates are requested in the table, but I can't find them in the output!")
+            ##             }
+            ##             trows <- roundSubtable(trows)
             
-##             rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
-##             if (nrow(trows) > 1){
-##                 for (i in 2:nrow(trows)){
-##                     rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
-##                 }
-##             }
-##             tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
-##             tmpx
-##         }
-
+            
+            ##             rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
+            ##             if (nrow(trows) > 1){
+            ##                 for (i in 2:nrow(trows)){
+            ##                     rowinfo <- paste0(rowinfo, paste0("_BR_", paste0(trows[i,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+            ##                 }
+            ##             }
+            ##             tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
+            ##             tmpx
+            ##         }
+            
         }
     }
 
     latentMaker <- function(latents, report = c("est", "se", "z", "p")){
-        trows <- parameters[which(parameters$rhs %in% latents & parameters$lhs %in% latents & parameters$op == "~~"),,
+        trows <- parameters[which(parameters$rhs %in% latents &
+                                  parameters$lhs %in% latents &
+                                  parameters$op == "~~"),,
                             drop = FALSE]
         if(dim(trows)[1] == 0){
             stop("Latent variance/covariance estimates missing in output!")
@@ -528,17 +543,17 @@ Note. IDENTNOTEFITINFORMATION
         trows
 
         
- ##        tmpx <- "_BR__EOC__BOMC4__UL_Latent Variances/Covariances_EOUL__EOMC__EOR_
-## ROWINFORMATION"
-##         rowinfo <- paste0("_BR_", trows[1,1], " with ", trows[1,3], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
-##             if (nrow(trows) > 1){
-##                 for (i in 2:nrow(trows)){
-##                     rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,1], " with ", trows[i,3], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
-##                 }
-##             }
-##             tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
-##         tmpx
-    
+        ##        tmpx <- "_BR__EOC__BOMC4__UL_Latent Variances/Covariances_EOUL__EOMC__EOR_
+        ## ROWINFORMATION"
+        ##         rowinfo <- paste0("_BR_", trows[1,1], " with ", trows[1,3], " _EOC__BOC_ ", paste0(trows[1,report], collapse = " _EOC__BOC_ "), "_EOR_\n")
+        ##             if (nrow(trows) > 1){
+        ##                 for (i in 2:nrow(trows)){
+        ##                     rowinfo <- paste0(rowinfo, paste0("_BR_", trows[i,1], " with ", trows[i,3], " _EOC__BOC_ ", paste0(trows[i,report], collapse = " _EOC__BOC_ "), "_EOR_\n"))
+        ##                 }
+        ##             }
+        ##             tmpx <- gsub("ROWINFORMATION", rowinfo, tmpx)
+        ##         tmpx
+        
     }
 
     latentMeanMaker <- function(latents, report = c("est", "se", "z", "p")){
@@ -585,13 +600,13 @@ Note. IDENTNOTEFITINFORMATION
         slopeInfo <- rbind(emptyrow, slopeInfo)
         reslt[["slopes"]] <- slopeInfo
         
-##        slopeInfo <- paste0(unlist(slopeInfo), collapse = "")
-##        slopeInfo <- paste0("_BR__EOC__BOMC4__UL_Regression Slopes_EOUL__EOMC__EOR_", slopeInfo)
-##        template <- gsub("_SLOPES_", slopeInfo, template)
-##    }else{
-##        template <- gsub("_SLOPES_", "", template)
+        ##        slopeInfo <- paste0(unlist(slopeInfo), collapse = "")
+        ##        slopeInfo <- paste0("_BR__EOC__BOMC4__UL_Regression Slopes_EOUL__EOMC__EOR_", slopeInfo)
+        ##        template <- gsub("_SLOPES_", slopeInfo, template)
+        ##    }else{
+        ##        template <- gsub("_SLOPES_", "", template)
     }
-
+    
     if("intercepts" %in% params){
         reslt[["intercepts"]] <- interceptMaker(variables, report)
     }
