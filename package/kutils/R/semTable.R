@@ -50,14 +50,13 @@
 ##' @param object A lavaan object returned by cfa() or sem().
 ##' @param file Output file name.  Default is NULL, meaning no output
 ##'     file.
-##' @param params Parameters to be included. Valid values are
+##' @param params Parameter sets to be included. Valid values are
 ##'     "loadings", "slopes", "intercepts", "means", "residuals",
 ##'     "covariances", "latentvariances", "latentmeans" and
 ##'     "thresholds". Default is "all" (but excludes "means"). See
 ##'     Details.
-##' @param fit Names of fit measures to be included in the
-##'     table. Can be "chi-square", a specially formated element, or
-##'     any of the other fit diagnistics provided by
+##' @param fit Summary indicators to be included. Can be "chi-square",
+##'     a specially formatted element, or fit indices provided by
 ##'     \code{lavaan::fitMeasures(object)}. Currently, they are
 ##'     "npar", "fmin", "chisq", "df", "pvalue", "baseline.chisq",
 ##'     "baseline.df", "baseline.pvalue", "cfi", "tli", "nnfi", "rfi",
@@ -71,8 +70,13 @@
 ##'     parameter.  Must have same number of elements as fit.  For
 ##'     example, fit = c("cfi.scaled", "tli.scaled"), names_fit =
 ##'     c("CFI", "TLI").
-##' @param standardized Should standarized results be presented along
-##'     with unstandardized?  Default is FALSE. See Details.
+##' @param cols A named vector of column names for main table. Default
+##'     is c("est" = "Estimate", "se" = "SE", "z" = "z", "p" = "p").
+##'     User may remove some columns from the table by omitting them.
+##' @param standardized If TRUE and model was not fit with
+##'     std.ov=std.lv=TRUE, refit model with those arguments and add
+##'     new report columns named "stdest" and "stdse".  Default is
+##'     FALSE.
 ##' @param names_upper Should the names of the model fit parameters be
 ##'     forced to be uppercase.  The default is TRUE.  This will also
 ##'     affect whatever is specified in names_fit.
@@ -81,21 +85,17 @@
 ##' @param type Choose either "latex" or "html".
 ##' @param includeGroup Should group membership be reported for
 ##'     parameters in a column on the right? Defaults to FALSE.
-##' @param group Group for which parameters should be
-##'     reported. Provide the value in the data that indicates the
-##'     desired group. Only necessary for multiple group
-##'     models. If multiple groups are present but
-##'     no group is specified, a column indicating the group for each
-##'     parameter estimate will be added to the output table (if
-##'     includeGroup = TRUE).
-##' @param longtable If TRUE, use longtable for LaTeX documents. Default
-##'     is FALSE.
+##' @param group Group for which parameters should be reported. Only
+##'     relevant for multiple group models. If not supplied,
+##'     parameters for all groups will be reported, along with a
+##'     column indicating the group (if includeGroup = TRUE).
+##' @param longtable If TRUE, use longtable for LaTeX
+##'     documents. Default is FALSE.
 ##' @importFrom stats pnorm
 ##' @return Markup for SEM table. Use cat to display it.
 ##' @export
 ##' @author Ben Kite <bakite@@ku.edu>
-##' @examples
-##' \donttest{
+##' @examples \donttest{
 ##' ## These run longer than 5 seconds
 ##' ## CFA model
 ##' require(lavaan)
@@ -104,38 +104,50 @@
 ##'               textual =~ x4 + x5 + x6
 ##'               speed   =~ x7 + x8 + x9'
 ##' fit1 <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE)
-##' fit1.1 <- semTable(fit1, fit = c("chi-square", "rmsea"))
-##' cat(fit1.1)
-##' fit1.2 <- semTable(fit1, fit = c("chisq", "rmsea"), standardized = TRUE)
-##' cat(fit1.2)
+##' fit1.t1 <- semTable(fit1, fit = c("chi-square", "rmsea"), standardized =TRUE)
+##' cat(fit1.t1)
+##' fit1.t2 <- semTable(fit1, fit = c("chisq", "rmsea"), standardized = TRUE)
+##' cat(fit1.t2)
+##' fit1.t3 <- semTable(fit1, fit = c("chisq", "rmsea", "tli"), cols = c("est" = "Estimates", "se" = "Std.Err."),
+##'                 standardized = TRUE)
+##' cat(fit1.t3)
+##' 
 ##' ## Can create file if desired
 ##' ## cat(fit1.2, file = "table1.2.tex")
 ##' ## Basic SEM
 ##' regmodel <- "x1 ~ x2 + x3
 ##' x1 ~1"
-##' fit2 <- sem(regmodel, data = HolzingerSwineford1939, std.lv = TRUE)
-##' fit2.1 <- semTable(fit2, fit = "rmsea", type = "html")
-##' cat(fit2.1)
+##' fit2 <- sem(regmodel, data = HolzingerSwineford1939, std.lv = TRUE, std.ov = TRUE)
+##' fit2.t <- semTable(fit2, fit = "rmsea", type = "html")
+##' cat(fit2.t)
 ##' #### Example with file output
 ##' ##semTable(output1, file = "exampleTable.html", fit = "rmsea",
 ##' ##standardized = TRUE, params = c("loadings", "latentvariances"),
 ##' ##type = "html")
 ##' fit3 <- sem(regmodel, data = HolzingerSwineford1939, group = "school")
-##' fit3.t <- semTable(fit3, fit = c("chisq", "rmsea", "cli"))
+##' fit3.t1 <- semTable(fit3)
+##' cat(fit3.t1)
+##' fit3.t2 <- semTable(fit3, cols = c("est" = "Est (MLE)", "se" = "Std.Err."))
+##' cat(fit3.t2)
+##' fit3.t2 <- semTable(fit3, fit = c("chisq", "rmsea", "cli"))
+##' cat(fit3.t2)
 ##' 
 ##' model <- "factor =~ .7*y1 + .7*y2 + .7*y3 + .7*y4
-##'           y1 | -1*t1 + 1*t2
-##'           y2 | -.5*t1 + 1*t2
-##'           y3 | -.2*t1 + 1*t2
-##'           y4 | -1*t1 + 1*t2"
+##'                  y1 | -1*t1 + 1*t2
+##'                  y2 | -.5*t1 + 1*t2
+##'                  y3 | -.2*t1 + 1*t2
+##'                  y4 | -1*t1 + 1*t2"
 ##' dat <- simulateData(model, sample.nobs = 300)
 ##' testmodel <- "ExampleFactor =~ y1 + y2 + y3 + y4"
-##' fit3 <- cfa(testmodel, data = dat, ordered = colnames(dat),
+##' fit4 <- cfa(testmodel, data = dat, ordered = colnames(dat),
 ##'     std.lv = FALSE)
-##' fit3.1 <- semTable(fit3, params = c("loadings", "thresholds", "residuals"),
+##' fit4.t1 <- semTable(fit4, params = c("loadings", "thresholds", "residuals"),
 ##'     fit = c("tli", "chi-square"),
 ##'     names_fit = c("TLI", "chi-square"), type = "html")
-##'
+##' fit4.t2 <- semTable(fit4, fit = c("rmsea", "tli", "chi-square"),
+##'     names_fit = c("RMSEA", "TLI", "chi-square"), type = "latex")
+##' 
+##' 
 ##' ## Example with file output requested in the command
 ##' ## semTable(output, file = "catTable.tex",
 ##' ##    params = c("loadings", "thresholds", "residuals"),
@@ -146,16 +158,20 @@
 semTable <-
     function(object, file = NULL, params = "all",
              fit = c("chi-square", "cfi", "tli", "rmsea"),
-             names_fit = fit, standardized= FALSE,
+             names_fit = fit,
+             cols = c("est" = "Estimates", "se" = "SE",
+                        "z" = "z", "p" = "p"),
+             standardized = FALSE, 
              names_upper = TRUE, single_spaced = TRUE, type = "latex",
              includeGroup = FALSE,
              group = NULL, longtable = FALSE)
 {
 
     ## do.call(rbind, alist) does not accept stringsAsFactors=FALSE,
-    ## must set globally to avoid problems.
+    ## must set globally to avoid hassle
     options.orig <- options()
     options(stringsAsFactors = FALSE)
+    on.exit(options(options.orig))
     
     ## local shorthand to replace the verbose
     ## formatC(round(chimeas$stat, 3), format = 'f', digits = 2)
@@ -173,82 +189,81 @@ semTable <-
     ## TODO: safety check for operations on columns that don't exist
     ## trows must be a row subset of the parameters table
     roundSubtable <- function(trows){
-        for (i in c("est", "se", "stdest", "stdse", "z")) trows[ , i] <- frnd(trows[ , i])
+        cols <- intersect(c("est", "se", "stdest", "stdse", "z"), colnames(trows))
+        for (i in cols) trows[ , i] <- frnd(trows[ , i])
         trows$p <- frnd(trows$p, 3, 3)
         trows$p <- gsub("0\\.", "\\.", trows$p)
         trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
-        trows[trows$free == 0, c("z", "p")] <- ""
+        trows[trows$free == 0, intersect(colnames(trows), c("se", "z", "p", "stdse"))] <- ""
         trows
     }
 
-    if(class(object)[1] != "lavaan"){
-        stop(paste("The object does not appear to be",
-                   "a lavaan object.  Only lavaan cfa object can be",
-                   "used with the CFATable function."))
-    }
-    if (!is.null(fit)){
-        if(names_upper == TRUE){
-            names(fit) <- toupper(names_fit)
-        }else{
-            names(fit) <- names_fit
-        }
 
-        fitmeas <- lavaan::fitMeasures(object)[]
-        fitmeas <- sapply(fitmeas, frnd)
+    ## If params != "all", follow user request to select params for table
+    ## If params == "all", then
+    ## 1. remove "variances" and insert "residuals" "covariances" "latentvariances"
+    ## 2. remove "means" and insert "intercepts" and "latentmeans"
+    cleanParams <- function(params, parameters) {
+        if (params != "all") {
+            return(unique(params))
+        }
+        
+        paramops <- c("=~" = "loadings", "~" = "slopes", "~1" = "means",
+                      "~~" = "variances", "|" = "thresholds")
+        params <- paramops[unique(parameters$op)]
+        names(params) <- NULL
+        if ("variances" %in% params){
+            params <- params[!params %in% "variances"]
+            if (length(which(parameters$rhs %in% variables &
+                             parameters$lhs %in% variables &
+                             parameters$op == "~~")) > 0) {
+                params <- c(params, "residuals")
+            } 
+            if (length(which(parameters$lhs %in% variables &
+                             parameters$rhs %in% variables &
+                             parameters$lhs != parameters$rhs &
+                             parameters$op == "~~")) > 0){
+                params <- c(params, "covariances")
+            }
+            if (length(which(parameters$rhs %in% latents &
+                             parameters$lhs %in% latents &
+                             parameters$op == "~~")) > 0){
+                params <- c(params, "latentvariances")
+            }
+        }
+        if ("means" %in% params){
+            params <- params[!params %in% "means"]
+            if(length(which(parameters$lhs %in% variables &
+                            parameters$op == "~1")) > 0){
+                params <- c(params, "intercepts")
+            }
+            if(length(which(parameters$lhs %in% latents &
+                            parameters$op == "~1")) > 0){
+                params <- c(params, "latentmeans")
+            }
+        }
+        params
     }
-    chimeas <- object@Fit@test[[1]]
-    chimeas$stat <- frnd(chimeas$stat, 3)
-    chimeas$pvalue <- frnd(chimeas$pvalue, 3,  3)
-    chimeas$pvalue <- gsub("0\\.", "\\.", chimeas$pvalue)
-    browser()
+    
+    if(class(object)[1] != "lavaan"){
+        stop("object is not a lavaan output object.")
+    }
+    
+
+    ## Create objects to be used within function
+    ## Extract parameters into a data.frame
     parTable <- object@ParTable[
                            intersect(names(object@ParTable),
-                                     c("lhs", "op", "rhs", "free", "group", "est", "se", "stdest", "stdse"))]
+                                     c("lhs", "op", "rhs", "free", "group", "est", "se"))]
     parameters <- as.data.frame(parTable, stringsAsFactors=FALSE)
-    ## parameters$est <- object@Fit@est
-    ## parameters$se <- object@Fit@se
     parameters$z <- parameters$est/parameters$se
     parameters$p <- 2*pnorm(abs(parameters$z), lower.tail = FALSE)
+
     variables <- unlist(object@Data@ov.names)
     latents <- unique(unlist(object@pta$vnames$lv))
-    if (length(params) == 1){
-        if (params == "all") {
-            params <- unique(as.character(parameters$op))
-            paramops <- c("=~" = "loadings", "~" = "slopes", "~1" = "means",
-                          "~~" = "variances", "|" = "thresholds")
-            params <- paramops[params]
-            names(params) <- NULL
-            if ("variances" %in% params){
-                params <- params[!params %in% "variances"]
-                if (length(which(parameters$rhs %in% variables &
-                                 parameters$lhs %in% variables &
-                                 parameters$op == "~~")) > 0){
-                    params <- c(params, "residuals")
-                }
-                if (length(which(parameters$lhs %in% variables &
-                                 parameters$rhs %in% variables &
-                                 parameters$lhs != parameters$rhs &
-                                 parameters$op == "~~")) > 0){
-                    params <- c(params, "covariances")
-                }
-                if (length(which(parameters$rhs %in% latents &
-                                 parameters$lhs %in% latents &
-                                 parameters$op == "~~")) > 0){
-                    params <- c(params, "latentvariances")
-                }
-            }
-            if ("means" %in% params){
-                params <- params[!params %in% "means"]
-                if(length(which(parameters$lhs %in% variables & parameters$op == "~1")) > 0){
-                    params <- c(params, "intercepts")
-                }
-                if(length(which(parameters$lhs %in% latents & parameters$op == "~1")) > 0){
-                    params <- c(params, "latentmeans")
-                }
-            }
-        }
-    }
 
+    params <- cleanParams(params, parameters)
+    
     ## Handle which group to make the table for here
     #if (!is.null(group)){
     #    includeGroup <- FALSE
@@ -280,53 +295,40 @@ _EOT_
 
 Note. IDENTNOTEFITINFORMATION
 "
+    ## in previous, name "report" was used for vector 
+    ## ("est", "se", "z", "p")
+    report <- names(cols)
+    
+    ## If standardized and model is not already standardized, fit new standardized
+    ## model and grab coefficients as "stdest" and "stdse"
+    if(isTRUE(standardized) && (!object@Options$std.lv | !object@Options$std.ov)){
+        report <- c(report, "stdest", "stdse")
+        cols <- c(cols, "Estimate (Std.)", "SE (Std.)")
 
-    if(standardized == TRUE){
-        report <- c("est", "se", "stdest", "stdse")
-        if(isTRUE(includeGroup)){
-            report <- c(report, "group")
-        }
         std <- update(object, std.lv = TRUE, std.ov = TRUE)
         parameters$stdest <- std@Fit@est
         parameters$stdse <- std@Fit@se
-        holder <-  "_BRT__EOC__BOMCT2__UL_Unstandarized_EOUL__EOMC_ _BOMCT2__UL_Standardized_EOUL__EOMC__EOR_"
-        template <- gsub("STANDARDIZED", holder, template)
-        holder <- "_BOCU_NAME_EOC_"
-        reportx <- list()
-        columnNames <- c("Estimate", "SE", "Estimate", "SE")
-        if(isTRUE(includeGroup)){
-            columnNames <- c(columnNames, "Group")
-        }
-        for(i in 1:length(columnNames)){
-            reportx[i] <- gsub("NAME", columnNames[i], holder)
-
-        }
-        columnnames <- paste0(paste0(reportx, collapse = " "), "_EOR_")
-
-    }else{
-        report <- c("est", "se", "z", "p")
-        if(isTRUE(includeGroup)){
-            report <- c(report, "group")
-        }
-        parameters$stdest <- NA
-        parameters$stdse <- NA
-
-        template <- gsub("STANDARDIZED", "", template)
-
-        holder <- "_BOCU_NAME_EOC_"
-        reportx <- list()
-        columnNames <- c("Estimate", "SE", "z", "p")
-        if(isTRUE(includeGroup)){
-            columnNames <- c(columnNames, "Group")
-        }
-        for(i in 1:length(columnNames)){
-            reportx[i] <- gsub("NAME", columnNames[i], holder)
-        }
-
-        columnnames <- paste0(paste0(reportx, collapse = " "), "_EOR_")
+        ## holder <-  "_BRT__EOC__BOMCT2__UL_Unstandarized_EOUL__EOMC_ _BOMCT2__UL_Standardized_EOUL__EOMC__EOR_"
+        ## template <- gsub("STANDARDIZED", holder, template)
+        ## holder <- "_BOCU_NAME_EOC_"
+        ##reportx <- list()
+        ##columnNames <- c("Estimate", "SE", "Estimate", "SE")
+        ##if(isTRUE(includeGroup)){
+        ##    columnNames <- c(columnNames, "Group")
+        ## }
+        ## for(i in 1:length(columnNames)){
+        ##    reportx[i] <- gsub("NAME", columnNames[i], holder)
+        ##
+        ##}
+        ##columnnames <- paste0(paste0(reportx, collapse = " "), "_EOR_")
     }
 
-    template <- gsub("REPORT", columnnames, template)
+    if(isTRUE(includeGroup)){
+        report <- c(report, "group")
+        cols <- c(cols, "Groups")
+    }
+    
+    ## template <- gsub("REPORT", columnnames, template)
 
     if (single_spaced == TRUE){
         template <- gsub("SINGLESPACE", "\\\\usepackage{setspace}", template)
@@ -334,16 +336,11 @@ Note. IDENTNOTEFITINFORMATION
         template <- gsub("SINGLESPACE", "", template)
     }
 
-    loads <- as.list(latents)
-    ints <- parameters[which(parameters$op == "~1" & parameters$lhs %in% variables), "lhs"]
-    regs <- parameters[which(parameters$op == "~"),]
-    dvs <- unique(regs$lhs)
-    ivs <- unique(regs$rhs)
+
 
     
 
-    loadingMaker <- function(loads, report = c("est", "se", "z", "p")){
-        lvname <- loads
+    loadingMaker <- function(lvname, report = c("est", "se", "z", "p")){
         trows <- parameters[which(parameters$rhs %in% variables &
                                   parameters$lhs %in% lvname &
                                   parameters$op == "=~"), ,
@@ -372,6 +369,7 @@ Note. IDENTNOTEFITINFORMATION
     }
 
     interceptMaker <- function(variables, report = c("est", "se", "z", "p")){
+        ints <- parameters[which(parameters$op == "~1" & parameters$lhs %in% variables), "lhs"]
         trows <- parameters[which(parameters$lhs %in% ints & parameters$op == "~1"),, drop = FALSE]
         if(dim(trows)[1] == 0)
             stop("Intercept estimates are requested in the table, but I can't find them in the output!")
@@ -380,7 +378,7 @@ Note. IDENTNOTEFITINFORMATION
         rowempty <- matrix("", nrow=1, ncol = NCOL(trows), dimnames = list(c("intercept"), colnames(trows)))
         rowempty[1, 2] <- "_BOMC4__UL_Intercepts_EOUL__EOMC_" 
         trows <- rbind(rowempty, trows)
-        colnames(trows)[1] <- " " ## first column name is blank. WHOA! How to fix?
+        colnames(trows)[1] <- "col1" ## first col name must be homogeneous"
         trows
         ## rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
         ## if (nrow(trows) > 1){
@@ -392,7 +390,8 @@ Note. IDENTNOTEFITINFORMATION
             ## tmpx
     }
 
-    observedMeanMaker <- function(variables, report = c("est", "se", "z", "p")){
+    observedMeanMaker <- function(variables, regs, report = c("est", "se", "z", "p")){
+        ivs <- unique(regs$rhs)
         trows <- parameters[which(parameters$lhs %in% ivs & parameters$op == "~1"),, drop = FALSE]
         if(dim(trows)[1] == 0)
             stop("Predictor variable mean estimates missing in output!")
@@ -402,7 +401,7 @@ Note. IDENTNOTEFITINFORMATION
         rowempty <- character(NCOL(trows))
         rowempty[2] <- "_BOMC4__UL_Means_EOUL__EOMC_" 
         trows <- rbind(rowempty, trows)
-        colnames(trows)[1] <- " " ## first column name is blank. WHOA! How to fix?
+        colnames(trows)[1] <- "col1" ## first col name must be homogeneous
         trows
         ##             tmpx <- "_BR__EOC_ _BOMC4__UL_Means_EOUL__EOMC_ _EOR_
         ## ROWINFORMATION"
@@ -424,7 +423,7 @@ Note. IDENTNOTEFITINFORMATION
         rowempty <- character(NCOL(trows))
         rowempty[2] <- "UL_dvname_EOUL_" 
         trows <- rbind(rowempty, trows)
-        colnames(trows)[1] <- " " ## first column name is blank. WHOA! How to fix?
+        colnames(trows)[1] <- "col1" ## first col name must be homogeneous"
         trows
         
         ##         tmpx <- "_BR__UL_DEPENDENTVAR_EOUL__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _BOC__EOC_ _EOR_
@@ -452,6 +451,7 @@ Note. IDENTNOTEFITINFORMATION
         rowempty <- character(NCOL(trows))
         rowempty[2] <- "_BOMC4__UL_Thresholds_EOUL__EOMC_" 
         trows <- rbind(rowempty, trows)
+        colnames(trows)[1] <- "col1" ## first col name must be homogeneous"
         trows
         ##         tmpx <- "_BR__EOC_ _BOMC4__UL_Thresholds_EOUL__EOMC_ _EOR_
         ## ROWINFORMATION"
@@ -465,7 +465,9 @@ Note. IDENTNOTEFITINFORMATION
     
 
     residualMaker <- function(variables, covariance = FALSE, report = c("est", "se", "z", "p")){
-        trows <- parameters[which(parameters$rhs %in% variables & parameters$lhs %in% variables & parameters$op == "~~"),,
+        trows <- parameters[which(parameters$rhs %in% variables &
+                                  parameters$lhs %in% variables &
+                                  parameters$op == "~~"),,
                             drop = FALSE ]
         if(dim(trows)[1] == 0) stop("residualMaker failure")
         trows <- roundSubtable(trows)
@@ -475,7 +477,7 @@ Note. IDENTNOTEFITINFORMATION
             rowempty <- character(NCOL(trows))
             rowempty[2] <- "_BOMC4__UL_Covariances_EOUL__EOMC_" 
             trows <- rbind(rowempty, trows)
-            colnames(trows)[1] <- " " ## first column name is blank. WHOA! How to fix?
+            colnames(trows)[1] <- "col1" ## first col name must be homogeneous"
             return(trows)
             
             ##             tmpx <- "_BR__EOC_ _BOMC4__UL_Covariances_EOUL__EOMC__EOR_
@@ -498,16 +500,16 @@ Note. IDENTNOTEFITINFORMATION
             rowempty <- character(NCOL(trows))
             rowempty[2] <- "_BOMC4__UL_Variances_EOUL__EOMC_" 
             trows <- rbind(rowempty, trows)
-            colnames(trows)[1] <- " " ## first column name is blank. WHOA! How to fix?
+            colnames(trows)[1] <- "col1" ## first col name must be homogeneous"
             return(trows)
 
             
-            ##             tmpx <- "_BR__EOC_ _BOMC4__UL_Variances_EOUL__EOMC__EOR_
+            ##  tmpx <- "_BR__EOC_ _BOMC4__UL_Variances_EOUL__EOMC__EOR_
             ## ROWINFORMATION"
-            ##             if(dim(trows)[1] == 0){
-            ##                 stop("Variance estimates are requested in the table, but I can't find them in the output!")
-            ##             }
-            ##             trows <- roundSubtable(trows)
+            ##  if(dim(trows)[1] == 0){
+            ##      stop("Variance estimates are requested in the table, but I can't find them in the output!")
+            ##  }
+            ##  trows <- roundSubtable(trows)
             
             
             ##             rowinfo <- paste0("_BR_", paste0(trows[1,c("lhs", report)], collapse = " _EOC__BOC_ "), "_EOR_\n")
@@ -532,14 +534,12 @@ Note. IDENTNOTEFITINFORMATION
             stop("Latent variance/covariance estimates missing in output!")
         }
         trows <- roundSubtable(trows)
-        ## trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
-        trows[trows$free == 0, c("z", "p")] <- ""
-        trows[ , "lhs"] <- paste(trows[ , "lhs"], " with ", trows[ , "rhs"])
+        trows[ , "lhs"] <- paste(trows[ , "lhs"], " w/ ", trows[ , "rhs"])
         trows <- trows[ , c("lhs", report)]
         rowempty <- character(NCOL(trows))
         rowempty[2] <- "_BOMC4__UL_Latent Variances/Covariances_EOUL__EOMC_" 
         trows <- rbind(rowempty, trows)
-        colnames(trows)[1] <- " " ## first column name is blank. WHOA! How to fix?
+        colnames(trows)[1] <- "col1" ## first col name must be homogeneous
         trows
 
         
@@ -567,7 +567,7 @@ Note. IDENTNOTEFITINFORMATION
         rowempty <- character(NCOL(trows))
         rowempty[2] <- "_BOMC4__UL_Latent Means/Intercepts_EOUL__EOMC_" 
         trows <- rbind(rowempty, trows)
-        colnames(trows)[1] <- " " ## first column name is blank. WHOA! How to fix?
+        colnames(trows)[1] <- "col1" ## first col name must be homogeneous"
         trows
         
         ##         tmpx <- "_BR__EOC_ _BOMC4__UL_Latent Means/Intercepts_EOUL__EOMC_ _EOR_
@@ -583,9 +583,42 @@ Note. IDENTNOTEFITINFORMATION
         
     }
 
+
+    getChiSq <- function(object){
+        ## build response for "chi-square"
+        chimeas <- object@Fit@test[[1]]
+        chimeas$stat <- frnd(chimeas$stat)
+        chimeas$pvalue <- frnd(chimeas$pvalue, 3,  3)
+        chimeas$pvalue <- gsub("0\\.", "\\.", chimeas$pvalue)
+        chisq <- paste0("_CHI2_", "(", chimeas$df, ") = ",
+                        chimeas$stat , "(p=", chimeas$pvalue,")")
+        chisq
+    }
+    
+    fitMaker <- function(object) {
+        if(names_upper == TRUE){
+            names_fit <- toupper(names_fit)
+            names(fit) <- names_fit
+        }else{
+            names(fit) <- names_fit
+        }
+        browser()
+        fitmeas <- lavaan::fitMeasures(object)[]
+        fitmeas <- sapply(fitmeas, frnd)
+        fitidx <- fitmeas[fit]
+        names(fitidx) <- names(fit)
+        fitidx <- paste(names(fitidx), "=", fitidx)
+        names(fitidx) <- names(fit) # reassign names
+        chisq <- grep("chi-square", names(fit), ignore.case = TRUE,
+                      value = TRUE)
+        fitidx[chisq] <- getChiSq(object)
+        paste(fitidx, collapse = ";")
+    }
+
+    
     reslt <- list()
     if("loadings" %in% params){
-        loadingInfo <- lapply(loads, loadingMaker, report)
+        loadingInfo <- lapply(latents, loadingMaker, report)
         loadingInfo <- do.call(rbind, loadingInfo)
         emptyrow <- character(NCOL(loadingInfo))
         emptyrow[2] <- "_BOMC4__UL_Factor Loadings_EOUL__EOMC"
@@ -593,7 +626,9 @@ Note. IDENTNOTEFITINFORMATION
         reslt[["loadings"]] <- loadingInfo
     }
     if("slopes" %in% params){
-        slopeInfo <- lapply(dvs, slopeMaker, regs, report)
+        regs <- parameters[which(parameters$op == "~"),]
+        dvs <- unique(regs$lhs)
+        slopeInfo <- lapply(dvs, slopeMaker, regs = regs, report = report)
         slopeInfo <- do.call(rbind, slopeInfo)
         emptyrow <- character(NCOL(slopeInfo))
         emptyrow[2] <- "_BOMC4__UL_Regression Slopes_EOUL__EOMC"
@@ -608,75 +643,40 @@ Note. IDENTNOTEFITINFORMATION
     }
     
     if("intercepts" %in% params){
-        reslt[["intercepts"]] <- interceptMaker(variables, report)
+        reslt[["intercepts"]] <- interceptMaker(variables, report = report)
     }
 
     if("means" %in% params){
-        reslt[["means"]] <- observedMeanMaker(variables, report)
+        regs <- parameters[which(parameters$op == "~"),]
+        reslt[["means"]] <- observedMeanMaker(variables, regs = regs, report = report)
     }
 
     if("thresholds" %in% params){
-        reslt[["thresholds"]] <- thresholdMaker(variables, report)
+        reslt[["thresholds"]] <- thresholdMaker(variables, report = report)
     }
     if("residuals" %in% params){
-       reslt[["residuals"]] <- residualMaker(variables, report)
+       reslt[["residuals"]] <- residualMaker(variables, covariance = FALSE, report = report)
     }
     if("covariances" %in% params){
-        reslt[["covariances"]] <- residualMaker(variables, covariance = TRUE, report)
+        reslt[["covariances"]] <- residualMaker(variables, covariance = TRUE, report = report)
     }
 
     if("latentvariances" %in% params){
-        reslt[["latentvariances"]] <- latentMaker(latents, report)
+        reslt[["latentvariances"]] <- latentMaker(latents, report = report)
     }
 
     if("latentmeans" %in% params){
-        reslt[["latentmeans"]] <- latentMeanMaker(latents, report)
+        reslt[["latentmeans"]] <- latentMeanMaker(latents, report = report)
     }
 
-    ## #template <- gsub("TITLE", caption, template)
-    ## if("chi-square" %in% fit){
-    ##     if (type == "latex"){
-    ##         fitinfotmpchi <- "$\\\\chi^{2}$(DF)= CHI, \\\\textit{p} = PVAL"
-    ##         fitinfotmpchi <- gsub("CHI", chimeas$stat, fitinfotmpchi)
-    ##         fitinfotmpchi <- gsub("DF", chimeas$df, fitinfotmpchi)
-    ##         fitinfotmpchi <- gsub("PVAL", chimeas$pvalue, fitinfotmpchi)
-    ##     }else{
-    ##         fitinfotmpchi <- paste0("&chi;(", chimeas$df, ") = ", chimeas$stat, ", p = ", chimeas$pvalue)
-    ##     }
-    ## } else {
-    ##     fitinfotmpchi <- NULL
-    ## }
-    ## if(length(grep("[0-9]\\* ", template))){
-    ##    template <- gsub("IDENTNOTE", "* Indicates parameters fixed for model identification._LB_", template)
-    ## }else{
-    ##     template <- gsub("IDENTNOTE", "", template)
-    ## }
-
-    ## xxx <- list()
-    ## if (!is.null(fit)){
-    ##     for(i in names(fit)[fit != "chi-square"]){
-    ##         tmp <- paste0(i, " = value")
-    ##         if(fit[i] %in% names(fitmeas)){
-    ##             fitmeastmp <- fitmeas[fit[i]]
-    ##             xxx[i] <- gsub("value",  fitmeas[fit[i]], tmp)
-    ##         }else{
-    ##             stop(paste0("I can't find the model fit index \"", i, "\" in the lavaan output."))
-    ##         }
-    ##     }
-
-    ##     fitinfoothers <- paste0(unlist(xxx), collapse = "; ")
-
-    ##     measures <- c(fitinfotmpchi, fitinfoothers)
-    ##     if(length(xxx) > 0){
-    ##         fitinfo <- paste0(measures, collapse = "; ")
-    ##     }else{
-    ##         fitinfo <- fitinfotmpchi
-    ##     }
-    ##     template <- gsub("FITINFORMATION", paste0(fitinfo, "."), template)
-    ## } else {
-    ##     template <- gsub("FITINFORMATION", "", template)
-    ## }
-
+    if (1){
+        reslt[["fixedparam"]] <-  "* Indicates parameters fixed for model identification._LB_"
+    }
+    
+    if (!is.null(fit)){
+        reslt[["summaries"]] <- fitMaker(object)
+    }
+    
     ## Replacement strings for LaTeX output
     latexreplace <- c(
         "_LB_" = "//\n",
@@ -701,12 +701,14 @@ Note. IDENTNOTEFITINFORMATION
         "_BOMR2_" = "& \\\\multirow{2}{c}{",
         "_BOMC1_" = "& \\\\multicolumn{1}{c}{",
         "_BOMC2_" = "& \\\\multicolumn{2}{c}{",
+        "_BOMC3_" = "& \\\\multicolumn{3}{c}{",
         "_BOMC4_" = "& \\\\multicolumn{4}{c}{",
         "_BOMCT1_" = "& \\\\multicolumn{1}{c}{",
         "_BOMCT2_" = "& \\\\multicolumn{2}{c}{",
+        "_BOMCT3_" = "& \\\\multicolumn{3}{c}{",
         "_BOMCT4_" = "& \\\\multicolumn{4}{c}{",
         "_HTMLHL_" = "",
-        "_X2_" = "$-2LLR (Model \\chi^2)$",
+        "_CHI2_" = "$\\\\chi^2)$",
         "_R2_" = "$R^2$",
         "_SIGMA_" = "$\\\\sigma$",
         "_NBSP_" = " "
@@ -735,12 +737,14 @@ Note. IDENTNOTEFITINFORMATION
         "_BOMR2_" = "<td rowspan = '2'>",
         "_BOMC1_" = "<td colspan = '1'>",
         "_BOMC2_" = "<td colspan = '2'>",
+        "_BOMC3_" = "<td colspan = '3'>",
         "_BOMC4_" = "<td colspan = '4'; align = 'center'>",
         "_BOMCT1_" = "<td colspan = '1'; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;",
         "_BOMCT2_" = "<td colspan = '2'; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;",
+        "_BOMCT3_" = "<td colspan = '3'; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;",
         "_BOMCT4_" = "<td colspan = '4'; align = 'center'; ; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;",
         "_HTMLHL_" = "<tr><td colspan = '5'; align = 'center'; ; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;</tr>",
-        "_X2_" = "&chi;<sup>2</sup>",
+        "_CHI2_" = "&chi;<sup>2</sup>",
         "_R2_" = "R<sup>2</sup>",
         "_SIGMA_" = "&sigma;",
         "_NBSP_" = "&nbsp;"
