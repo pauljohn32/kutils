@@ -104,12 +104,13 @@
 ##'               textual =~ x4 + x5 + x6
 ##'               speed   =~ x7 + x8 + x9'
 ##' fit1 <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE)
-##' fit1.t1 <- semTable(fit1, fit = c("chi-square", "rmsea"), standardized =TRUE)
+##' fit1.t1 <- semTable(fit1, fit = c("chi-square", "rmsea"))
 ##' cat(fit1.t1)
 ##' fit1.t2 <- semTable(fit1, fit = c("chisq", "rmsea"), standardized = TRUE)
 ##' cat(fit1.t2)
-##' fit1.t3 <- semTable(fit1, fit = c("chisq", "rmsea", "tli"), cols = c("est" = "Estimates", "se" = "Std.Err."),
-##'                 standardized = TRUE)
+##' fit1.t3 <- semTable(fit1, fit = c("chisq", "rmsea", "tli"),
+##'                     cols = c("est" = "Estimates", "se" = "Std.Err."),
+##'                     standardized = TRUE)
 ##' cat(fit1.t3)
 ##' 
 ##' ## Can create file if desired
@@ -612,19 +613,34 @@ Note. IDENTNOTEFITINFORMATION
         chisq <- grep("chi-square", names(fit), ignore.case = TRUE,
                       value = TRUE)
         fitidx[chisq] <- getChiSq(object)
-        paste(fitidx, collapse = ";")
+        paste(fitidx, collapse = "; ")
     }
 
+
+    markupTable <- function(trows){
+        ## TODO: Insert attribute printing here
+        trowsf <- trows
+        for(i in 1:(NCOL(trowsf) -1)){
+            trowsf[ , i] <- paste0(trowsf[ , i], "_EOC__BOC_")
+        }
+        trowsf[ , 1] <- paste0("_BR__BOC_", trowsf[, 1])
+        trowsf[ , NCOL(trows)] <- paste0(trowsf[ , NCOL(trowsf)], "_EOC__EOR_")
+        res <- paste(apply(trowsf, 1, paste, collapse = " "), collapse = "\n")
+        res
+    }
+    
     
     reslt <- list()
     if("loadings" %in% params){
         loadingInfo <- lapply(latents, loadingMaker, report)
+        browser()
         loadingInfo <- do.call(rbind, loadingInfo)
         emptyrow <- character(NCOL(loadingInfo))
         emptyrow[2] <- "_BOMC4__UL_Factor Loadings_EOUL__EOMC"
         loadingInfo <- rbind(emptyrow, loadingInfo)
         reslt[["loadings"]] <- loadingInfo
     }
+
     if("slopes" %in% params){
         regs <- parameters[which(parameters$op == "~"),]
         dvs <- unique(regs$lhs)
@@ -670,17 +686,21 @@ Note. IDENTNOTEFITINFORMATION
     }
 
     if (1){
-        reslt[["fixedparam"]] <-  "* Indicates parameters fixed for model identification._LB_"
+        rowempty <- character(length = 1 + length(report))
+        rowempty <- "_BOMC3_ * Indicates parameters fixed for model identification._EOMC__LB_" 
+        reslt[["fixedparam"]] <- rowempty
     }
     
     if (!is.null(fit)){
-        reslt[["summaries"]] <- fitMaker(object)
+        rowempty <- character(length = 1 + length(report))
+        rowempty <- paste("_BOMC3_", fitMaker(object), "_EOMC__LB_")
+        reslt[["summaries"]] <- rowempty
     }
     
     ## Replacement strings for LaTeX output
     latexreplace <- c(
         "_LB_" = "//\n",
-        "_EOC_" =  "</td>",
+        "_EOC_" =  "",
         "_BOC_" = "& ", 
         "_EOMC_" = "}",
         "_EOR_" = "\\\\tabularnewline",
@@ -690,7 +710,7 @@ Note. IDENTNOTEFITINFORMATION
         "_BR_" = "",
         "_BT_" = if(longtable) paste0("\\\\begin{longtable}{l", paste0(rep("r", length(report)), collapse = ""), "}")
                  else paste0("\\\\begin{tabular}{l", paste0(rep("r", length(report)), collapse = ""), "}"),
-        "_EOL_", "\n",
+        "_EOL_" = "\n",
         "_HL_" = "\\\\hline", 
         "_UL_" = "\\\\underline{",
         "_EOUL_" = "}",
