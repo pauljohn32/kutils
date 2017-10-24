@@ -623,7 +623,7 @@ Note. IDENTNOTEFITINFORMATION
         for(i in 1:(NCOL(trowsf) -1)){
             trowsf[ , i] <- paste0(trowsf[ , i], "_EOC__BOC_")
         }
-        trowsf[ , 1] <- paste0("_BR__BOC_", trowsf[, 1])
+        trowsf[ , 1] <- paste0("_BR_", trowsf[, 1])
         trowsf[ , NCOL(trows)] <- paste0(trowsf[ , NCOL(trowsf)], "_EOC__EOR_")
         res <- paste(apply(trowsf, 1, paste, collapse = " "), collapse = "\n")
         res
