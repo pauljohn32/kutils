@@ -45,7 +45,7 @@
 ##' The standardized parameters are obtained by updating the output
 ##' with the options std.lv = TRUE and std.ov = TRUE.  If these
 ##' options were used when originally creating output, setting
-##' standardized = TRUE will yield two identical sets of two columns.
+##' standardized = TRUE has no effect.
 ##'
 ##' @param object A lavaan object returned by cfa() or sem().
 ##' @param file Output file name.  Default is NULL, meaning no output
@@ -338,9 +338,6 @@ Note. IDENTNOTEFITINFORMATION
     }
 
 
-
-    
-
     loadingMaker <- function(lvname, report = c("est", "se", "z", "p")){
         trows <- parameters[which(parameters$rhs %in% variables &
                                   parameters$lhs %in% lvname &
@@ -367,7 +364,7 @@ Note. IDENTNOTEFITINFORMATION
         trows <- trows[ , c("lhs", report)]
         colnames(trows)[1] <- "col1" ## first col name must be homogeneous"
         title <- list(title = "Intercepts",
-                      markup = "_BOMC4__UL__CONTENT__EOUL__EOMC_",
+                      markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                       colnum = 2)
         attr(trows, "title") <- title
         trows
@@ -378,12 +375,11 @@ Note. IDENTNOTEFITINFORMATION
         trows <- parameters[which(parameters$lhs %in% ivs & parameters$op == "~1"),, drop = FALSE]
         if(dim(trows)[1] == 0)
             stop("Predictor variable mean estimates missing in output!")
-        
         trows <- roundSubtable(trows)
         trows <- trows[ , c("lhs", report)]
         colnames(trows)[1] <- "col1" ## first col name must be homogeneous
         title <- list(title = "Means",
-                      markup = "_BOMC4__UL__CONTENT__EOUL__EOMC_",
+                      markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                       colnum = 2)
         attr(trows, "title") <- title
         trows
@@ -416,7 +412,7 @@ Note. IDENTNOTEFITINFORMATION
         trows <- trows[ , c("lhs", report)]
         colnames(trows)[1] <- "col1" ## first col name must be homogeneous"
         title <- list(title = "Thresholds",
-                      markup = "_BOMC4__CONTENT__EOUL__EOMC_",
+                      markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                       colnum = 2)
         attr(trows, "title") <- title
         trows
@@ -435,7 +431,7 @@ Note. IDENTNOTEFITINFORMATION
             trows <- trows[ , c("lhs", report)]
             colnames(trows)[1] <- "col1" ## first col name must be homogeneous"
             title <- list(title = "Covariances",
-                          markup = "_BOMC4__UL__CONTENT__EOUL__EOMC_",
+                          markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                           colnum = 2)
             attr(trows, "title") <- title
             return(trows)
@@ -444,7 +440,7 @@ Note. IDENTNOTEFITINFORMATION
             trows <- trows[ , c("lhs", report)]
             colnames(trows)[1] <- "col1" ## first col name must be homogeneous"
             title <- list(title = "Variances",
-                          markup = "_BOMC4__UL__CONTENT__EOUL__EOMC_",
+                          markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                           colnum = 2)
             attr(trows, "title") <- title
             return(trows)
@@ -464,7 +460,7 @@ Note. IDENTNOTEFITINFORMATION
         trows <- trows[ , c("lhs", report)]
         colnames(trows)[1] <- "col1" ## first col name must be homogeneous
         title <- list(title = "Latent Var/Cov",
-                      markup = "_BOMC4__UL__CONTENT__EOUL__EOMC_",
+                      markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                       colnum = 2)
         attr(trows, "title") <- title
         trows
@@ -480,7 +476,7 @@ Note. IDENTNOTEFITINFORMATION
         trows <- trows[ , c("lhs", report)]
         colnames(trows)[1] <- "col1" ## first col name must be homogeneous"
         title <- list(title = "Latent Means/Intercept",
-                      markup = "_BOMC4__UL__CONTENT__EOUL__EOMC_",
+                      markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                       colnum = 2)
         attr(trows, "title") <- title
         trows
@@ -536,18 +532,17 @@ Note. IDENTNOTEFITINFORMATION
             header <- paste0(header, gsub("_CONTENT_", title$title, title$markup))
             header <- paste0(header, "_EOR_")
         } else {
-            MESSG <- "markupTable: colnum > 2 was not planned for"
+            MESSG <- "getTitleMarkup: colnum > 2 was not planned for"
             stop(MESSG)
         }
         header
-    )
-   
-    
+    }
+       
     ## Receive a trows object, which has attribute "title",
     ## intersperse rows with column markup, then insert title
     ## information
-    markupTable <- function(trows) {
-        ## TODO: Insert attribute printing here
+    ## format = c("allcol", "1col")
+    markupTable <- function(trows, format = "4col") {
         trowsf <- trows
         for(i in 1:(NCOL(trowsf) -1)){
             trowsf[ , i] <- paste0(trowsf[ , i], "_EOC__BOC_")
@@ -559,28 +554,25 @@ Note. IDENTNOTEFITINFORMATION
         paste(header, "\n", res, "\n")
     }
     
-    
     reslt <- list()
     if("loadings" %in% params){
-        loadingInfo <- lapply(latents, loadingMaker, report)
+        loadingInfo <- lapply(latents, loadingMaker, report = report)
         ## a list of 3 trows objects
         ## this is a title for the collection of lists
         title <- list(title = c("Factor Loadings"),
-                      markup = "_BOMC4__UL__CONTENT__EOUL__EOMC",
+                      markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                       colnum = 2)
         attr(loadingInfo, "title") <- title
         reslt[["loadings"]] <- loadingInfo
     }
-
-  
         
     if("slopes" %in% params){
-        regs <- parameters[which(parameters$op == "~"),]
+        regs <- parameters[which(parameters$op == "~"), ]
         dvs <- unique(regs$lhs)
         slopeInfo <- lapply(dvs, slopeMaker, regs = regs, report = report)
         slopeInfo <- do.call(rbind, slopeInfo)
         title <- list(title = c("Regression Slopes"),
-                      markup = "_BOMC4__UL__CONTENT__EOUL__EOMC",
+                      markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                       colnum = 2)
         attr(slopeInfo, "title") <- title
         reslt[["slopes"]] <- slopeInfo
@@ -599,7 +591,7 @@ Note. IDENTNOTEFITINFORMATION
         reslt[["thresholds"]] <- thresholdMaker(variables, report = report)
     }
     if("residuals" %in% params){
-       reslt[["residuals"]] <- residualMaker(variables, covariance = FALSE, report = report)
+        reslt[["residuals"]] <- residualMaker(variables, covariance = FALSE, report = report)
     }
     if("covariances" %in% params){
         reslt[["covariances"]] <- residualMaker(variables, covariance = TRUE, report = report)
@@ -669,17 +661,17 @@ Note. IDENTNOTEFITINFORMATION
         "_EOC_" = "</td>",
         "_BOC_" = "<td>",
         "_EOMC_" = "</td>",
-        "_EOR_", "</tr>",
+        "_EOR_" = "</tr>",
         "_BRU_" = paste("<tr><td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;"),
         "_BRT_" = paste("<tr><td style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;"),
-        "_BOCU_", paste("<td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;"),
+        "_BOCU_" = paste("<td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;"),
         "_BR_" = "<tr><td>",
         "_BT_" =  "<table>\n",
         "_EOL_" = "\n",
         "_HL_" =  "",
         "_UL_" =  "<span style=\"text-decoration: underline;\">",
         "_EOUL_" = "</span>",
-        "_SEPU_" = paste("</td><td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;"),
+        "_SEPU_" = "</td><td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;",
         "_SEP_" = "</td><td>",
         "_EOT_" = "</table>",
         "_BOMR1_" = "<td rowspan = '1'>",
@@ -698,6 +690,42 @@ Note. IDENTNOTEFITINFORMATION
         "_SIGMA_" = "&sigma;",
         "_NBSP_" = "&nbsp;"
     )
+    
+    ## Replacement strings for CSV output
+    csvreplace <- c(
+        "_LB_" = "\n",
+        "_EOC_" =  ",",
+        "_BOC_" = "", 
+        "_EOMC_" = ",",
+        "_EOR_" = "\n",
+        "_BRU_" = "",
+        "_BRT_" = "", 
+        "_BOCU_" = ",",
+        "_BR_" = "",
+        "_BT_" = "",
+        "_EOL_" = "\n",
+        "_HL_" = "", 
+        "_UL_" = "",
+        "_EOUL_" = "",
+        "_SEPU_" = "", 
+        "_SEP_" = ",", 
+        "_EOT_" = "",
+        "_BOMR1_" = "",
+        "_BOMR2_" = "",
+        "_BOMC1_" = "",
+        "_BOMC2_" = "",
+        "_BOMC3_" = "",
+        "_BOMC4_" = "",
+        "_BOMCT1_" = "",
+        "_BOMCT2_" = "",
+        "_BOMCT3_" = "",
+        "_BOMCT4_" = "",
+        "_HTMLHL_" = "",
+        "_CHI2_" = "chi^2",
+        "_R2_" = "R^2",
+        "_SIGMA_" = "sigma",
+        "_NBSP_" = " "
+    )
 
     ## Now work on the markup
     ## Iterate through reslt, treating "loadings" and "slopes" differently
@@ -706,15 +734,31 @@ Note. IDENTNOTEFITINFORMATION
         if(length(grep(tab, c("loadings", "slopes"))) > 0){
             header <- getTitleMarkup(reslt[[tab]])
             subtables <- vapply(reslt[[tab]], markupTable, character(1))
+            c(header, subtables)
         } else {
             markupTable(reslt[[tab]])
         }
     })), collapse = " ")
 
-  
-    lapply(reslt[["loadings"]], markupTable)
-  
     
-    reslt
+    resmark <- paste("_BT_\n", resmark, "_EOT_\n")
+    if (type == "latex"){
+        latexmarkup <- mgsub(names(latexreplace), latexreplace, resmark)
+        if (!is.null(file)){
+            cat(latexmarkup, file = file)
+        }
+    }
+
+    if (type == "html"){
+         htmlmarkup <- mgsub(names(htmlreplace), htmlreplace, resmark)
+         if (!is.null(file)){
+             cat(htmlmarkup, file = file)
+         }
+    }
+
+    csvmarkup <- mgsub(names(csvreplace), csvreplace, resmark)
+   
+
+    list(latex = latexmarkup, html= htmlmarkup, csv = csvmarkup)
 }
 
