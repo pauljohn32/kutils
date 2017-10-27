@@ -103,6 +103,11 @@
 ##'               speed   =~ x7 + x8 + x9'
 ##' fit1 <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE)
 ##' fit1.t1 <- semTable(fit1, fit = c("chi-square", "rmsea"))
+##' fit1.t1 <- semTable(fit1, fit = c("chi-square", "rmsea"),
+##'            colNames = c("est" = "Est",  se = "Std. Err."))
+##' fit1.t1 <- semTable(fit1, fit = c("chi-square", "rmsea"),
+##'            colNames = c("estse" = "Estimate(Std.Err.)"))
+##' 
 ##' cat(fit1.t1)
 ##' fit1.t2 <- semTable(fit1, fit = c("chisq", "rmsea"), standardized = TRUE)
 ##' cat(fit1.t2)
@@ -169,8 +174,9 @@ semTable <-
              group = NULL, longtable = FALSE)
 {
 
-    ## do.call(rbind, alist) does not accept stringsAsFactors=FALSE,
-    ## must set globally to avoid hassle
+    ## do.call(rbind, alist) unexpectedly converts characters to factors.
+    ## it does not accept stringsAsFactors=FALSE,
+    ## So set globally to avoid hassle
     options.orig <- options()
     options(stringsAsFactors = FALSE)
     on.exit(options(options.orig))
@@ -195,7 +201,7 @@ semTable <-
         for (i in colNames) trows[ , i] <- frnd(trows[ , i])
         trows$p <- frnd(trows$p, 3, 3)
         trows$p <- gsub("0\\.", "\\.", trows$p)
-        trows$est <- ifelse(trows$free == 0, paste0(trows$est, "*"), trows$est)
+        trows$est <- ifelse(trows$free == 0, paste0(trows$est, "_FIXED_"), trows$est)
         trows[trows$free == 0, intersect(colnames(trows), c("se", "z", "p", "stdse"))] <- ""
         trows
     }
@@ -255,7 +261,9 @@ semTable <-
         
         createEstSE <- function(dframe){
             dframe <- roundSubtable(dframe)
-            paste0(dframe[ , "est"], "(", dframe[ , "se"], ")", dframe[ , "starsig"])
+            ifelse(dframe[ , "free"] != 0,
+                   paste0(dframe[ , "est"], "(", dframe[ , "se"], ")", dframe[ , "starsig"]),
+                   paste0(dframe[ , "est"], "_FIXED_"))
         }
 
         if(class(object)[1] != "lavaan"){
@@ -271,23 +279,11 @@ semTable <-
         parameters$starsig <- starsig(parameters$p)
         parameters$estse <- createEstSE(parameters)
 
+        ## items previously global are specialized to this model
         attr(parameters, "variables") <- unique(unlist(object@Data@ov.names))
         attr(parameters, "latents") <- unique(unlist(object@pta$vnames$lv))
-
         attr(parameters, "params") <- cleanParamSets(paramSets, parameters)
-        
-       ##  ## If standardized and model is not already standardized, fit new standardized
-       ##  ## model and grab coefficients as "stdest" and "stdse"
-       ##  if(isTRUE(standardized) && (!object@Options$std.lv | !object@Options$std.ov)){
-       ##     report <- c(report, "stdest", "stdse")
-       ##     colNames <- c(colNames, "Std. Estimate", "Std. SE")
-       ##     assign("report", report, envir =  parent.frame())
-       ##     assign("colNames", colNames, envir =  parent.frame())
-           
-       ##     std <- update(object, std.lv = TRUE, std.ov = TRUE)
-       ##     parameters$stdest <- std@Fit@est
-       ##     parameters$stdse <- std@Fit@se
-       ## }
+
         parameters <- roundSubtable(parameters)
         parameters
     }
@@ -300,7 +296,7 @@ semTable <-
                                   parameters$op == "=~"), ,
                             drop = FALSE]
         rownames(trows) <- paste("loadings", lvname, trows[ , "rhs"], sep = ".")
-        trows <- data.frame(col1 = trows$rhs, trows[ , report])
+        trows <- data.frame(col1 = trows$rhs, trows[ , report, drop = FALSE])
         ## don't put "_BOC_" at beginning if in colnum 1
         title <- list(title = lvname,
                       markup = "_UL__CONTENT__EOUL__EOC_",
@@ -315,7 +311,7 @@ semTable <-
         if(dim(trows)[1] == 0)
             stop("Intercept estimates are requested in the table, but I can't find them in the output!")
         rownames(trows) <- paste("intercepts.", trows[ , "lhs"])
-        trows <- data.frame(col1 = trows$lhs, trows[, report])
+        trows <- data.frame(col1 = trows$lhs, trows[, report, drop = FALSE])
         title <- list(title = "Intercepts",
                       markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                       colnum = 2)
@@ -329,7 +325,7 @@ semTable <-
         if(dim(trows)[1] == 0)
             stop("Predictor variable mean estimates missing in output!")
         rownames(trows) <- paste("means.", trows[ , "lhs"])
-        trows <- data.frame(col1 = trows$lhs, trows[, report])
+        trows <- data.frame(col1 = trows$lhs, trows[, report, drop = FALSE])
         title <- list(title = "Means",
                       markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                       colnum = 2)
@@ -340,7 +336,7 @@ semTable <-
     slopeMaker <- function(dvname, parameters, regs, report = c("est", "se", "z", "p")){
         trows <- regs[which(regs$lhs == dvname), , drop = FALSE]
         rownames(trows) <- paste("slopes", dvname, trows[ , "rhs"], sep = ".")
-        trows <- data.frame(col1 = trows$rhs, trows[ , report])
+        trows <- data.frame(col1 = trows$rhs, trows[ , report, drop = FALSE])
         title <- list(title = dvname,
                       markup = "_UL__CONTENT__EOUL__EOC_",
                       colnum = 1)
@@ -356,7 +352,7 @@ semTable <-
         thresnum <- substring(trows$rhs, 2, nchar(trows$rhs))
         trows$lhs <- paste0(trows$lhs, "(", thresnum, ")")
         rownames(trows) <- paste("thresholds", trows[ , "lhs"], thresnum, sep = ".")
-        trows <- data.frame(col1 = trows$lhs, trows[ , report])
+        trows <- data.frame(col1 = trows$lhs, trows[ , report, drop = FALSE])
         title <- list(title = "Thresholds",
                       markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                       colnum = 2)
@@ -373,8 +369,9 @@ semTable <-
                             drop = FALSE ]
         if(dim(trows)[1] == 0) stop("residualMaker failure")
         if (isTRUE(covariance)){
-            trows <- trows[which(trows$rhs != trows$lhs),]
-            trows <- data.frame(col1 = trows$lhs, trows[ , report])
+            trows <- trows[which(trows$rhs != trows$lhs), ]
+            rownames(trows) <- paste("covariances", trows[ , "lhs"], sep = ".")
+            trows <- data.frame(col1 = trows$lhs, trows[ , report, drop = FALSE])
             title <- list(title = "Covariances",
                           markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                           colnum = 2)
@@ -382,7 +379,8 @@ semTable <-
             return(trows)
         } else {
             trows <- trows[which(trows$rhs == trows$lhs),, drop = FALSE]
-            trows <- data.frame(col1 = trows$lhs, trows[ , report])
+            rownames(trows) <- paste("variances", trows[ , "lhs"], sep = ".")
+            trows <- data.frame(col1 = trows$lhs, trows[ , report, drop = FALSE])
             title <- list(title = "Variances",
                           markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                           colnum = 2)
@@ -399,9 +397,10 @@ semTable <-
         if(dim(trows)[1] == 0){
             stop("Latent variance/covariance estimates missing in output!")
         }
-        trows[ , "lhs"] <- paste(trows[ , "lhs"], " w/ ", trows[ , "rhs"])
-        rownames(trows) <- paste("latentvariances", trows[ , "lhs"], sep = ".")
-        trows <- data.frame(col1 = trows$lhs, trows[ , report])
+        rownames(trows) <- paste0("latentvariances", ".", trows[ , "lhs"],
+                                 ".", trows[ , "rhs"])
+        trows[ , "lhs"] <- paste0(trows[ , "lhs"], " w/", trows[ , "rhs"])
+        trows <- data.frame(col1 = trows$lhs, trows[ , report, drop = FALSE])
         title <- list(title = "Latent Var/Covariances",
                       markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                       colnum = 2)
@@ -415,7 +414,7 @@ semTable <-
         if(dim(trows)[1] == 0)
             stop("Latent mean estimates missing in output!")
         rownames(trows) <- paste("latentmeans", trows[ , "lhs"], sep = ".")
-        trows <- data.frame(col1 = trows$lhs, trows[ , report])
+        trows <- data.frame(col1 = trows$lhs, trows[ , report, drop = FALSE])
         title <- list(title = "Latent Means/Intercept",
                       markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                       colnum = 2)
@@ -499,19 +498,25 @@ semTable <-
     ## For each fitted SEM model, cycle through process of
     ## 1. Retrieve parameters
     ## Extract parameters into a data.frame
-    parseParamTable <- function(object, report){    
+    extractParameters <- function(object, colNames){    
         paramTable <- getParamTable(object)
         params <- attr(paramTable, "params")
+
+        ## report was name used for varnames of columns for
+        ## keeing, ex: c("est" "se" "z" "p")
+        report <- names(colNames)
   
         reslt <- list()
         if("loadings" %in% params){
             latents <- attr(paramTable, "latents")
-            loadingInfo <- lapply(latents, loadingMaker, parameters = paramTable, report = report)
+            loadingInfo <- lapply(latents, loadingMaker,
+                                  parameters = paramTable, report = report)
+            names(loadingInfo) <- latents
             ## a list of trows objects
             ## this is a title for the collection of lists
             title <- list(title = c("Factor Loadings"),
-                          markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
-                          colnum = 2)
+                     markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
+                     colnum = 2)
             attr(loadingInfo, "title") <- title
             reslt[["loadings"]] <- loadingInfo
         }
@@ -519,8 +524,10 @@ semTable <-
         if("slopes" %in% params){
             regs <- paramTable[which(paramTable$op == "~"), ]
             dvs <- unique(regs$lhs)
-            slopeInfo <- lapply(dvs, slopeMaker, parameters = paramTable, regs = regs, report = report)
-            slopeInfo <- do.call(rbind, slopeInfo)
+            slopeInfo <- lapply(dvs, slopeMaker, parameters = paramTable,
+                                regs = regs, report = report)
+            names(slopeInfo) <- dvs
+            ## title for regression collection
             title <- list(title = c("Regression Slopes"),
                           markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                           colnum = 2)
@@ -564,11 +571,11 @@ semTable <-
         reslt
     }
 
-    parseModelSummary <- function(object){
+    extractModelSummary <- function(object){
         sumry <- list()
         if (1){
             rowempty <- character(length = 1 + length(report))
-            rowempty <- "_BOMC3_ * Indicates parameters fixed for model identification._EOMC__LB_\n" 
+            rowempty <- "_BOMC3_ _FIXED_ Indicates parameters fixed for model identification._EOMC__LB_\n" 
             sumry[["fixedparam"]] <- rowempty
         }
         
@@ -578,15 +585,42 @@ semTable <-
             sumry[["summaries"]] <- rowempty
         }
     }
+
+    ## ## Combine 2 of the trows objects, copying attributes too
+    ## mergeTables <- function(x, y){
+    ##     resltmerge <- merge(x, y, by =c("row.names", "col1"), sort = FALSE, all = TRUE)
+    ##     attr(resltmerge, "title") <- attr(x, "title")
+    ##     ## TODO: consider edit markup to be shifted right
+    ##     resltmerge
+    ## }
+
+    ## ## put various fits together
+    ## mergeResults(aList) {
+    ##     targets <- c("loadings", "slopes", "intercepts", "means",
+    ##                  "thresholds", "residuals", "covariances",
+    ##                  "latentvariances", "latentmeans")
+    ##     loadings <- lapply(aList, function(x) x["loadings"])
+
+    ## }
     
     browser()
-    ## in previous version, "report" was column designation:
-    #  ("est", "se", "z", "p"), Now could also have "est(se)"
-    ## I simplify to "estse" here
-    names(colNames) <- gsub("est(se)", "estse", names(colNames))
-    report <- names(colNames)
-    reslt <- parseParamTable(object, report)
     
+    ## in previous version, "report" was column designation:
+    #  ("est", "se", "z", "p"),
+    
+    ## I simplify from "est(se)" to "estse" 
+    names(colNames) <- gsub("est(se)", "estse", names(colNames))
+   
+    reslt1 <- extractParameters(object, colNames)
+
+    ## could treat standardized estimate as second model,
+    ## extract parameters same way
+    ## stdFit <- update(object, std.lv = TRUE, std.ov = TRUE) 
+    ## reslt2 <- extractParameters(stdFit, colNames)
+
+    ## test case with different column request
+    ## reslt1 <- extractParameters(object, colNames = c("estse" = "Est(SE)"))
+    ## reslt2 <- extractParameters(stdFit, colNames = c("estse" = "Est(SE)"))
 
     if(isTRUE(includeGroup)){
         report <- c(report, "group")
@@ -595,23 +629,24 @@ semTable <-
     
     ## Now work on the markup
     ## Iterate through reslt, treating "loadings" and "slopes" differently
-    browser()
+    ## Handle one list of estimates
+    reslt <- reslt1
     resmark <- paste(unlist(lapply(names(reslt), function(tab){
         if(length(grep(tab, c("loadings", "slopes"))) > 0){
             header <- getTitleMarkup(reslt[[tab]])
             subtables <- vapply(reslt[[tab]], markupTable,
-                                FUN.VALUE = character(1), report = report)
+                                FUN.VALUE = character(1), report = names(colNames))
             c(header, subtables)
         } else {
-            markupTable(reslt[[tab]])
+            markupTable(reslt[[tab]], report = names(colNames))
         }
     })), collapse = " ")
-
-    
     resmark <- paste("_BT_\n", resmark, "_EOT_\n")
 
-    result <- markupConvert(resmark, longtable = longtable, file = "../jasper")
-   
+    result <- markupConvert(resmark, type = c("latex", "html", "csv"),
+                            longtable = longtable, file = "../jasper",
+                            colNames = colNames)
+    
 }
 
 
@@ -625,11 +660,13 @@ semTable <-
 ##'     "html", and "csv".
 ##' @param longtable should a tabular or a longtable object be created?
 ##' @param file A file stub, to which ".tex", ".html", or ".csv" can be added
+##' @param colNames For SEM table, the colNames object
 ##' @return a list of marked up character objects
 ##' @author Paul Johnson
 markupConvert <- function(marked, type = c("latex", "html", "csv"),
-                        longtable = FALSE, file = NULL)
+                        longtable = FALSE, file = NULL, colNames)
 {
+    report <- names(colNames)
     ## Replacement strings for LaTeX output
     latexreplace <- c(
         "_LB_" = "//\n",
@@ -664,7 +701,8 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         "_CHI2_" = "$\\\\chi^2)$",
         "_R2_" = "$R^2$",
         "_SIGMA_" = "$\\\\sigma$",
-        "_NBSP_" = " "
+        "_NBSP_" = " ",
+        "_FIXED_" = "$^+$"
     )
 
     ## Replacement strings for HTML output
@@ -700,7 +738,8 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         "_CHI2_" = "&chi;<sup>2</sup>",
         "_R2_" = "R<sup>2</sup>",
         "_SIGMA_" = "&sigma;",
-        "_NBSP_" = "&nbsp;"
+        "_NBSP_" = "&nbsp;",
+        "_FIXED_" = "<sup>+</sup>"
     )
     
     ## Replacement strings for CSV output
@@ -736,7 +775,8 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         "_CHI2_" = "chi^2",
         "_R2_" = "R^2",
         "_SIGMA_" = "sigma",
-        "_NBSP_" = " "
+        "_NBSP_" = " ",
+        "_FIXED_" = "+"
     )
 
     result <- list()
