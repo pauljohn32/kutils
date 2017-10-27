@@ -1,3 +1,21 @@
+2017-10-26  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (getParamTable): new function to create
+	parameters object, call rounding function here, no need within
+	each stanza rename "cols" as "colNames", introduce "est(se)" as a
+	legal column name.
+	(parseParamTable): variables and latents cannot be global variables,
+	must be attributes of parameter table, in order to allow for more
+	than one model in this function
+	(parseParamTable): handles params here, each model can have separate
+	(latentMeanMaker): drop "gotcha" hit me again, chosing 1 column
+	from trows
+
+2017-10-25  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (markupTable): insert parameters as named
+	argument in the maker functions
+
 2017-10-06  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (keyApply): mapvalues insert warn_missing =
