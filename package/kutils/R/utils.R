@@ -97,7 +97,7 @@ NULL
 ##'     values smaller than 0.01 get two stars, and so forth.  Must be
 ##'     same number of elements as alpha. These need not be asterixes,
 ##'     could be any character strings that users desire. See example.
-##' @return a character vector of asterixes, same length as pval
+##' @return a character vector of symbols (eg asterixes), same length as pval
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @export
 ##' @examples
