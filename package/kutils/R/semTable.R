@@ -18,7 +18,8 @@
 ##' \item "covariances" are the observed
 ##' variable covariances.
 ##' \item "latentvariances" are the latent
-##' variable variances and covariances.
+##' variable variances.
+##' \item "latentcovariances" are the latent covariances 
 ##' \item "latentmeans" are the latent variable
 ##' means (or intercepts).
 ##' \item "thresholds" arise in latent
@@ -29,7 +30,7 @@
 ##' included. If standardized=TRUE, columns will be inserted for
 ##' the standardized parameter estimate and its standard error.
 ##'
-##' When standardized = TRUE, the columns are:
+##' The default columns are:
 ##' \enumerate{
 ##' \item the parameter estimates,
 ##' \item the standard errors,
@@ -37,18 +38,33 @@
 ##' \item standardized standard errors.
 ##' }
 ##'
-##' The standardized parameters are obtained by updating the output
-##' with the options std.lv = TRUE and std.ov = TRUE.  If these
-##' options were used when originally creating output, setting
-##' standardized = TRUE has no effect.
+##' The colNames parameter is used to specify different columns,
+##' or to alter the displayed labels for them.
 ##'
-##' @param object A lavaan object returned by cfa() or sem().
-##' @param file Base name for output file.
+##' @param object A lavaan object returned by cfa() or sem(), or a
+##'     named list of lavaan objects.
+##' @param colNames Column names for main table. This is used to both
+##'     *select* which columns are include and *how* their labels will
+##'     appear in output. The allowed names are "est", "se", "z", "p"
+##'     or "est(se)". The default is for a 4 column table, \code{c(est
+##'     = "Estimate", se = "SE", z = "z", p = "p")}. User can instead
+##'     request any columns, such as c(est = "Estimate", se = "SE") or
+##'     c("est(se)" = "Estimates(Std.Err.)". If one vector of columns
+##'     is supplied, it is used for all model objects. Different
+##'     columns for different models can be requested by
+##'     supplying a list of named vectors. Names must be same names
+##'     supplied in the \code{object} list of models.
 ##' @param paramSets Parameter sets to be included. Valid values are
-##'     "loadings", "slopes", "intercepts", "means", "residuals",
-##'     "covariances", "latentvariances", "latentmeans" and
-##'     "thresholds". Default is "all" (but excludes "means"). See
-##'     Details.
+##'     \code{"all"} or any of the following: \code{c("loadings",
+##'     "slopes", "intercepts", "residuals", "covariances",
+##'     "latentmeans", "latentvariances", "latentcovariances",
+##'     "thresholds"}. Default is "all", which means that any of these
+##'     parameters present in the fitted model will be included in the
+##'     output. If \code{object} is a list of fitted models, and
+##'     paramSets is "all" or a vector, then same parameter sets are
+##'     reported for all models. Different parameter sets can be
+##'     requested by supplying a list of named vectors. Names must be
+##'     same names supplied in the \code{object} list of models.
 ##' @param fit Summary indicators to be included. Can be "chi-square",
 ##'     a specially formatted element, or fit indices provided by
 ##'     \code{lavaan::fitMeasures(object)}. Currently, they are
@@ -64,33 +80,24 @@
 ##'     parameter.  Must have same number of elements as fit.  For
 ##'     example, fit = c("cfi.scaled", "tli.scaled"), names_fit =
 ##'     c("CFI", "TLI").
-##' @param colNames A named vector of column names for main
-##'     table. This is used to both *select* which columns are include
-##'     and *how* their labels will appear in output.  The allowed
-##'     names are "est", "se", "z", "p" or "est(se)". The values are
-##'     user-supplied "pretty labels" to be included in the actual
-##'     output. For a 4 column table, c(est = "Estimate", se = "SE", z
-##'     = "z", p = "p"), for a 2 column table, c(est = "Estimate", se
-##'     = "SE").  Some users may prefer one column, the only type we
-##'     allow is, c("est(se)" = "Estimate(Std.Error)").
-##' @param standardized If TRUE and model was not fit with
-##'     std.ov=std.lv=TRUE, refit model with those arguments and add
-##'     new report columns named "stdest" and "stdse".  Default is
-##'     FALSE.
 ##' @param names_upper Should the names of the model fit parameters be
 ##'     forced to be uppercase.  The default is TRUE.  This will also
 ##'     affect whatever is specified in names_fit.
-##' @param type Choose either "latex" or "html".
+##' @param type Choose "latex", "html", "csv", or any combination. If
+##'     user supplies c("latex", "html", "csv"), all 3 sets of markup
+##'     will be returned.
 ##' @param includeGroup Should group membership be reported for
 ##'     parameters in a column on the right? Defaults to FALSE.
 ##' @param group Group for which parameters should be reported. Only
 ##'     relevant for multiple group models. If not supplied,
 ##'     parameters for all groups will be reported, along with a
 ##'     column indicating the group (if includeGroup = TRUE).
+##' @param file Base name for output file.
 ##' @param longtable If TRUE, use longtable for LaTeX
 ##'     documents. Default is FALSE.
 ##' @importFrom stats pnorm
-##' @return Markup for SEM table. Use cat to display it.
+##' @return Markup for SEM table, or a list of markup character
+##'     strings, one for each value of \code{type}.
 ##' @export
 ##' @author Ben Kite <bakite@@ku.edu> Paul Johnson <pauljohn@@ku.edu>
 ##' @examples \donttest{
@@ -107,6 +114,14 @@
 ##'            colNames = c("est" = "Est",  se = "Std. Err."))
 ##' fit1.t1 <- semTable(fit1, fit = c("chi-square", "rmsea"),
 ##'            colNames = c("estse" = "Estimate(Std.Err.)"))
+##'
+##' ## Fit same model with standardization
+##' fit1.std <- update(fit1, std.lv = TRUE, std.ov = TRUE) 
+##' ## include 2 models in table request
+##' semTable(list("Ordinary" = fit1, "Standardized" = fit1.std))
+##'
+##' semTable(list("Ordinary" = fit1, "Standardized" = fit1.std),
+##'     colNames = list("Ordinary" = c("est", "se"), "Standardized" = c("est")))
 ##' 
 ##' cat(fit1.t1)
 ##' fit1.t2 <- semTable(fit1, fit = c("chisq", "rmsea"), standardized = TRUE)
@@ -215,6 +230,7 @@ semTable <-
         if (paramSets != "all") {
             return(unique(paramSets))
         }
+        
         variables <- attr(parameters, "variables")
         latents <- attr(parameters, "latents")
         
@@ -223,40 +239,48 @@ semTable <-
         params <- paramops[unique(parameters$op)]
         names(params) <- NULL
         if ("variances" %in% params){
-            params <- params[!params %in% "variances"]
-            if (length(which(parameters$rhs %in% variables &
-                             parameters$lhs %in% variables &
-                             parameters$op == "~~")) > 0) {
+            params <- setdiff(params, "variances")
+            if (any(parameters$lhs %in% variables &
+                    parameters$rhs %in% variables &
+                    parameters$lhs == parameters$rhs &
+                    parameters$op == "~~")) {
                 params <- c(params, "residuals")
             }
-            if (length(which(parameters$lhs %in% variables &
+            if (any(parameters$lhs %in% variables &
                              parameters$rhs %in% variables &
                              parameters$lhs != parameters$rhs &
-                             parameters$op == "~~")) > 0){
+                             parameters$op == "~~")) {
                 params <- c(params, "covariances")
             }
-            if (length(which(parameters$rhs %in% latents &
-                             parameters$lhs %in% latents &
-                             parameters$op == "~~")) > 0){
+            if (any(parameters$rhs %in% latents &
+                    parameters$lhs %in% latents &
+                    parameters$lhs == parameters$rhs &
+                    parameters$op == "~~")) {
                 params <- c(params, "latentvariances")
             }
+            if (any(parameters$rhs %in% latents &
+                             parameters$lhs %in% latents &
+                             parameters$lhs != parameters$rhs &
+                             parameters$op == "~~")) {
+                params <- c(params, "latentcovariances")
+            }
+        
         }
         if ("means" %in% params){
-            params <- params[!params %in% "means"]
-            if(length(which(parameters$lhs %in% variables &
-                            parameters$op == "~1")) > 0){
+            params <- setdiff(params, "means")
+            if(any(parameters$lhs %in% variables &
+                            parameters$op == "~1")){
                 params <- c(params, "intercepts")
             }
-            if(length(which(parameters$lhs %in% latents &
-                            parameters$op == "~1")) > 0){
+            if(any(parameters$lhs %in% latents &
+                            parameters$op == "~1")){
                 params <- c(params, "latentmeans")
             }
         }
         params
     }
-    
 
-           
+    
     getParamTable <- function(object){
         
         createEstSE <- function(dframe){
@@ -302,6 +326,7 @@ semTable <-
                       markup = "_UL__CONTENT__EOUL__EOC_",
                       colnum = 1)
         attr(trows, "title") <- title
+        class(trows) <- c("trows", class(trows))
         trows
     }
 
@@ -316,6 +341,7 @@ semTable <-
                       markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                       colnum = 2)
         attr(trows, "title") <- title
+        class(trows) <- c("trows", class(trows))
         trows
     }
 
@@ -330,6 +356,7 @@ semTable <-
                       markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                       colnum = 2)
         attr(trows, "title") <- title
+        class(trows) <- c("trows", class(trows))
         trows
     }
 
@@ -341,6 +368,7 @@ semTable <-
                       markup = "_UL__CONTENT__EOUL__EOC_",
                       colnum = 1)
         attr(trows, "title") <- title
+        class(trows) <- c("trows", class(trows))
         trows
     }
 
@@ -357,6 +385,7 @@ semTable <-
                       markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                       colnum = 2)
         attr(trows, "title") <- title
+        class(trows) <- c("trows", class(trows))
         trows
     }
     
@@ -376,6 +405,7 @@ semTable <-
                           markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                           colnum = 2)
             attr(trows, "title") <- title
+            class(trows) <- c("trows", class(trows))
             return(trows)
         } else {
             trows <- trows[which(trows$rhs == trows$lhs),, drop = FALSE]
@@ -385,6 +415,7 @@ semTable <-
                           markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                           colnum = 2)
             attr(trows, "title") <- title
+            class(trows) <- c("trows", class(trows))
             return(trows)
         }
     }
@@ -405,6 +436,7 @@ semTable <-
                       markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                       colnum = 2)
         attr(trows, "title") <- title
+        class(trows) <- c("trows", class(trows))
         trows
      }
 
@@ -419,6 +451,7 @@ semTable <-
                       markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                       colnum = 2)
         attr(trows, "title") <- title
+        class(trows) <- c("trows", class(trows))
         trows
      }
 
@@ -480,18 +513,22 @@ semTable <-
        
     ## A trows object is a matrix, this inserts formatting markup.
     ## trows also has attribute "title",
-    ## format = c("multicol", "1col")
-    markupTable <- function(trows, report) {
-        trowsf <- trows[ , c("col1", report)]
+    markupTable <- function(trows) {
+        #trowsf <- trows[ , c("col1", report)]
+        trowsf <- trows
         for(i in 1:(NCOL(trowsf) -1)){
             trowsf[ , i] <- paste0(trowsf[ , i], "_EOC__BOC_")
         }
         trowsf[ , 1] <- paste0("_BR_", trowsf[, 1])
         trowsf[ , NCOL(trowsf)] <- paste0(trowsf[ , NCOL(trowsf)], "_EOC__EOR_")
         res <- paste(apply(trowsf, 1, paste, collapse = " "), collapse = "\n")
-        header <- getTitleMarkup(trows)
-        result <- paste(header, "\n", res, "\n")
-        return(result)
+        ## TODO 20171028 CAUTION: workaround here b/c title info sometimes missing, must
+        ## go back find why it is missing
+        if (!is.null(attr(trows, "title"))){
+            header <- getTitleMarkup(trows)
+            res <- paste(header, "\n", res, "\n")
+        }
+        return(res)
     } 
 
 
@@ -518,6 +555,7 @@ semTable <-
                      markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                      colnum = 2)
             attr(loadingInfo, "title") <- title
+            class(loadingInfo) <- c("trowsList", class(loadingInfo))
             reslt[["loadings"]] <- loadingInfo
         }
         
@@ -532,6 +570,7 @@ semTable <-
                           markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
                           colnum = 2)
             attr(slopeInfo, "title") <- title
+            class(slopesInfo) <- c("trowsList", class(slopesInfo))
             reslt[["slopes"]] <- slopeInfo
         }
         
@@ -573,13 +612,13 @@ semTable <-
 
     extractModelSummary <- function(object){
         sumry <- list()
-        if (1){
+        if (1) {
             rowempty <- character(length = 1 + length(report))
             rowempty <- "_BOMC3_ _FIXED_ Indicates parameters fixed for model identification._EOMC__LB_\n" 
             sumry[["fixedparam"]] <- rowempty
         }
         
-        if (!is.null(fit)){
+        if (!is.null(fit)) {
             rowempty <- character(length = 1 + length(report))
             rowempty <- paste("_BOMC3_", fitMaker(object), "_EOMC__LB_")
             sumry[["summaries"]] <- rowempty
@@ -602,6 +641,38 @@ semTable <-
     ##     loadings <- lapply(aList, function(x) x["loadings"])
 
     ## }
+    ## Give in a list of tables and this puts them
+    ## together side by side, with markup
+    buildSubtable <- function(tablList){
+        ## if one table is NULL, replace with empty DF
+        ## for others, expand rows to same size
+
+        parmnames <- unique(do.call(rbind, lapply(tablList, function(x) cbind(rownames = rownames(x), col1 = x[ , "col1"]))))
+        rownames(parmnames) <- parmnames[ , "rownames"]
+        for(x in names(tablList)){
+            if (is.null(tablList[[x]])) {
+                y <- data.frame(col1 = parmnames[ , "col1"],
+                                matrix("-", ncol = length(colNames),
+                                       nrow = NROW(parmnames),
+                                       dimnames = list(parmnames[ , "rownames"],
+                                                       names(colNames))))
+                y[ , match("col1", colnames(y))] <- NULL
+                tablList[[x]] <- y
+            } else {
+                y <- tablList[[x]][rownames(parmnames), ]
+                ## y[ , "col1"] <- parmnames[ , "col1"]
+                rownames(y) <- rownames(parmnames)
+                y[ , match("col1", colnames(y))] <- NULL
+                tablList[[x]] <- y
+                if(is.null(attr(tablList, "title"))) attr(tablList, "title") <- attr(tablList[[x]], "title")
+            }
+        }
+        ## that has a title attribute
+        tablMatrix <- do.call(cbind,  tablList)
+        tablMatrix <- cbind("col1" = parmnames[ , "col1"], tablMatrix)
+        attr(tablMatrix, "title") <- attr(tablList, "title")
+        markupTable(tablMatrix)
+    }
     
     browser()
     
@@ -611,13 +682,44 @@ semTable <-
     ## I simplify from "est(se)" to "estse" 
     names(colNames) <- gsub("est(se)", "estse", names(colNames))
    
-    reslt1 <- extractParameters(object, colNames)
+    ##reslt1 <- extractParameters(object, colNames)
 
-    ## could treat standardized estimate as second model,
-    ## extract parameters same way
-    ## stdFit <- update(object, std.lv = TRUE, std.ov = TRUE) 
-    ## reslt2 <- extractParameters(stdFit, colNames)
+    parmList <- lapply(object, extractParameters, colNames)
 
+    parmSetsFound <- unique(unlist(lapply(parmList, function(x) names(x))))
+
+    parmSetsOrdering <- c("loadings"= "Factor Loadings",
+                          "slopes" = "Regression Slopes",
+                          "intercepts" = "Intercepts",
+                          "means"= "Means",
+                          "residuals" = ,
+                          "covariances" = "Covariances",
+                          "variances" = "Variances",
+                          "latentvariances" = "Latent Var/Covariances",
+                          "latentmeans" = "Latent Means/Intercept",
+                          "thresholds"= "Thresholds")
+    ## re-order paramSetsFound according to standard list
+    parmSetNames <- intersect(parmSetsOrdering, parmSetsFound)
+
+    results <- list()
+    for (parmSetName in parmSetNames){
+        tablList <- lapply(parmList, function(x) x[[parmSetName]])
+        if(parmSetName %in% c("loadings", "slopes")){
+            ## get the varnames
+            varnames <- unique(unlist(lapply(tablList, names)))
+            hh <- list()
+            for(i in varnames) {
+                subList <- lapply(tablList, function(x) x[[i]])
+                hh[[i]] <- buildSubtable(subList)
+            }
+            res <- paste0(hh, collapse = " ")
+            results[[parmSetName]] <- res
+        } else {
+            results[[parmSetName]] <- buildSubtable(tablList)
+        }
+    }
+        
+    
     ## test case with different column request
     ## reslt1 <- extractParameters(object, colNames = c("estse" = "Est(SE)"))
     ## reslt2 <- extractParameters(stdFit, colNames = c("estse" = "Est(SE)"))
