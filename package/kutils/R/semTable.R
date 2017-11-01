@@ -393,7 +393,6 @@ semTable <-
     
     ##works for loadings or slopes
     loadingMaker <- function(parameters, rowType = "loadings", colNames, modelName) {
-        browser()
         report <- names(colNames[[modelName]])
         totalNcolumns <- min(9,  length(unname(unlist(colNames))))
         trows <- parameters[parameters$rowType == rowType,  , drop = TRUE]
@@ -409,159 +408,6 @@ semTable <-
         })
         info
     }
-
-    ## ## gives back a list of tables, 1 for each DV
-    ## slopeMaker <- function(parameters, report = c("est", "se", "z", "p")){
-    ##     jj <- "slopes"
-    ##     trows <- parameters[parameters$rowType == jj, , drop = FALSE]
-    ##     trowsplit <- split(trows, f = trows$lhs, drop = FALSE)
-    ##     slopelist <- lapply(trowsplit, function(x){
-    ##         vname <- unique(x$lhs)
-    ##         rownames(x) <- paste(jj, vname, x[ , "rhs"], sep = ".")
-    ##         x <- data.frame(col1 = x$rhs, x[ , report, drop = FALSE])
-    ##         makeSubtableTitle(dvname, colnum = 1, width = 2, underline = TRUE) 
-    ##         ## title <- list(title = dvname,
-    ##         ##               markup = "_UL__CONTENT__EOUL__EOC_",
-    ##         ##               colnum = 1)
-    ##         attr(x, "title") <- title
-    ##         class(x) <- c("trows", class(x))
-    ##         x
-    ##     })
-    ##     slopelist
-    ## }
-
-    
-    ## interceptMaker <- function(parameters, report = c("est", "se", "z", "p")){
-    ##     jj <- "intercepts"
-    ##     trows <- parameters[parameters$rowType == jj, , drop = FALSE]
-    ##     if(NROW(trows) == 0) return(NULL)
-    ##     rownames(trows) <- paste0(jj, ".", trows[ , "lhs"])
-    ##     trows <- data.frame(col1 = trows$lhs, trows[, report, drop = FALSE])
-    ##     title <- list(title = paramSetsLabels[jj],
-    ##                   markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
-    ##                   colnum = 2)
-    ##     attr(trows, "title") <- title
-    ##     class(trows) <- c("trows", class(trows))
-    ##     trows
-    ## }
-
-    ## observedMeanMaker <- function(parameters, report = c("est", "se", "z", "p")){
-    ##     jj <- "means"
-    ##     trows <- parameters[parameters$rowType == jj, , drop = FALSE]
-    ##     if(NROW(trows) == 0) return(NULL)
-    ##     rownames(trows) <- paste0(jj, ".", trows[ , "lhs"])
-    ##     trows <- data.frame(col1 = trows$lhs, trows[, report, drop = FALSE])
-    ##     title <- list(title = paramSetsLabels[jj],
-    ##                   markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
-    ##                   colnum = 2)
-    ##     attr(trows, "title") <- title
-    ##     class(trows) <- c("trows", class(trows))
-    ##     trows
-    ## }
-
-
-    ## thresholdMaker <- function(parameters, rowType, colNames, modelName){
-    ##     report <- names(colNames[[modelName]])
-    ##     totalNcolumns <- min(9,  length(unname(unlist(colNames))))
-    ##     trows <- parameters[parameters$rowType == rowType, ,
-    ##                         drop = FALSE]
-    ##     if(dim(trows)[1] == 0) return(NULL)
-    ##     thresnum <- substring(trows$rhs, 2, nchar(trows$rhs))
-    ##     trows$col1 <- paste0(trows$lhs, "(", thresnum, ")")
-    ##     rownames(trows) <- paste(jj, trows[ , "lhs"], thresnum, sep = ".")
-    ##     trows <- data.frame(col1 = trows$col1, trows[ , report, drop = FALSE])
-    ##     attr(trows, "title") <- makeSubtableTitle(paramSetsLabels[rowType],
-    ##                                               colnum = 2,
-    ##                                               width = totalNcolumns,
-    ##                                               underline = TRUE)
-    ##     class(trows) <- c("trows", class(trows))
-    ##     trows
-    ## }
-
-        
-
-    ## residualvarianceMaker <- function(parameters, rowType, colNames, modelName){
-    ##     report <- names(colNames[[modelName]])
-    ##     totalNcolumns <- min(9,  length(unname(unlist(colNames))))
-    ##     trows <- parameters[parameters$rowType == rowType,, drop = FALSE ]
-    ##     if(dim(trows)[1] == 0) return(NULL)
-    ##     trows <- trows[which(trows$rhs == trows$lhs),, drop = FALSE]
-    ##     rownames(trows) <- paste("residualvariances", trows[ , "lhs"], sep = ".")
-    ##     trows <- data.frame(col1 = trows$lhs, trows[ , report, drop = FALSE])
-    ##     attr(trows, "title") <- makeSubtableTitle(paramSetsLabels[rowType],
-    ##                                               colnum = 2,
-    ##                                               width = totalNcolumns,
-    ##                                               underline = TRUE)
-    ##     class(trows) <- c("trows", class(trows))
-    ##     trows
-    ## }
-
-    ## residualcovarianceMaker <- function(parameters, rowType, colNames, modelName){
-    ##     report <- names(colNames[[modelName]])
-    ##     totalNcolumns <- min(9,  length(unname(unlist(colNames))))
-    ##     trows <- parameters[parameters$rowType == rowType,, drop = FALSE ]
-    ##     if(dim(trows)[1] == 0) return(NULL)
-    ##     trows <- trows[which(trows$rhs != trows$lhs), ]
-    ##     rownames(trows) <- paste0(rowType, trows[ , "lhs"], sep = ".")
-    ##     trows <- data.frame(col1 = trows$lhs, trows[ , report, drop = FALSE])
-        
-    ##     attr(trows, "title") <- makeSubtableTitle(paramSetsLabels[rowType],
-    ##                                               colnum = 2,
-    ##                                               width = totalNcolumns,
-    ##                                               underline = TRUE)
-    ##     class(trows) <- c("trows", class(trows))
-    ##     trows
-    ## }
-
-    
-    ## latentvarianceMaker <- function(parameters, report = c("est", "se", "z", "p")){
-    ##     jj <- "latentvariances"
-    ##     trows <- parameters[parameters$rowType == jj, , drop = FALSE]
-    ##     if(dim(trows)[1] == 0) return(NULL)
-    ##     rownames(trows) <- paste0(jj, ".", trows[ , "lhs"])
-    ##     trows[ , "lhs"] <- trows[ , "lhs"]
-    ##     trows <- data.frame(col1 = trows$lhs, trows[ , report, drop = FALSE])
-    ##     title <- list(title = paramSetsLabels[jj],
-    ##                   markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
-    ##                   colnum = 2)
-    ##     attr(trows, "title") <- title
-    ##     class(trows) <- c("trows", class(trows))
-    ##     trows
-    ## }
-
-
-    ## latentcovarianceMaker <- function(parameters, rowType, colNames, modelName){
-    ##     report <- names(colNames[[modelName]])
-    ##     totalNcolumns <- min(9,  length(unname(unlist(colNames))))
-    ##     trows <- parameters[parameters$rowType == rowType, , drop = FALSE]
-    ##     if(dim(trows)[1] == 0) return(NULL)
-    ##     rownames(trows) <- paste0(rowType, ".", trows[ , "lhs"],
-    ##                              ".", trows[ , "rhs"])
-    ##     trows[ , "lhs"] <- paste0(trows[ , "lhs"], " w/", trows[ , "rhs"])
-    ##     trows <- data.frame(col1 = trows$lhs, trows[ , report, drop = FALSE])
-    ##     attr(trows, "title") <- makeSubtableTitle(paramSetsLabels[rowType],
-    ##                                               colnum = 2,
-    ##                                               width = totalNcolumns,
-    ##                                               underline = TRUE)
-    ##     class(trows) <- c("trows", class(trows))
-    ##     trows
-    ## }
-
-
-    
-
-    ## latentMeanMaker <- function(parameters, report = c("est", "se", "z", "p")){
-    ##     trows <- parameters[parameters$rowType == "latentmeans",, drop = FALSE]
-    ##     if(dim(trows)[1] == 0) return (NULL)
-    ##     rownames(trows) <- paste("latentmeans", trows[ , "lhs"], sep = ".")
-    ##     trows <- data.frame(col1 = trows$lhs, trows[ , report, drop = FALSE])
-    ##     title <- list(title = "Latent Means/Intercept",
-    ##                   markup = paste0("_BOMC", length(report), "__UL__CONTENT__EOUL__EOMC_"),
-    ##                   colnum = 2)
-    ##     attr(trows, "title") <- title
-    ##     class(trows) <- c("trows", class(trows))
-    ##     trows
-    ##  }
 
     ## want to replace all/many of the "maker" functions with one function.
     ## works for:
@@ -702,62 +548,9 @@ semTable <-
                                             modelName = modelName, col1name = "lhs")
             }
         }
-                
-        ## reslt <- list()
-        ## for (jj in c("loadings", "slopes")){
-        ##     info <- loadingMaker(paramTable, rowType = jj, colNames)
-            
-        ##     if (!is.null(info)){
-        ##         attr(info, "title") <- makeSubtableTitle(paramSetsLabels["loadings"],
-        ##                                                  colnum = 2,
-        ##                                                  width = length(report))
-        ##         class(info) <- c("trowsList", class(loadingInfo))
-        ##     }
-        ##     reslt[[i]] <- info
-        ## }
-
-        ## for(i in c("intercepts", "means", "latentvariances", "latentmeans")){
-        ##     reslt[[i]] <- parTableMaker(paramTable, rowType = i, colNames,
-        ##                                 modelName = modelName, col1name = "lhs")
-        ## }
-
-      
-        ## if("thresholds" %in% params){
-        ##     reslt[["thresholds"]] <-
-        ##         thresholdMaker(parameters = paramTable,
-        ##                        rowType = "thresholds",
-        ##                        colNames = colnames,
-        ##                        modelName = modelName)
-        ## }
-        
-        ## if("residualvariancess" %in% params){
-        ##     reslt[["residualvariances"]] <-
-        ##         residualvarianceMaker(parameters = paramTable,
-        ##                               rowType = "thresholds",
-        ##                               colNames = colnames,
-        ##                               modelName = modelName)
-        ## }
-
-        ## if("residualcovariances" %in% params){
-        ##     reslt[["residualcovariances"]] <-
-        ##         residualcovarianceMaker(parameters = paramTable,
-        ##                                 rowType = "thresholds",
-        ##                                 colNames = colnames,
-        ##                                 modelName = modelName)
-        ## }
-        ##  if("latentcovariances" %in% params){
-        ##     reslt[["latentcovariances"]] <-
-        ##         latentcovarianceMaker(parameters = paramTable,
-        ##                               rowType = "thresholds",
-        ##                               colNames = colnames,
-        ##                               modelName = modelName)
-        ## }
-       
         reslt
     }
-
-
-    
+   
     extractModelSummary <- function(object){
         sumry <- list()
         if (1) {
