@@ -135,23 +135,36 @@
 ##' ## Can create file if desired
 ##' ## cat(fit1.t2, file = "table1.t2.tex")
 ##' ## Basic SEM
-##' regmodel <- 'visual  =~ x1 + x2 + x3
+##' regmodel1 <- 'visual  =~ x1 + x2 + x3
 ##'              textual =~ x4 + x5 + x6
 ##'              speed   =~ x7 + x8 + x9
 ##'              visual ~ textual + speed
 ##' '
 ##'
-##' fit2 <- sem(regmodel, data = HolzingerSwineford1939, std.lv = TRUE, meanstructure = TRUE)
+##' fit2 <- sem(regmodel1, data = HolzingerSwineford1939, std.lv = TRUE, meanstructure = TRUE)
 ##'
-##' fit2.std <- update(fit1, std.lv = TRUE, std.ov = TRUE, meanstructure = TRUE) 
+##' fit2.std <- update(fit2, std.lv = TRUE, std.ov = TRUE, meanstructure = TRUE) 
 ##'
-fit2.t <- semTable(list("Ordinary" = fit2, "Standardized" = fit2.std), fit = "rmsea",
-                   colNames = list("Ordinary" = c("est" = "Est", "se" = "Std.Err.", "p" = "p"),
-                                   "Standardized" = c("est" = "Standardized Est.")),
-                   file = "../jasper", type = c("latex", "csv"))
-##'
+##' fit2.t <- semTable(list("Ordinary" = fit2, "Standardized" = fit2.std), fit = "rmsea",
+##'                    colNames = list("Ordinary" = c("est" = "Est", "se" = "Std.Err.", "p" = "p"),
+##'                                    "Standardized" = c("estsestars" = "Standardized Est.")),
+##'                    paramSets = c("loadings", "slopes", "latentcovariances"),
+##'                    file = "../jasper", type = c("latex", "csv"))
+##' cat(fit2.t)
 ##' 
-##' fit2.t <- semTable(list("Ordinary" = fit2, "Standardized" = fit2.std), fit = "rmsea", type = "html")
+##' fit2.t <- semTable(list("Ordinary" = fit2, "Standardized" = fit2.std), type = "html")
+##'
+##' regmodel2 <- 'visual  =~ x1 + x2 + x3
+##'              textual =~ x4 +  x6
+##'              speed   =~  x8 + x9
+##'              visual ~ textual 
+##' '
+##' fit3 <- sem(regmodel2, data = HolzingerSwineford1939, std.lv = TRUE, meanstructure = TRUE)
+##' 
+##' fit3.std <- update(fit2, std.lv = TRUE, std.ov = TRUE)
+##'
+##' semTable(list("Mod 1" = fit2, "Mod 1 std" = fit2.std, "Mod 2" = fit3, "Mod 3 std" = fit3.std),
+##'                  colNames = c("estse" = "Est(S.E.)"), file = "../jasper")
 ##'
 ##' 
 ##' cat(fit2.t)
@@ -189,9 +202,6 @@ fit2.t <- semTable(list("Ordinary" = fit2, "Standardized" = fit2.std), fit = "rm
 ##' ##    fit = c("tli", "chi-square"),
 ##' ##    names_fit = c("TLI", "chi-square"), type = "latex")
 ##' }
-##' .. content for \description{} (no empty lines) ..
-##'
-##' .. content for \details{} ..
 semTable <-
     function(object, file = NULL,
              paramSets = "all",
@@ -255,7 +265,10 @@ semTable <-
     fixParamSets <- function(paramSets, parameters) {
         if (paramSets != "all") {
             paramSets <- unique(paramSets)
-            if (any(paramSets %in% names(
+            if (any(!paramSets %in% names(paramSetsLabels))){
+                MESSG <- "fixParamSets: invalid paramSets"
+                stop(MESSG)
+            }
         }
         
         variables <- attr(parameters, "variables")
@@ -342,26 +355,26 @@ semTable <-
         parameters[parameters$lhs %in% latents &
                    parameters$op == "~1", "rowType"] <- "latentmeans"
         parameters
-        
     }
     
     getParamTable <- function(object){
-        
         createEstSE <- function(dframe, stars = FALSE){
             dframe <- roundSubtable(dframe)
             ifelse(dframe[ , "free"] != 0,
-                   paste0(dframe[ , "est"], "(", dframe[ , "se"], ")", if(stars)dframe[ , "starsig"]),
-                   paste0(dframe[ , "est"], "_FIXED_"))
+                   paste0(dframe[ , "est"], "(", dframe[ , "se"], ")", if(stars)dframe[ , "starsig"] else ""),
+                   paste0(dframe[ , "est"]))
         }
-
+        
         if(class(object)[1] != "lavaan"){
             stop("object is not a lavaan output object.")
         }
 
         parList <- object@ParTable[
                               intersect(names(object@ParTable),
-                                        c("lhs", "op", "rhs", "free", "group", "est", "se"))]
+                                        c("lhs", "op", "rhs", "free", "group", "est", "se", "label", "plabel"))]
         parameters <- as.data.frame(parList, stringsAsFactors=FALSE)
+        rsquare <- lavInspect(object, what = "rsquare")
+        
         parameters$z <- ifelse(parameters$free != 0 & parameters$se != 0, parameters$est/parameters$se, NA)
         parameters$p <- 2*pnorm(abs(parameters$z), lower.tail = FALSE)
         parameters$starsig <- starsig(parameters$p)
@@ -378,13 +391,25 @@ semTable <-
         parameters2
     }
 
+    ## The trows objects have an attribute "title" and this
+    ## formats that
+    getTitleMarkup <- function(title){
+        header  <- "_BR_"
+        ## Tricky business b/c row markup does not call for _BOC_ in column 1,
+        ## that's provided by "_BR_".
+        header <- paste0(header, gsub("_CONTENT_", title$title, title$markup), "_EOR_")
+        header
+    }
     
-    makeSubtableTitle <- function(title, colnum = 1, width = 1,  underline = TRUE){
-        prefix <- if (colnum > 1) paste("_EOC_", rep("_BOC__EOC_", colnum - 2))
+    makeSubtableTitle <- function(title, colnum = 1, width = 1, center = TRUE, underline = TRUE){
+        colalign <- if(center) "_BOMC" else "_BOML"
+        ## Need a separator if colnum > 1. This is ripple effect of removing & from _BOMC_ definition.
+        ## Because we assume it is always BOMC, now must add _BOC_ before _BOMC_
+        prefix <- if (colnum > 1) paste0("_EOC_", rep("_BOC__EOC_", colnum - 2), "_BOC_")
         markup <- if(underline) {
-                      paste0(prefix, "_BOMC", width, "__UL__CONTENT__EOUL__EOMC_")
+                      paste0(prefix, colalign, width, "__UL__CONTENT__EOUL__EOMC_")
                   } else {
-                      paste0(prefix, "_BOMC", width, "__CONTENT__EOMC_")
+                      paste0(prefix, colalign, width, "__CONTENT__EOMC_")
                   }
         title <- list(title = title, markup = markup,
                       colnum = colnum, width = width)
@@ -398,11 +423,17 @@ semTable <-
         trows <- parameters[parameters$rowType == rowType,  , drop = TRUE]
         trowsplit <- split(trows, f = trows$lhs, drop = FALSE)
         info <- lapply(trowsplit, function(x){
+            ## drop gotcha, if x has one row from df now it is a list.
+            if(class(x)[1] == "list") x <- as.data.frame(x)
             vname <- unique(x$lhs)
+            print(paste("vname", vname))
+            print(x)
+            print("\n")
+            ##if(rowType == "slopes") browser()
             rownames(x) <- paste(rowType, vname, x[ , "rhs"], sep = ".")
             x <- data.frame(col1 = x$rhs, x[ , report, drop = FALSE])
             ## don't put "_BOC_" at beginning if in colnum 1
-            attr(x, "title") <- makeSubtableTitle(vname, colnum = 1, width = 2, underline = TRUE)
+            attr(x, "title") <- makeSubtableTitle(vname, colnum = 1, width = 1, center = FALSE,  underline = TRUE)
             class(x) <- c("trows", class(x))
             x
         })
@@ -410,7 +441,8 @@ semTable <-
     }
 
     ## want to replace all/many of the "maker" functions with one function.
-    ## works for:
+    ## Only difference between maker functions was in calculation of col1 and
+    ## the rownames, which we can customize here
     ## rowType in c("intercepts", "means" "latentmeans", "latentvariances","residualcovariances"
     ##
     ## complications: "latentcovariances" "residualvariances" "thresholds" "covariances"
@@ -428,13 +460,13 @@ semTable <-
             rownames(trows) <- paste(rowType, trows[ , "lhs"], sep = ".")
             trows$col1 <- trows[ , col1name]
         } else if (rowType == "residualcovariances"){
-            trows$col1 = trows$lhs
+            trows$col1 <- trows$lhs
             rownames(trows) <- paste0(rowType, trows[ , "lhs"], sep = ".")
         } else if (rowType == "latentcovariances"){
             browser()
             ## Needed?
             ## trows <- parameters[parameters$rowType == rowType, , drop = FALSE]
-            trows$col1 = trows$lhs
+            trows$col1 <- trows$lhs
             rownames(trows) <- paste0(rowType, ".", trows[ , "lhs"],
                            ".", trows[ , "rhs"])
         } else {
@@ -485,15 +517,7 @@ semTable <-
     }
 
 
-    ## The trows objects have an attribute "title" and this
-    ## formats that
-    getTitleMarkup <- function(title){
-        header  <- "_BR_"
-        ## Tricky business b/c row markup does not call for _BOC_ in column 1,
-        ## that's provided by "_BR_".
-        header <- paste(header, gsub("_CONTENT_", title$title, title$markup), "_EOR_")
-        header
-    }
+
        
     ## A trows object is a matrix, this inserts formatting markup.
     ## trows also has attribute "title", which is used to create
@@ -506,12 +530,12 @@ semTable <-
         }
         trowsf[ , 1] <- paste0("_BR_", trowsf[, 1])
         trowsf[ , NCOL(trowsf)] <- paste0(trowsf[ , NCOL(trowsf)], "_EOC__EOR_")
-        res <- paste(apply(trowsf, 1, paste, collapse = " "), collapse = "\n")
+        res <- paste0(apply(trowsf, 1, paste, collapse = ""), collapse = "\n")
         ## TODO 20171028 CAUTION: workaround here b/c title info sometimes missing, must
         ## go back find why it is missing
         if (!is.null(attr(trows, "title"))){
             header <- getTitleMarkup(attr(trows, "title"))
-            res <- paste(header, "\n", res, "\n")
+            res <- paste0(header, "\n", res, "\n")
         }
         return(res)
     } 
@@ -525,7 +549,7 @@ semTable <-
         params <- attr(paramTable, "params")
         ## report was name used for varnames of columns for
         ## keeing, ex: c("est" "se" "z" "p")
-        report <- names(colNames[modelName])
+        report <- names(colNames[[modelName]])
 
         ## explore following as alternative concept to manage calculations
         ## creates a list of tables for each parameter type, so no need to do
@@ -540,6 +564,7 @@ semTable <-
                     attr(info, "title") <- makeSubtableTitle(paramSetsLabels["loadings"],
                                                              colnum = 2,
                                                              width = length(report))
+                    browser()
                     class(info) <- c("trowsList", class(info))
                 }
                 reslt[[jj]] <- info
@@ -561,7 +586,7 @@ semTable <-
         
         if (!is.null(fit)) {
             rowempty <- character(length = 1 + length(report))
-            rowempty <- paste("_BOMC3_", fitMaker(object), "_EOMC__LB_")
+            rowempty <- paste0("_BOMC3_", fitMaker(object), "_EOMC__LB_")
             sumry[["summaries"]] <- rowempty
         }
     }
@@ -653,26 +678,24 @@ semTable <-
                 }
                 res <- paste0(hh, collapse = " ")
                 ## Improvise a section heading for loadings and slopes
-                title <- list(title = paramSetsLabels[jj],
-                              markup = paste0("_BOMC", totalNcolumns, "__UL__CONTENT__EOUL__EOMC_"),
-                              colnum = 2)
+                ## title <- list(title = paramSetsLabels[jj],
+                ##               markup = paste0("_BOMC", totalNcolumns, "__UL__CONTENT__EOUL__EOMC_"),
+                ##               colnum = 2)
+                title <- makeSubtableTitle(paramSetsLabels[jj], colnum = 1, width = totalNcolumns,
+                                           underline = TRUE)
                 header <- getTitleMarkup(title)
-                res <- paste(header, res)
+                res <- paste0(header, res)
             } else {
                 res <- buildParamSetSubtable(tablList, colNames)
             }
             res
         })
         
-        results2 <- paste(results, collapse = " ")
-        colHeaderRow <- paste("_BR__EOC__BOC_", paste(colHeaderRow, collapse = "_EOC__BOC_"), "_EOC__EOR_\n")
-        ## manual prototype
-        ## modelHeaderRow <- paste0("_BR__EOC_", 
-        ##                          "_BOMC", colNameCounts[1],"__UL_", names(colNameCounts[1]) , "_EOUL__EOMC_",
-        ##                          "_BOMC", colNameCounts[2],"__UL_", names(colNameCounts[2]), "_EOUL__EOMC_", "_EOR_")
-        modelHeaderRow <- paste0("_BR__EOC_",
-                                 paste0("_BOMC", colNameCounts, "__UL_", names(colNameCounts), "_EOUL__EOMC_", collapse = " "),
-                                 "_EOR_\n", collapse = " ")
+        results2 <- paste(results, collapse = "")
+        colHeaderRow <- paste("_BR__EOC__BOC_", paste(colHeaderRow, collapse = "_EOC__BOC_"), "_EOC__EOR_\n _HL_\n")
+        modelHeaderRow <- paste0("_BR__EOC__BOC_",
+                                 paste0("_BOMC", colNameCounts, "__UL_", names(colNameCounts), "_EOUL__EOMC_", collapse = "_BOC_"),
+                                 "_EOR_\n _HL_\n", collapse = " ")
         resmark <- paste("_BT_\n", modelHeaderRow, colHeaderRow, results2, "_EOT_\n")
         resmark
     }
@@ -682,7 +705,8 @@ semTable <-
     result <- markupConvert(markedResults, type = type,
                             longtable = longtable, file = file,
                             colNames = colNames)
-
+    attr(result, "markedResults") <- markedResults
+    result
 }
 
 
@@ -702,7 +726,8 @@ semTable <-
 markupConvert <- function(marked, type = c("latex", "html", "csv"),
                         longtable = FALSE, file = NULL, colNames)
 {
-    report <- names(unlist(colNames))
+    ##num of columns, except for col1
+    Ncolumns <- length(unname(unlist(colNames)))
     
     ## Replacement strings for LaTeX output
     latexreplace <- c(
@@ -710,15 +735,15 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         "_EOC_" =  "",
         "_BOC_" = "& ", 
         "_EOMC_" = "}",
-        "_EOR_" = "\\\\tabularnewline",
+        "_EOR_" = "\\\\tabularnewline\n",
         "_BRU_" = "",
         "_BRT_" = "", 
         "_BOCU_" = "& ",
         "_BR_" = "",
         "_BT_" = if(longtable) paste0("\\\\begin{longtable}{l",
-                                      paste0(rep("r", length(report)), collapse = ""), "}")
+                                      paste0(rep("r", Ncolumns), collapse = ""), "}")
                  else paste0("\\\\begin{tabular}{l",
-                             paste0(rep("r", length(report)), collapse = ""), "}"),
+                             paste0(rep("r", Ncolumns), collapse = ""), "}"),
         "_EOL_" = "\n",
         "_HL_" = "\\\\hline", 
         "_UL_" = "\\\\underline{",
@@ -728,19 +753,28 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         "_EOT_" = if (longtable) "\\\\end{longtable}" else "\\\\end{tabular}",
         "_BOMR1_" = "& \\\\multirow{1}{c}{",
         "_BOMR2_" = "& \\\\multirow{2}{c}{",
-        "_BOMC1_" = "& \\\\multicolumn{1}{c}{",
-        "_BOMC2_" = "& \\\\multicolumn{2}{c}{",
-        "_BOMC3_" = "& \\\\multicolumn{3}{c}{",
-        "_BOMC4_" = "& \\\\multicolumn{4}{c}{",
-        "_BOMC5_" = "& \\\\multicolumn{5}{c}{",
-        "_BOMC6_" = "& \\\\multicolumn{6}{c}{",
-        "_BOMC7_" = "& \\\\multicolumn{7}{c}{",
-        "_BOMC8_" = "& \\\\multicolumn{8}{c}{",
-        "_BOMC9_" = "& \\\\multicolumn{9}{c}{",
-        "_BOMCT1_" = "& \\\\multicolumn{1}{c}{",
-        "_BOMCT2_" = "& \\\\multicolumn{2}{c}{",
-        "_BOMCT3_" = "& \\\\multicolumn{3}{c}{",
-        "_BOMCT4_" = "& \\\\multicolumn{4}{c}{",
+        "_BOMC1_" = "\\\\multicolumn{1}{c}{",
+        "_BOMC2_" = "\\\\multicolumn{2}{c}{",
+        "_BOMC3_" = "\\\\multicolumn{3}{c}{",
+        "_BOMC4_" = "\\\\multicolumn{4}{c}{",
+        "_BOMC5_" = "\\\\multicolumn{5}{c}{",
+        "_BOMC6_" = "\\\\multicolumn{6}{c}{",
+        "_BOMC7_" = "\\\\multicolumn{7}{c}{",
+        "_BOMC8_" = "\\\\multicolumn{8}{c}{",
+        "_BOMC9_" = "\\\\multicolumn{9}{c}{",
+        "_BOML1_" = "\\\\multicolumn{1}{l}{",
+        "_BOML2_" = "\\\\multicolumn{2}{l}{",
+        "_BOML3_" = "\\\\multicolumn{3}{l}{",
+        "_BOML4_" = "\\\\multicolumn{4}{l}{",
+        "_BOML5_" = "\\\\multicolumn{5}{l}{",
+        "_BOML6_" = "\\\\multicolumn{6}{l}{",
+        "_BOML7_" = "\\\\multicolumn{7}{l}{",
+        "_BOML8_" = "\\\\multicolumn{8}{l}{",
+        "_BOML9_" = "\\\\multicolumn{9}{l}{",
+        "_BOMCT1_" = "\\\\multicolumn{1}{c}{",
+        "_BOMCT2_" = "\\\\multicolumn{2}{c}{",
+        "_BOMCT3_" = "\\\\multicolumn{3}{c}{",
+        "_BOMCT4_" = "\\\\multicolumn{4}{c}{",
         "_HTMLHL_" = "",
         "_CHI2_" = "$\\\\chi^2)$",
         "_R2_" = "$R^2$",
@@ -779,6 +813,15 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         "_BOMC7_" = "<td colspan = '7'; align = 'center'>",
         "_BOMC8_" = "<td colspan = '8'; align = 'center'>",
         "_BOMC9_" = "<td colspan = '9'; align = 'center'>",
+        "_BOML1_" = "<td colspan = '1'; align = 'left'>",
+        "_BOML2_" = "<td colspan = '2'; align = 'left'>",
+        "_BOML3_" = "<td colspan = '3'; align = 'left'>",
+        "_BOML4_" = "<td colspan = '4'; align = 'left'>",
+        "_BOML5_" = "<td colspan = '5'; align = 'left'>",
+        "_BOML6_" = "<td colspan = '6'; align = 'left'>",
+        "_BOML7_" = "<td colspan = '7'; align = 'left'>",
+        "_BOML8_" = "<td colspan = '8'; align = 'left'>",
+        "_BOML9_" = "<td colspan = '9'; align = 'left'>",
         "_BOMCT1_" = "<td colspan = '1'; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;",
         "_BOMCT2_" = "<td colspan = '2'; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;",
         "_BOMCT3_" = "<td colspan = '3'; style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;",
