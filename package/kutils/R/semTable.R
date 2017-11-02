@@ -463,7 +463,7 @@ semTable <-
             trows$col1 <- trows$lhs
             rownames(trows) <- paste0(rowType, trows[ , "lhs"], sep = ".")
         } else if (rowType == "latentcovariances"){
-            browser()
+            ## browser()
             ## Needed?
             ## trows <- parameters[parameters$rowType == rowType, , drop = FALSE]
             trows$col1 <- trows$lhs
@@ -564,7 +564,6 @@ semTable <-
                     attr(info, "title") <- makeSubtableTitle(paramSetsLabels["loadings"],
                                                              colnum = 2,
                                                              width = length(report))
-                    browser()
                     class(info) <- c("trowsList", class(info))
                 }
                 reslt[[jj]] <- info
@@ -681,7 +680,7 @@ semTable <-
                 ## title <- list(title = paramSetsLabels[jj],
                 ##               markup = paste0("_BOMC", totalNcolumns, "__UL__CONTENT__EOUL__EOMC_"),
                 ##               colnum = 2)
-                title <- makeSubtableTitle(paramSetsLabels[jj], colnum = 1, width = totalNcolumns,
+                title <- makeSubtableTitle(paramSetsLabels[jj], colnum = 2, width = totalNcolumns,
                                            underline = TRUE)
                 header <- getTitleMarkup(title)
                 res <- paste0(header, res)
