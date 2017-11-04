@@ -23,6 +23,9 @@
 ##' means (or intercepts).
 ##' \item "thresholds" arise in latent
 ##' response variates (non-numeric indicator data).
+##' \item "fits" the summary indicators of the mismatch between
+##' the theoretical and observed covariance matrices, such as
+##' RMSEA, CLI, TFI.
 ##' }
 ##'
 ##' The standardized parameter regulates the number of columns to be
@@ -58,22 +61,35 @@
 ##'     list("Model A" = c(est = "Estimate", se = "Std. Err."),
 ##'     "Model B" = c(p = "p value")). The names in this list must be
 ##'     same names supplied in the \code{object} list of models.
-##' @param paramSets Parameter sets to be included. Valid values are
-##'     \code{"all"} or a vector including any of the following:
-##'     \code{c("loadings", "slopes", "intercepts",
+##' @param paramSets Parameter sets to be included for each fitted
+##'     object.  Can be one vector (applied to all fit objects) or a
+##'     list of vectors (one for each element in the list of fitted
+##'     models). Valid values of the vector are \code{"all"} or a any
+##'     of the following: \code{c("loadings", "slopes", "intercepts",
 ##'     "residualvariances", "residualcovariances", "latentmeans",
-##'     "latentvariances", "latentcovariances",
-##'     "thresholds")}. Default is "all", which means that any of the
-##'     parameters present in the fitted model that are listed in the
-##'     previous sentence will be included in the output. If
-##'     \code{object} is a list of fitted models, and paramSets is
-##'     "all" or a vector, then same parameter sets are reported for
-##'     all models. Different parameter sets can be requested by
-##'     supplying a list of named vectors. Names must be same names
+##'     "latentvariances", "latentcovariances", "thresholds",
+##'     "fits")}. Default is "all", any of the estimates present in
+##'     the fitted model that are listed in the previous sentence will
+##'     be included in the output. If \code{object} is a list of
+##'     fitted models, and paramSets is "all" or a vector, then same
+##'     parameter sets are reported for all models. Different
+##'     parameter sets can be requested by supplying a list of named
+##'     vectors. Names for vectors within that list must be same names
 ##'     supplied in the \code{object} list of models.
 ##' @param paramSetsLabels Named vector, used to supply alternative
 ##'     pretty printing labels for parameter sets. See default in
-##'     declaration of this function.
+##'     declaration of this function. Input can either be a vector of
+##'     the same lenth as \code{paramSets}, meaning all labels or are
+##'     user-specified, or a named vector of new labels for some of
+##'     the parameter sets. The default values are \code{c("loadings"=
+##'     "Factor Loadings", "slopes" = "Regression Slopes",
+##'     "intercepts" = "Intercepts", "means"= "Means",
+##'     "residualvariances" = "Residual Variances",
+##'     "residualcovariances" = "Residual Covariances", "variances" =
+##'     "Variances", "latentvariances" = "Latent Variances",
+##'     "latentcovariances" = "Latent Covariances", "latentmeans" =
+##'     "Latent Intercepts", "thresholds" = "Thresholds", "fits" =
+##'     "Fit Indices")}
 ##' @param fit Summary indicators to be included. The allowed values
 ##'     are provided by \code{lavaan::fitMeasures(object)}. Currently,
 ##'     they are "npar", "fmin", "chisq", "df", "pvalue",
@@ -105,6 +121,9 @@
 ##' @param file Base name for output file.
 ##' @param longtable If TRUE, use longtable for LaTeX
 ##'     documents. Default is FALSE.
+##' @param alpha Thresholds for p-values that determine number of
+##'     stars.  Defaults as \code{c(0.05, 0.01, 0.001)} for
+##'     \code{c("*", "**", "***")}.
 ##' @importFrom stats pnorm
 ##' @return Markup for SEM table, or a list of markup character
 ##'     strings, one for each value of \code{type}.
@@ -119,10 +138,10 @@
 ##'               textual =~ x4 + x5 + x6
 ##'               speed   =~ x7 + x8 + x9'
 ##' fit1 <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE, meanstructure = TRUE)
-##' fit1.t1 <- semTable(fit1, fit = c("chi-square", "rmsea"), file = "../jasper")
-##' fit1.t1 <- semTable(fit1, fit = c("chi-square", "rmsea"),
+##' fit1.t1 <- semTable(fit1, fit = c("chisq", "rmsea"), file = "../jasper")
+##' fit1.t1 <- semTable(fit1, fit = c("chisq", "rmsea"),
 ##'            colLabels = c("est" = "Est",  se = "Std. Err."))
-##' fit1.t1 <- semTable(fit1, fit = c("chi-square", "rmsea"),
+##' fit1.t1 <- semTable(fit1, fit = c("chisq", "rmsea"),
 ##'            colLabels = c("estse" = "Estimate(Std.Err.)"))
 ##' ## 2 groups
 ##' fit1.g <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE, group = "school")
@@ -202,17 +221,17 @@
 ##' fit4 <- cfa(testmodel, data = dat, ordered = colnames(dat),
 ##'     std.lv = FALSE)
 ##' fit4.t1 <- semTable(fit4, paramSets = c("loadings", "thresholds", "residualvariances"),
-##'     fit = c("tli", "chi-square"),
-##'     names_fit = c("TLI", "chi-square"), type = "html")
-##' fit4.t2 <- semTable(fit4, fit = c("rmsea", "tli", "chi-square"),
-##'     names_fit = c("RMSEA", "TLI", "chi-square"), type = "latex")
+##'     fit = c("tli", "chisq"),
+##'     names_fit = c("TLI", "chisq"), type = "html")
+##' fit4.t2 <- semTable(fit4, fit = c("rmsea", "tli", "chisq"),
+##'     names_fit = c("RMSEA", "TLI", "chisq"), type = "latex")
 ##' 
 ##' 
 ##' ## Example with file output requested in the command
 ##' ## semTable(output, file = "catTable.tex",
 ##' ##    paramSets = c("loadings", "thresholds", "residualvariances"),
-##' ##    fit = c("tli", "chi-square"),
-##' ##    names_fit = c("TLI", "chi-square"), type = "latex")
+##' ##    fit = c("tli", "chisq"),
+##' ##    names_fit = c("TLI", "chisq"), type = "latex")
 ##' }
 semTable <-
     function(object, file = NULL,
@@ -227,13 +246,14 @@ semTable <-
                                 "latentvariances" = "Latent Variances",
                                 "latentcovariances" = "Latent Covariances", 
                                 "latentmeans" = "Latent Intercepts",
-                                "thresholds"= "Thresholds"),
-             fit = c("chi-square", "cfi", "tli", "rmsea"),
+                                "thresholds" = "Thresholds",
+                                "fits" = "Fit Indices"),
+             fit = c("chisq", "cfi", "tli", "rmsea"),
              fitLabels = toupper(fit),
              colLabels = c("est" = "Estimate", "se" = "SE", "z" = "z", "p" = "p"),
              standardized = FALSE, 
              names_upper = TRUE, type = "latex",
-             group = NULL, longtable = FALSE)
+             group = NULL, longtable = FALSE, alpha =  c(0.05, 0.01, 0.001))
 {
 
     ## do.call(rbind, alist) unexpectedly converts characters to factors.
@@ -259,7 +279,7 @@ semTable <-
     ## TODO: safety check for operations on columns that don't exist
     ## trows must be a row subset of the parameters table
     roundSubtable <- function(trows){
-        colLabels <- intersect(c("est", "se", "stdest", "stdse", "z"), colnames(trows))
+        colLabels <- intersect(c("est", "se", "stdest", "stdse", "z", "rsquare"), colnames(trows))
         for (i in colLabels) trows[ , i] <- frnd(trows[ , i])
         trows$p <- frnd(trows$p, 3, 3)
         trows$p <- gsub("0\\.", "\\.", trows$p)
@@ -333,8 +353,17 @@ semTable <-
         params
     }
 
-
-    insertParamRowType <- function(parameters){
+    ## relabel the "rowType" column in a parTable data frame
+    ##
+    ## Re-lable the "rowType", the parameterSet indicator for each
+    ## row in a parTable. Identifies "residualvariances",
+    ## "residualcovariances", "latentvariances" "latentcovariances",
+    ## "intercepts" and "latentmeans"
+    ##  
+    ## @param parameters A parTable data frame, with estimates and some labels. 
+    ## @return 
+    ## @author Paul Johnson
+    relabelParamSets <- function(parameters){
         paramops <- c("=~" = "loadings", "~" = "slopes", "~1" = "means",
                       "~~" = "variances", "|" = "thresholds")
 
@@ -391,7 +420,7 @@ semTable <-
         parameters$z <- ifelse(parameters$free != 0 & parameters$se != 0,
                                parameters$est/parameters$se, NA)
         parameters$p <- 2*pnorm(abs(parameters$z), lower.tail = FALSE)
-        parameters$starsig <- starsig(parameters$p)
+        parameters$starsig <- starsig(parameters$p, alpha = alpha, symbols = starsymbols)
         parameters$estse <- createEstSE(parameters)
         parameters$estsestars <- createEstSE(parameters, stars = TRUE)
 
@@ -405,14 +434,25 @@ semTable <-
         attr(parameters, "latents") <- unique(unlist(object@pta$vnames$lv))
         attr(parameters, "params") <- fixParamSets(paramSets, parameters)
 
-        parameters2 <- insertParamRowType(parameters)
+        parameters2 <- relabelParamSets(parameters)
+        ## parse rsquare among
+        ## "indicators"
+        parameters2[ , "rsquare"] <- as.numeric("")
+        parameters2[parameters2$rowType == "loadings", "rsquare"] <-
+            rsquare[parameters2$rhs[parameters2$rowType == "loadings"]]
+        ## "latentvariances"
+        ## "latentsquares" are NA if there is no regression fitted,
+        ## must be cautious here
+        latentrsquares <- rsquare[parameters2[parameters2$rowType == "latentvariances", "lhs"]]
+        parameters2[parameters2$rowType == "latentvariances", "rsquare"] <-
+            ifelse(!is.na(latentrsquares), latentrsquares, NA)
         parameters2 <- roundSubtable(parameters2)
         parameters2
     }
 
     ## The trows objects have an attribute "title" and this
     ## formats that
-    getTitleMarkup <- function(title){
+    applyTitleMarkup <- function(title){
         header  <- "_BR_"
         ## Tricky business b/c row markup does not call for _BOC_ in column 1,
         ## that's provided by "_BR_".
@@ -507,18 +547,18 @@ semTable <-
 
     ## Create elaborate markup for Chi-Square value
     getChiSq <- function(object){
-        ## build response for "chi-square"
+        ## build response for "chisq"
         chimeas <- object@Fit@test[[1]]
         chimeas$stat <- frnd(chimeas$stat)
         chimeas$pvalue <- frnd(chimeas$pvalue, 3,  3)
         chimeas$pvalue <- gsub("0\\.", "\\.", chimeas$pvalue)
         namenew <- paste0("_CHI2_", "(", chimeas$df, ")")
-        chisq <- paste0(chimeas$stat , "(p=", chimeas$pvalue,")")
-        name(chisq) <- namenew
+        chisq <- paste0(namenew, "=", chimeas$stat , "(p=", chimeas$pvalue,")")
+        names(chisq) <- "_CHI2_"
         chisq
     }
 
-
+    
 
 
        
@@ -537,7 +577,7 @@ semTable <-
         ## TODO 20171028 CAUTION: workaround here b/c title info sometimes missing, must
         ## go back find why it is missing
         if (!is.null(attr(trows, "title"))){
-            header <- getTitleMarkup(attr(trows, "title"))
+            header <- applyTitleMarkup(attr(trows, "title"))
             res <- paste0(header, "\n", res, "\n")
         }
         return(res)
@@ -564,7 +604,8 @@ semTable <-
         reslt <- list()
         for(jj in names(paramTableSplit)){
             if (jj %in% c("loadings", "slopes")){
-                info <- loadingMaker(paramTableSplit[[jj]], rowType = jj, colLabels, modelName)
+                info <- loadingMaker(paramTableSplit[[jj]], rowType = jj,
+                                     colLabels, modelName)
                 if (!is.null(info)){
                     attr(info, "title") <- makeSubtableTitle(paramSetsLabels["loadings"],
                                                              colnum = 2,
@@ -580,45 +621,39 @@ semTable <-
         reslt
     }
 
-
     ## Gather summary fit indicators
-    fitMaker <- function(object) {
-        if(names_upper == TRUE){
-            fitLabels <- toupper(fitLabels)
-            names(fit) <- fitLabels
-        }else{
-            names(fit) <- fitLabels
-        }
-        
+    fitMaker <- function(object, colLabels, modelName) {
+        report <- names(colLabels[[modelName]])
+        totalNcolumns <- min(9,  length(unname(unlist(colLabels))))
+        ## retrieve fit values, will be named vector
         fitmeas <- lavaan::fitMeasures(object)[]
         fitmeas <- sapply(fitmeas, frnd)
-        fitmeas["chi-square"] <- getChiSq(object)
-        fitmeas[fit]
-        fitidx <- fitmeas[fit]
-        names(fitidx) <- names(fit)
-        fitidx <- paste(names(fitidx), "=", fitidx)
-        names(fitidx) <- names(fit) # reassign names
-        chisq <- grep("chi-square", names(fit), ignore.case = TRUE,
-                      value = TRUE)
-        fitidx[chisq] <- getChiSq(object)
-        paste(fitidx, collapse = "; ")
+        fitmeas <- fitmeas[fit]
+        fitmeas[is.na(fitmeas)] <- ""
+        
+        ## re-label the fit indices
+     
+        browser()
+        ## chisq is a special presentation
+        if ("chisq" %in% fit){
+            chiresult <- getChiSq(object)
+            fitmeas <- c(chiresult, fitmeas)
+        }
+        
+        info <- data.frame(col1 = fitLabels, row.names = fit)
+        info[ , report] <- ""
+        info[ , report[1]] <- fitmeas
+        
+        attr(info, "title") <- makeSubtableTitle(paramSetsLabels["fits"],
+                                                 colnum = 2,
+                                                 width = totalNcolumns,
+                                                 underline = TRUE)
+        
+        class(info) <- c("trowsList", class(info))
+        info
     }
 
     
-    extractModelSummary <- function(object){
-        sumry <- list()
-        if (1) {
-            rowempty <- character(length = 1 + length(report))
-            rowempty <- "_BOMC3_ _FIXED_ Indicates parameters fixed for model identification._EOMC__LB_\n" 
-            sumry[["fixedparam"]] <- rowempty
-        }
-        
-        if (!is.null(fit)) {
-            rowempty <- character(length = 1 + length(report))
-            rowempty <- paste0("_BOMC3_", fitMaker(object), "_EOMC__LB_")
-            sumry[["summaries"]] <- rowempty
-        }
-    }
 
     ## Given a list of tables (say, 3 variances tables) this puts them
     ## together side by side, with markup.
@@ -663,7 +698,8 @@ semTable <-
         colNameCounts <- lapply(colLabels, length)
         colHeaderRow <- unname(unlist(colLabels))
         totalNcolumns <- min(9,  length(colHeaderRow))## If more than 9, give up at centering
-        results <- lapply(paramSetNames, function(jj) {
+
+        buildSubtableForParamSet <- function(jj) {
             ## retrieve param jj from each model
             tablList <- lapply(paramList, function(x) x[[jj]])
             ## treat loadings and slopes differently because they are
@@ -680,24 +716,135 @@ semTable <-
                 ## Improvise a section heading for loadings and slopes
                 title <- makeSubtableTitle(paramSetsLabels[jj], colnum = 2,
                                            width = totalNcolumns, underline = TRUE)
-                header <- getTitleMarkup(title)
+                header <- applyTitleMarkup(title)
                 res <- paste0(header, res)
             } else {
                 res <- buildParamSetSubtable(tablList, colLabels)
             }
             res
-        })
+        }
         
+        results <- lapply(paramSetNames, buildSubtableForParamSet)
         results2 <- paste(results, collapse = "")
         colHeaderRow <- paste("_BR__EOC__BOC_", paste(colHeaderRow, collapse = "_EOC__BOC_"), "_EOC__EOR_\n _HL_\n")
         modelHeaderRow <- paste0("_BR__EOC__BOC_",
                                  paste0("_BOMC", colNameCounts, "_", names(colNameCounts), "_EOMC_", collapse = "_BOC_"),
                                  "_EOR_\n _HL_\n", collapse = " ")
-        resmark <- paste("_BT_\n", modelHeaderRow, colHeaderRow, results2, "_EOT_\n")
+        tablesuffix <-  paste0("_LB_",
+                               paste0("_FIXED_", "Fixed parameter_LB_", "\n"),
+                               if (any(c("estsestars") %in% sapply(colLabels, names)))
+                                   paste0(starsymbols, " p < ", alpha, collapse = ", "))
+
+        resmark <- paste("_BT_\n", modelHeaderRow, colHeaderRow, results2, "_HL__EOT_\n", tablesuffix)
         resmark
-     }
+    }
 
 
+    updateLabels <- function(labelsold, labelsnew, augment = FALSE){
+        if (is.null(names(labelsold)) || is.null(names(labelsnew))){
+            MESSG <- "updateLabels only works with named vectors"
+            stop(MESSG)
+        }
+        labelsold.names <- names(labelsold)
+        labelsnew.names <- names(labelsnew)
+        inboth <- intersect(labelsnew.names, labelsold.names)
+        if(!augment){
+            if(any(!labelsnew.names %in% labelsold.names)){
+                MESSG("some labels not in original name vector. Dropped!")
+                warning(MESSG)
+               
+                labelsold[inboth] <- labelsnew[inboth]
+                return(labelsold)
+            }
+        } else {
+            labelsold[inboth] <- labelsnew[inboth]
+            labelsold <- c(labelsold, labelsnew[subset(labelsold.names, inboth)])
+        }
+        labelsold    
+    }
+ 
+        
+        ##
+        if (missing(labelsold)) {
+            names(labelsnew) <- x
+            return(labelsnew)
+        }
+
+        if (is.null(names(labelsold))) {
+            if(!missing(x)){
+                names(labelsold) <- x
+            } else {
+                MESSG <- "labelsold should have names or x should be supplied"
+                stop(MESSG)
+            }
+        }
+
+        if(is.null(names(labelsnew))){
+            if(length(labelsnew) == length(labelsold)){
+                labelsold <- labelsnew
+            } else {
+                MESSG <- "unnamed new labels should match length of old labels"
+                stop(MESSG)
+            }
+            if (!missing(x)){
+                names(labelsold) <- x
+            }
+        }
+
+        
+        
+        
+        if(is.null(names(labelsnew))) names(labelsnew) <- labelsnew
+        
+    }
+
+    if (missing(xlabels)){
+        if(!missing(xlabels) && !is.null
+        x <- names(xlabels)
+    } 
+
+    parseXandXLabels <- function(x, xlabels){
+        xarg <- deparse(substitute(x))
+        xlabelsarg <- deparse(substitute(xlabels))
+        if(missing(
+        if(missing){deparse(substitute(xlabels))}{
+             return(defaults)
+        ## x has no names, xlabels has no names
+        ## does nothing except give names to labels
+        if(is.vector(x) && is.vector(xlabels) && is.null(names(x))
+           && is.null(names(xlabels))}
+            if(length(x) == length(xlabelsnew)){
+                names(xlabelsnew) <- x
+                return(xlabelsnew)
+            } else {
+                MESSG <- paste("re-labeling error concerning:", x, "and", xlabels)
+            }
+        if(length(xlabels)
+            names(fit) <- fitLabels
+        } else if (!is.null(names(fitLabels))) {
+            oldnames <- names(fitLabels)
+            newnames <- fitLabels
+            namesnow <- names(fit)
+            newnamez(fit) <- mgsub(oldnames, newnames, namesnow)
+        } else {
+            MESSG <- "fitMaker: fit index name error"
+        }
+        
+    starsymbols <- c("_STAR1_", "_STAR2_", "_STAR3_")
+    
+    paramSetsLabelDefaults <- c("loadings" = "Factor Loadings",
+                                "slopes" = "Regression Slopes",
+                                "intercepts" = "Intercepts",
+                                "means" = "Means",
+                                "residualvariances" = "Residual Variances",
+                                "residualcovariances" = "Residual Covariances",
+                                "variances" = "Variances",
+                                "latentvariances" = "Latent Variances",
+                                "latentcovariances" = "Latent Covariances", 
+                                "latentmeans" = "Latent Intercepts",
+                                "thresholds" = "Thresholds",
+                                "fits" = "Fit Indices")
+            
     ## A generic name for models. If list is not provided, there's
     ## no name, so use this
     mname <- "Model" # modelname
@@ -733,39 +880,34 @@ semTable <-
         names(object)[1] <- mname
     }
 
-    ## if one fitted model
-    if (length(object) == 1){
+    ## if one fitted model and 2 or more groups found in there
+    if ((length(object) == 1) && ((G <- (object[[1]])@Data@ngroups) > 1)){
         onemodel <- object[[1]] 
-        G <- onemodel@Data@ngroups
-        if (G > 1){
-            if(length(onemodel@Data@group.label) > 0L) {
-                groupNames <- unlist(onemodel@Data@group.label)
-            }
-            ## CAUTION 20171103 assumes groups are numbered 1, 2, 3
-            ## in same order as retrieved by @Data@group.label.
-            parTable <- getParamTable(onemodel)
-            parTableSplit <- split(parTable,
-                                   f = factor(parTable$group.label,
-                                              levels = unique(parTable$group.label)))
-            colLabels <- lapply(parTableSplit, function(x) colLabels.orig)
-            for(i in names(parTableSplit)){
-                paramList[[i]] <- extractParameters(parTableSplit[[i]], colLabels=colLabels,
-                                                    modelName = i)
-            }
- 
-            if(length(onemodel@Data@group.label) > 0L) {
-                names(paramList) <- unlist(onemodel@Data@group.label)
-            }
-            attr(paramList, "G") <- G
-        } else {
-            paramTable <- getParamTable(onemodel)
-            parms <- extractParameters(paramTable, colLabels,
-                                       modelName = names(object)[1])
-            paramList[[mname]] <- parms
+        ## Use group labels, not numbers
+        if(length(onemodel@Data@group.label) > 0L) {
+            groupNames <- unlist(onemodel@Data@group.label)
         }
+        ## CAUTION 20171103 assumes groups are numbered 1, 2, 3
+        ## in same order as retrieved by @Data@group.label.
+        parTable <- getParamTable(onemodel)
+        parTableSplit <- split(parTable,
+                               f = factor(parTable$group.label,
+                                          levels = unique(parTable$group.label)))
+        colLabels <- lapply(parTableSplit, function(x) colLabels.orig)
+        for(i in names(parTableSplit)){
+            paramList[[i]] <- extractParameters(parTableSplit[[i]], colLabels=colLabels,
+                                                modelName = i)
+            paramList[[i]][["fits"]] <- fitMaker(onemodel, colLabels, ii)
+        }
+        
+        if(length(onemodel@Data@group.label) > 0L) {
+            names(paramList) <- unlist(onemodel@Data@group.label)
+        }
+        attr(paramList, "G") <- G
     } else {
-        Gcounts <- lapply(object, function(x) x@Data@ngroups)
-        if(any(Gcounts > 1)) {
+        ## more models, abort if any are multigroup
+        G <- lapply(object, function(x) x@Data@ngroups)
+        if(any(G > 1)) {
             MESSG <- "Several Multi Group models are not understandable"
         }
         ## each model object's parameters are pulled
@@ -773,6 +915,7 @@ semTable <-
         for(ii in names(object)){
             paramTable <- getParamTable(object[[ii]])
             paramList[[ii]] <- extractParameters(paramTable, colLabels, modelName = ii)
+            paramList[[ii]][["fits"]] <- fitMaker(object[[ii]], colLabels, ii)
         }
     }
     
@@ -788,7 +931,7 @@ semTable <-
     attr(result, "markedResults") <- markedResults
     result
 }
-
+NULL
 
 
 
@@ -811,7 +954,7 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
     
     ## Replacement strings for LaTeX output
     latexreplace <- c(
-        "_LB_" = "//\n",
+        "_LB_" = "\\\n",
         "_EOC_" =  "",
         "_BOC_" = "& ", 
         "_EOMC_" = "}",
@@ -860,7 +1003,10 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         "_R2_" = "$R^2$",
         "_SIGMA_" = "$\\\\sigma$",
         "_NBSP_" = " ",
-        "_FIXED_" = "$^+$"
+        "_FIXED_" = "$^+$",
+        "_STAR1_" = "$^{*}$",
+        "_STAR2_" = "$^{**}$",
+        "_STAR3_" = "$^{***}$"
     )
 
     ## Replacement strings for HTML output
@@ -914,6 +1060,9 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         "_SIGMA_" = "&sigma;",
         "_NBSP_" = "&nbsp;",
         "_FIXED_" = "<sup>+</sup>",
+        "_STAR1_" = "<sup>*</sup>",
+        "_STAR2_" = "<sup>**</sup>",
+        "_STAR3_" = "<sup>***</sup>",
         "<td><td" = "<td"
     )
     
@@ -965,7 +1114,10 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         "_R2_" = "R^2",
         "_SIGMA_" = "sigma",
         "_NBSP_" = " ",
-        "_FIXED_" = "+"
+        "_FIXED_" = "+",
+        "_STAR1_" = "*",
+        "_STAR2_" = "**",
+        "_STAR3_" = "**"
     )
 
     result <- list()
