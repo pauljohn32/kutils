@@ -186,6 +186,8 @@ NULL
 ##'     the augment = TRUE.
 ##' @param augment If TRUE, add new items in x from y. Otherwise,
 ##'     ignore named items in y that are not in x.
+##' @param warnings Defaults as FALSE. Show warnings about augmentation
+##'     of the target vector.
 ##' @export
 ##' @return an updated vector
 ##' @author Paul Johnson
