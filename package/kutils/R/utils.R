@@ -119,8 +119,9 @@ starsig <-
         messg <- "alpha vector must have same number of elements as symbols vector"
         stop(messg)
     }
+    if(is.vector(pval) && !is.numeric(pval)) pval <- as.numeric(pval)
     nstars <- sapply(pval, function(x) sum(abs(x) < alpha))
-    sapply(nstars, function(y) symbols[y])
+    sapply(nstars, function(x) if(!is.na(x) && x > 0) symbols[x] else " ")
 }
 NULL
 
@@ -159,6 +160,111 @@ removeMatches <- function(x, y, padNA = FALSE){
     }
     x
 }
+NULL
+
+##' Use new information to update a vector, either 1)
+##' adding names, 
+##'
+##' Original purpose was to receive 2 named vectors, x and y, and copy
+##' "updated" named values from y into x. If both vectors are named,
+##' then values in x for which y names match will be updated with
+##' values from y.
+##'
+##' If either x or y has no names, then we have special rules
+##' to put the information to use, or fail.
+##' 1. If neither has names, then the function returns a new
+##' vector with x as the names and y as the values.
+##' 2. If x has no names, but y does, then we proceed as if
+##' user wants to supply new labels for some values of x, but
+##' not all.
+##'
+##' @param x vector to be updated, may be named or not.
+##' @param y labels, possibly with names. If unnamed, must match
+##'     length of x. If named, and length is shorter than x, then
+##'     name-value pairs in x will be replaced with name-value pairs
+##'     with y. If names in y are not in x, an error results unless
+##'     the augment = TRUE.
+##' @param augment If TRUE, add new items in x from y. Otherwise,
+##'     ignore named items in y that are not in x.
+##' @export
+##' @return an updated vector
+##' @author Paul Johnson
+##' @examples
+##' x <- c(a = 1, b = 2, c = 3)
+##' y <- c(b = 22)
+##' modifyVector(x, y)
+##' y <- c(c = 7, a = 13, e = 8)
+##' ## Will give warning unless augment = TRUE
+##' modifyVector(x, y, augment = TRUE)
+##' modifyVector(x, y)
+##' x <- c("a", "b", "c")
+##' y <- c("income", "education", "sei")
+##' ## Same as names(y) <- x
+##' modifyVector(x, y)
+##' x <- c("a", "b", "c")
+##' y <- c(a = "happy")
+##' modifyVector(x, y)
+##' y <- c(a = "happy", g = "glum")
+##' ## Will give error unless augment = TRUE
+##' modifyVector(x, y, augment = TRUE)
+modifyVector <- function(x, y, augment = FALSE, warnings = FALSE){
+    if (missing(x) || missing(y)) stop("modifyVector requires x and y")
+    ## neither has names, so values of y are names for x
+    if (is.null(names(x)) && is.null(names(y))){
+        if (length(x) == length(y)){
+            names(y) = x
+        } else{
+            MESSG <- paste("if neither x nor y has names,",
+                           "then x and y must be of same length")
+            stop(MESSG)
+        }
+        return(y)
+    }
+    
+    ## x has names, but y does not,  y is new values of x
+    ## but x keeps old names
+    if (!is.null(names(x)) && is.null(names(y))){
+        if (length(x) == length(y)){
+            x.names <- names(x)
+            x <- y
+            names(x) <- x.names
+        } else{
+            MESSG <- paste("if y has no names,",
+                           "x and y must be of same length")
+            stop(MESSG)
+        }
+        return(x)
+    }
+    
+    ## x has no names, but y does.  Assume user meant
+    ## to replace x *values* by y *names* and values. 
+    if (is.null(names(x)) && !is.null(names(y))){
+        ## x has no names, so we will give x its values
+        ## as its names. 
+        names(x) <- x
+        return(modifyVector(x, y, augment))
+    }
+    
+    ## x and y both have names, y may be different in length
+    x.names <- names(x)
+    y.names <- names(y)
+    inboth <- intersect(y.names, x.names)
+    yunique <- y[!y.names %in% x.names]
+    
+    x[inboth] <- y[inboth]
+    
+    if(augment){
+        x <- c(x, yunique)
+    } else {
+        if(length(yunique) > 0 && warnings){
+            MESSG <- paste("if augment = FALSE, elements in y",
+                           "with names not in names(x) will be discarded")
+            warning(MESSG)
+        }
+    }            
+    x
+}
+NULL
 
 
 ##' apply a vector of replacements, one after the other.
