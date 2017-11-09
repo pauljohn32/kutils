@@ -1,3 +1,34 @@
+2017-11-09  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (insertParamTypes): constructed parameters,
+	cut out most of fixParamSets, omit constrained rows
+
+2017-11-06  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/utils.R (starsig): correct "character(0)" return when
+	no stars were called for!
+	(starsig): if pval is a vector, but not numeric, us as.numeric.
+	protects against columns set "as character" by formatC
+
+2017-11-05  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (buildSubtableForParamSet): Lots of
+	pussy-footing about changing the way labels are supplied and
+	information is passed among vectors.
+	(createEstSE): fix parameter rsquare for multi group
+
+	* ../R/utils.R (modifyVector): new utility vector to replace
+	named vector value selectively, also some other special feature
+	shown in examples.
+
+2017-11-03  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (extractModelSummary): multi-group fixes, treat
+	2 groups as 2 objects, rownames must be unique by group
+	(createEstSE): insert group.labels as new column, makes
+	multi-group work easier lalter on
+
+
 2017-11-02  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/semTable.R (extractParameters): error b/c colNames is list,
@@ -5,6 +36,10 @@
 	(markupConvert): \tabularnewline should always insert \n with it.
 	Results in "double spaced" tables, not problem in LaTeX output,
 	need to see if that is problem in other output formats.
+	(loadingMaker): fix the factor gotcha, where a character is
+	converted to a factor and R re-alphabetizes it.
+	(markupConvert): HTML markup fiddle, _BOC_BOM becomes
+	"_BOM". silly fiddle.
 
 2017-11-01  Paul Johnson  <pauljohn@delllap-16>
 
