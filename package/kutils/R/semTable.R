@@ -61,7 +61,7 @@
 ##'     parameter sets for each model, \code{list("Model A" =
 ##'     c("loadings", "residualcovariances"), "Model B" =
 ##'     c("loadings", "slopes")}.
-##' @param paramSetsLabels Named vector, used to supply alternative
+##' @param paramSetLabels Named vector, used to supply alternative
 ##'     pretty printing labels for parameter sets. The default values
 ##'     are \code{c("loadings"= "Factor Loadings", "slopes" =
 ##'     "Regression Slopes", "intercepts" = "Intercepts", "means"=
@@ -69,8 +69,9 @@
 ##'     "residualcovariances" = "Residual Covariances", "variances" =
 ##'     "Variances", "latentvariances" = "Latent Variances",
 ##'     "latentcovariances" = "Latent Covariances", "latentmeans" =
-##'     "Latent Intercepts", "thresholds" = "Thresholds", "fits" =
-##'     "Fit Indices")}. The paramSetsLabels argument must be a named
+##'     "Latent Intercepts", "thresholds" = "Thresholds",
+##'     "constructed" = "Constructed", "fits" = "Fit Indices")}.
+##'     The paramSetLabels argument must be a named
 ##'     vector that overrides some or all of the default names.
 ##' @param columns A vector naming estimates to appear for each model.
 ##'     The allowed columns are "est", "se", "z", "p", "rsquare",
@@ -136,17 +137,21 @@
 ##' HS.model <- ' visual  =~ x1 + x2 + x3
 ##'               textual =~ x4 + x5 + x6
 ##'               speed   =~ x7 + x8 + x9'
-##' fit1 <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE, meanstructure = TRUE)
+##' fit1 <- cfa(HS.model, data = HolzingerSwineford1939,
+##'             std.lv = TRUE, meanstructure = TRUE)
 ##' fit1.t1 <- semTable(fit1, columns = c("est", "estse"),
 ##'                     fits = c("chisq", "rmsea"), file = "../jasper")
 ##' fit1.t1 <- semTable(fit1, fits = c("chisq", "rmsea"),
-##'            columns = c("est", "se"), columnLabels = c(se = "S.E."), file = "../jasper")
+##'                columns = c("est", "se"), columnLabels = c(se = "S.E."),
+##'                file = "../jasper")
 ##' fit1.t1 <- semTable(fit1, fits = c("chisq", "rmsea"),
-##'            columns = c("estsestars"), columnLabels = c("estsestars" = "Est(SE)"),
-##'            file = "../jasper")
+##'                columns = c("estsestars"),
+##'                columnLabels = c("estsestars" = "Est(SE)"),
+##'                file = "../jasper")
 ##' fit1.t1 <- semTable(fit1, fits = c("chisq", "rmsea"),
-##'            columns = c("eststars", "p"), columnLabels = c("eststars" = "Est(SE)"),
-##'            file = "../jasper")
+##'                columns = c("eststars", "p"),
+##'                columnLabels = c("eststars" = "Est(SE)"),
+##'                file = "../jasper")
 ##' 
 ##' ## 2 groups
 ##' fit1.g <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE, group = "school")
@@ -195,16 +200,18 @@
 ##' fit2.t <- semTable(list("Ordinary" = fit2, "Standardized" = fit2.std), type = "html")
 ##'
 ##' regmodel2 <- 'visual  =~ x1 + x2 + x3
-##'              textual =~ x4 +  x6
-##'              speed   =~  x8 + x9
-##'              visual ~ textual 
+##'               textual =~ x4 +  x6
+##'               speed   =~  x8 + x9
+##'               visual ~ textual 
 ##' '
-##' fit3 <- sem(regmodel2, data = HolzingerSwineford1939, std.lv = TRUE, meanstructure = TRUE)
+##' fit3 <- sem(regmodel2, data = HolzingerSwineford1939, std.lv = TRUE,
+##'             meanstructure = TRUE)
 ##' 
 ##' fit3.std <- update(fit2, std.lv = TRUE, std.ov = TRUE)
 ##'
-##' semTable(list("Mod 1" = fit2, "Mod 1 std" = fit2.std, "Mod 2" = fit3, "Mod 3 std" = fit3.std),
-##'                  columns = c("estse" = "Est(S.E.)"), file = "../jasper")
+##' semTable(list("Mod 1" = fit2, "Mod 1 std" = fit2.std, "Mod 2" = fit3,
+##'               "Mod 3 std" = fit3.std),
+##'          columns = c("estse" = "Est(S.E.)"), file = "../jasper")
 ##'
 ##' 
 ##' cat(fit2.t)
@@ -229,11 +236,11 @@
 ##' testmodel <- "ExampleFactor =~ y1 + y2 + y3 + y4"
 ##' fit4 <- cfa(testmodel, data = dat, ordered = colnames(dat),
 ##'     std.lv = FALSE)
-##' fit4.t1 <- semTable(fit4, paramSets = c("loadings", "thresholds", "residualvariances"),
-##'     fits = c("tli", "chisq"),
-##'     fitLabelss = c("TLI", "chisq"), type = "html")
+##' fit4.t1 <- semTable(fit4, paramSets = c("loadings", "thresholds",
+##'     "residualvariances"), fits = c("tli", "chisq"),
+##'     fitLabels = c("TLI", "chisq"), type = "html")
 ##' fit4.t2 <- semTable(fit4, fits = c("rmsea", "tli", "chisq"),
-##'     fitLabels = c("RMSEA", "TLI", "chisq"), type = "latex")
+##'               fitLabels = c("RMSEA", "TLI", "chisq"), type = "latex")
 ##' 
 ##' 
 ##' ## Example with file output requested in the command
@@ -242,19 +249,11 @@
 ##' ##    fits = c("tli", "chisq"),
 ##' ##    fitLabels = c("TLI", "chisq"), type = "latex")
 ##' }
-semTable <-
-    function(object, file = NULL,
-             paramSets = "all",
-             paramSetsLabels,
-             columns = c(est = "Estimate", se = "SE", z = "z", p = "p"),
-             columnLabels,
-             fits = c("chisq", "cfi", "tli", "rmsea"),
-             fitLabels = toupper(fits),
-             group = NULL,
-             type = "latex", 
-             longtable = FALSE, alpha =  c(0.05, 0.01, 0.001))
-{
-
+semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
+                     columns = c(est = "Estimate", se = "SE", z = "z", p = "p"),
+                     columnLabels, fits = c("chisq", "cfi", "tli", "rmsea"),
+                     fitLabels = toupper(fits), group = NULL, type = "latex",
+                     longtable = FALSE, alpha =  c(0.05, 0.01, 0.001)) {
     ## do.call(rbind, alist) unexpectedly converts characters to factors.
     ## it does not accept stringsAsFactors=FALSE,
     ## So set globally to avoid hassle
@@ -295,7 +294,7 @@ semTable <-
     fixParamSets <- function(paramSets, parameters) {
         if (paramSets != "all") {
             paramSets <- unique(paramSets)
-            if (any(!paramSets %in% names(paramSetsLabels))){
+            if (any(!paramSets %in% names(paramSetLabels))){
                 MESSG <- "fixParamSets: invalid paramSets"
                 stop(MESSG)
             }
@@ -362,9 +361,10 @@ semTable <-
     ## @param parameters A parTable data frame, with estimates and some labels. 
     ## @return 
     ## @author Paul Johnson
-    relabelParamSets <- function(parameters){
+    insertParamTypes <- function(parameters){
         paramops <- c("=~" = "loadings", "~" = "slopes", "~1" = "means",
-                      "~~" = "variances", "|" = "thresholds")
+                      "~~" = "variances", "|" = "thresholds",
+                      ":=" = "constructed", "==" = "constraints")
 
         variables <- attr(parameters, "variables")
         latents <- attr(parameters, "latents")
@@ -436,9 +436,7 @@ semTable <-
         attr(parameters, "latents") <- unique(unlist(object@pta$vnames$lv))
         attr(parameters, "params") <- fixParamSets(paramSets, parameters)
 
-        ## do.call(rbind, lapply(names(rsquare), function(xname) {x <- rsquare[[xname]]; data.frame(rsquare = x, vname = names(x), group.label = xname)}))
-        
-        parameters2 <- relabelParamSets(parameters)
+        parameters2 <- insertParamTypes(parameters)
         ## parse rsquare among
         ## "indicators"
         parameters2[ , "rsquare"] <- as.numeric("")
@@ -459,8 +457,12 @@ semTable <-
             }
         } else {
             ## one group model
-            parameters2[parameters2$paramType == "loadings", "rsquare"] <-
-                rsquare[parameters2$rhs[parameters2$paramType == "loadings"]]
+            ## convoluted retrieval of rsquare by loading names
+            browser()
+            loadingVars <- !is.null(parameters2$paramType) & parmeters2$paramType == "loadings"
+            parameters2[loadingVars] <- rsquare[loadingVars]
+            ## parameters2[parameters2$paramType) & parameters2$paramType == "loadings", "rsquare"] <-
+            ##     rsquare[parameters2$rhs[parameters2$paramType == "loadings"]]
             
             ## "latentvariances"
             ## "latentsquares" are NA if there is no regression fitted,
@@ -559,7 +561,7 @@ semTable <-
             rownames(trows) <- paste(paramType, trows[ , col1name], sep = ".")
         }
         trows <- data.frame(col1 = trows$col1, trows[ , report, drop = FALSE])
-        attr(trows, "title") <- makeSubtableTitle(paramSetsLabels[paramType],
+        attr(trows, "title") <- makeSubtableTitle(paramSetLabels[paramType],
                                                   colnum = 2,
                                                   width = totalNcolumns,
                                                   underline = TRUE)
@@ -637,7 +639,7 @@ semTable <-
                 info <- loadingMaker(paramTableSplit[[jj]], paramType = jj,
                                      colLabels, modelName)
                 if (!is.null(info)){
-                    attr(info, "title") <- makeSubtableTitle(paramSetsLabels["loadings"],
+                    attr(info, "title") <- makeSubtableTitle(paramSetLabels["loadings"],
                                                              colnum = 2,
                                                              width = length(report))
                     class(info) <- c("trowsList", class(info))
@@ -676,7 +678,7 @@ semTable <-
             info["chisq", ] <- yy
         }
         
-        attr(info, "title") <- makeSubtableTitle(paramSetsLabels["fits"],
+        attr(info, "title") <- makeSubtableTitle(paramSetLabels["fits"],
                                                  colnum = 2,
                                                  width = totalNcolumns,
                                                  underline = TRUE)
@@ -746,7 +748,7 @@ semTable <-
                 }
                 res <- paste0(hh, collapse = " ")
                 ## Improvise a section heading for loadings and slopes
-                title <- makeSubtableTitle(paramSetsLabels[jj], colnum = 2,
+                title <- makeSubtableTitle(paramSetLabels[jj], colnum = 2,
                                            width = totalNcolumns, underline = TRUE)
                 header <- applyTitleMarkup(title)
                 res <- paste0(header, res)
@@ -809,7 +811,7 @@ semTable <-
         columnLabels <- modifyVector(columnx, columnLabels)
     }
     
-    ## paramSetsLabels has default. If user supplies some
+    ## paramSetLabels has default. If user supplies some
     ## replacements, OK!
     paramx <- c("loadings" = "Factor Loadings",
                 "slopes" = "Regression Slopes",
@@ -822,11 +824,12 @@ semTable <-
                 "latentcovariances" = "Latent Covariances", 
                 "latentmeans" = "Latent Intercepts",
                 "thresholds" = "Thresholds",
+                "constructed" = "Constructed",
                 "fits" = "Fit Indices")
-    if (missing(paramSetsLabels)){
-        paramSetsLabels <- paramx
+    if (missing(paramSetLabels)){
+        paramSetLabels <- paramx
     } else {
-        paramSetsLabels <- modifyVector(paramx, paramSetsLabels)
+        paramSetLabels <- modifyVector(paramx, paramSetLabels)
     }
 
     ## Fill in fitLabels against default "toupper"
@@ -958,7 +961,7 @@ semTable <-
     
     paramSetsFound <- unique(unlist(lapply(paramList, function(x) names(x))))
     ## re-order paramSetsFound according to standard list
-    paramSetNames <- intersect(names(paramSetsLabels), paramSetsFound)
+    paramSetNames <- intersect(names(paramSetLabels), paramSetsFound)
   
     markedResults <- finalizeMarkup(paramSetNames, colLabels)
     
