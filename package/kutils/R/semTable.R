@@ -45,7 +45,7 @@
 ##'     or a named list of lavaan objects, e.g., \code{list("Model A"
 ##'     = obj1, "Model B" = obj2)}. Results will be displayed side by
 ##'     side.
-##' @param file Base name for output file.
+
 ##' @param paramSets Parameter sets to be included for each fitted
 ##'     object.  Valid values of the vector are \code{"all"} or a any
 ##'     of the following: \code{c("loadings", "slopes", "intercepts",
@@ -70,11 +70,11 @@
 ##'     some or all of the default names.
 ##' @param columns A vector naming estimates to appear for each model.
 ##'     The allowed columns are "est", "se", "z", "p", "rsquare",
-##'     "estse", "eststars", "estestars". The first 5 have the usual
+##'     "estse", "eststars", "estsestars". The first 5 have the usual
 ##'     meanings, while "estse" (can also be written \code{"est(se)"})
 ##'     displays as, for example "1.21(0.23)", and the last 2 are to
 ##'     include "significance stars".  \code{"eststars"} shows as
-##'     "1.21***" and \code{"estsetars"} (or \code{"est(se)stars"})
+##'     "1.21***" and \code{"estsestars"} (or \code{"est(se)stars"})
 ##'     displays as "1.21(0.23)**". See parameter \code{alpha}. One
 ##'     may request different columns for each model by providing a
 ##'     named list of vectors.  Use model names in the list,
@@ -98,22 +98,27 @@
 ##'     "srmr_bollen", "srmr_bollen_nomean", "srmr_mplus",
 ##'     "srmr_mplus_nomean", "cn_05", "cn_01", "gfi", "agfi", "pgfi",
 ##'     "mfi", "ecvi")}. The return for "chisq" will include markup
-##'     for degrees of freedom and p value.
+##'     for degrees of freedom and p value. If user specifies
+##'     \code{NULL}, or if "fits" is excluded from \code{paramSets},
+##'     all fit indicators are omitted.
 ##' @param fitLabels Labels for some or all of the fit measures
 ##'     requested by the fits parameter, e.g. \code{c(rmsea =
 ##'     "Root Mean Square Error of Approximation", cli = "CLI")}. The
 ##'     default labels are the upper-case fits names (except for
 ##'     "chisq", where a Greek letter is supplied when possible).
-##' @param group This parameter does not work now, but here is the
-##'     goal.  If object is just one SEM, but there are several groups
-##'     within it, the parameters for each group will be displayed
-##'     side by side.  All groups will be displayed by default.  User
-##'     should be able to specify a vector of group names here to
-##'     select some. But this is not implemented yet.
+##' @param groups Specify some group names for inclusion in the
+##'     model. If \code{object} is just one SEM, but there are several
+##'     groups within it, the parameters for each group will be
+##'     displayed side by side.  All groups will be displayed by
+##'     default.  User should specify a vector of group names here to
+##'     select some groups for display.
 ##' @param type Choose "latex", "html", "csv", or a vector including
 ##'     any or all of these. If several are specified, ie,
 ##'     \code{c("latex", "html", "csv")}, a list of 3 sets of markup
 ##'     will be returned.
+##' @param file Base name for output file. Specify "mymodel" to get
+##'     output files "mymodel.tex", "mymodel.html", or "mymodel.csv",
+##'     depending on the value of \code{type}.
 ##' @param longtable If TRUE, use longtable for LaTeX
 ##'     documents. Default is FALSE.
 ##' @param alpha Thresholds for p-values that determine number of
@@ -156,6 +161,17 @@
 ##' fit1.gt1 <- semTable(fit1.g, columns = c("estsestars", "p"),
 ##'                columnLabels = c(estsestars = "Est w/stars", p = "p-value"),
 ##'                file = file.path(tempdir, "fit1.g1"))
+##' testview("fit1.g1", tempdir)
+##' ## Now name particular group by name
+##' fit1.gt2 <- semTable(fit1.g, columns = c("estsestars", "p"),
+##'                columnLabels = c(estsestars = "Est w/stars", p = "p-value"),
+##'                file = file.path(tempdir, "fit1.g2"), groups = "Pasteur")
+##' testview("fit1.g2", tempdir)
+##' ## Name particular group by number
+##' fit1.gt3 <- semTable(fit1.g, columns = c("estsestars", "p"),
+##'                columnLabels = c(estsestars = "Est w/stars", p = "p-value"),
+##'                file = file.path(tempdir, "fit1.g3"), groups = 1)
+##' testview("fit1.g3", tempdir)
 ##' 
 ##' ## Fit same model with standardization
 ##' fit1.std <- update(fit1, std.lv = TRUE, std.ov = TRUE, meanstructure = TRUE) 
@@ -310,7 +326,7 @@
 semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                      columns = c(est = "Estimate", se = "SE", z = "z", p = "p"),
                      columnLabels, fits = c("chisq", "cfi", "tli", "rmsea"),
-                     fitLabels = toupper(fits), group = NULL, type = "latex",
+                     fitLabels = toupper(fits), groups = NULL, type = "latex",
                      longtable = FALSE, alpha =  c(0.05, 0.01, 0.001)) {
     ## do.call(rbind, alist) unexpectedly converts characters to factors.
     ## it does not accept stringsAsFactors=FALSE,
@@ -831,8 +847,7 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
         columnLabels <- modifyVector(columnx, columnLabels)
     }
     
-    ## paramSetLabels has default. If user supplies some
-    ## replacements, OK!
+    ## paramSetLabels default.
     paramx <- c("loadings" = "Factor Loadings",
                 "slopes" = "Regression Slopes",
                 "intercepts" = "Intercepts",
@@ -865,10 +880,14 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
         if("chisq" %in% fits){
             fitLabelsX["chisq"] <- "_CHI2_"
         }
+        ## blended labels, defaults with user labels on top
         fitLabels <-  modifyVector(fitLabelsX, fitLabels)
     }
+
     
-    if(!is.list(fits)) {
+    if(is.null(fits)) paramSets["fits"] <- NULL
+    
+    if(!is.null(fits) && !is.list(fits)) {
         names(fits) <- fits
         fits <- toupper(fits)
         fitsX <- modifyVector(fits, fitLabels)
@@ -876,8 +895,10 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
         fitsLabeled <- lapply(object, function(x) fitsX)
     } else {
         ## fits is a list
-        if (length(fits) != length(object) || any(!names(fits) %in% names(object))){
+        if (!is.null(fits) && length(fits) != length(object) ||
+            any(!names(fits) %in% names(object))){
             MESSG <- "object list and fits list must match"
+            stop(MESSG)
         }
         fitsLabeled <- lapply(names(object), function(xname){
             fitsone <- fits[[xname]]
@@ -886,8 +907,6 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
             fitsX <- modifyVector(fits, fitLabels)
         })
     }
-    
-           
     
     ## Next fixes the colLabels
     ## convert columns to a list, one per object, like
@@ -907,7 +926,6 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
         if (length(columns) != length(object) || names(columns) != names(object)){
             MESSG <- "object list and columns list must match"
         }
-
         columns <- lapply(columns, function(x){
             names(x) <- gsub("est(se)", "estse", names(x))
             x
@@ -918,46 +936,69 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
             zz})
     }
 
-  
     paramList <- list()
     ## if one fitted model and 2 or more groups found in there
     if ((length(object) == 1) && ((G <- (object[[1]])@Data@ngroups) > 1)){
+       
         onemodel <- object[[1]] 
-        ## Use group labels, not numbers
-        if(length(onemodel@Data@group.label) > 0L) {
-            groupNames <- unlist(onemodel@Data@group.label)
-        }
-        ## CAUTION 20171103 assumes groups are numbered 1, 2, 3
-        ## in same order as retrieved by @Data@group.label.
+        ## has both group and group.label variables from @Data@group.label.
         parTable <- getParamTable(onemodel, paramSets, paramSetLabels)
+        groupnumbers <- unique(parTable$group)
+        grouplabels <- unique(parTable$group.label)
+       
+        if (!missing(groups)){
+            ## If groups provided, remove ones not in groups parameter
+            ## if they give a character vector
+            if(is.character(groups)){
+                if(any(!groups %in% grouplabels)){
+                    MESSG <- "invalid group names"
+                    stop(MESSG)
+                }
+                parTable <- parTable[parTable$group.label %in% groups, ]
+            } else if (isTRUE(checkCoercion(groups, "integer"))){
+                groups <- as.integer(groups)
+                if(any(!groups %in% groupnumbers)){
+                    MESSG <- "invalid group numbers"
+                    stop(MESSG)
+                }
+                parTable <- parTable[parTable$group %in% groups, ]  
+            } else {
+                MESSG <- "invalid group numbers"
+                stop(MESSG)
+            }
+        }
+        ## Process remaining groups
         parTableSplit <- split(parTable,
                                f = factor(parTable$group.label,
                                           levels = unique(parTable$group.label)))
         colLabels <- lapply(parTableSplit, function(x) colLabels[[1]])
-        fitsLabeled <- lapply(parTableSplit, function(x) fitsLabeled[[1]])
+        if (!is.null(fits)){
+            fitsLabeled <- lapply(parTableSplit, function(x) fitsLabeled[[1]])
+            }
         for(ii in names(parTableSplit)){
             paramList[[ii]] <- extractParameters(parTableSplit[[ii]],
                                                 colLabels = colLabels,
                                                 modelName = ii)
-            paramList[[ii]][["fits"]] <- fitMaker(onemodel, fitsLabeled, colLabels, ii)
-        }
-        
-        if(length(onemodel@Data@group.label) > 0L) {
-            names(paramList) <- unlist(onemodel@Data@group.label)
+            if (!is.null(fits)){
+                paramList[[ii]][["fits"]] <- fitMaker(onemodel, fitsLabeled, colLabels, ii)
+            }
         }
         attr(paramList, "G") <- G
     } else {
         ## more models, abort if any are multigroup
         G <- lapply(object, function(x) x@Data@ngroups)
-        if(any(G > 1)) {
+        if((length(object) > 1) && any(G > 1)) {
             MESSG <- "Several Multi Group models are not understandable"
+            stop(MESSG)
         }
         ## each model object's parameters are pulled
         ## paramList <- lapply(names(object, extractParameters, columns)
         for(ii in names(object)){
             paramTable <- getParamTable(object[[ii]], paramSets, paramSetLabels)
             paramList[[ii]] <- extractParameters(paramTable, colLabels, modelName = ii)
-            paramList[[ii]][["fits"]] <- fitMaker(object[[ii]], fitsLabeled, colLabels, ii)
+            if(!is.null(fits)){
+                paramList[[ii]][["fits"]] <- fitMaker(object[[ii]], fitsLabeled, colLabels, ii)
+            }
         }
     }
     
@@ -1194,4 +1235,65 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         return(result[[1]])
     }
     result
+}
+NULL
+
+##' Test viewer for tex tables
+##'
+##' Creates the smallest possible latex file. Compiles it, then
+##' displays in viewer if system has \code{xdg-open} settings.
+##' 
+##' @param tablefile The base name of the table file
+##' @param dir Directory where table is saved, same will be used for build.
+##' @param tmpfn File name to be used by example document
+##' @return NULL
+##' @author Paul Johnson <pauljohn@@ku.edu>
+##' @examples
+##' require(lavaan)
+##' tempdir <- tempdir()
+##' HS.model <- ' visual  =~ x1 + x2 + x3
+##'               textual =~ x4 + x5 + x6
+##'               speed   =~ x7 + x8 + x9'
+##' fit1 <- cfa(HS.model, data = HolzingerSwineford1939,
+##'             std.lv = TRUE, meanstructure = TRUE)
+##' fit1.t <- semTable(fit1, fits = c("chisq", "rmsea"),
+##'                columns = c("estsestars", "rsquare"),
+##'                columnLabels = c("estsestars" = "Est(SE)"),
+##'                file = file.path(tempdir, "fit1.t"))
+##' testview("fit1.t", tempdir)
+testview <- function(tablefile, dir, tmpfn = "tmp.tex"){
+    wd.orig <- getwd()
+    isWindoze <- if(Sys.info()[['sysname']] == "Windows") TRUE else FALSE
+    mynull <-  if(isWindoze) "> nul" else " > /dev/null"
+    setwd(dir)
+    
+    x1 <- "
+\\documentclass[english]{article}
+\\usepackage[T1]{fontenc}
+\\usepackage[utf8]{inputenc}
+\\usepackage{geometry}
+\\geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+\\usepackage{babel}
+\\usepackage{longtable}
+\\begin{document}
+"
+    x2 <- paste0("\\include{", tablefile, "}\n")
+
+    x3 <- "\\end{document}\n"
+
+    cat(x1, x2, x3, file = tmpfn)
+    cmd <- paste("pdflatex", tmpfn, " && pdflatex", tmpfn)
+    
+    if (isWindoze){
+        out1 <- tryCatch(shell(cmd, intern = TRUE))
+        MESSG <- paste("Please open this file:",
+                       file.path(dir, gsub(".tex", ".pdf", tmpfn)))
+        print(MESSG)
+    } else {
+        out1 <- tryCatch(system(cmd, intern = TRUE))
+        cmd2 <- paste("xdg-open", gsub(".tex", ".pdf", tmpfn))
+        out2 <- tryCatch(system(cmd2, intern = TRUE))
+    }
+    
+    setwd(wd.orig)
 }
