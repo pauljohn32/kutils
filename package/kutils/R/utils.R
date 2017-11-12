@@ -162,28 +162,31 @@ removeMatches <- function(x, y, padNA = FALSE){
 }
 NULL
 
-##' Use new information to update a vector, either 1)
-##' adding names, 
+##' Use new information to update a vector. Similar in concept to
+##' R's modify list
 ##'
-##' Original purpose was to receive 2 named vectors, x and y, and copy
-##' "updated" named values from y into x. If both vectors are named,
-##' then values in x for which y names match will be updated with
-##' values from y.
-##'
-##' If either x or y has no names, then we have special rules
-##' to put the information to use, or fail.
-##' 1. If neither has names, then the function returns a new
-##' vector with x as the names and y as the values.
-##' 2. If x has no names, but y does, then we proceed as if
-##' user wants to supply new labels for some values of x, but
-##' not all.
-##'
+##' ##' Original purpose was to receive 2 named vectors, x and y, and copy
+##' "updated" named values from y into x. If x or y are not named,
+##' however, this will do something useful.
+##' \itemize{
+##' \item Both vectors are named: values in x for which y names match will be
+##'     updated with values from y. If \code{augment} is true, then named
+##'     values in y that are not present in x will be added to x.
+##' \item If neither vector is named: returns a new vector with x as the names
+##'     and y as the values. Same as returning \code{names(y) <- x}.
+##' \item If x is not named, y is named: replaces elements in x with values of y
+##'     where suitable (x matches names(y)). For matches, returns x = y[x]
+##'     if names(y) include x.
+##' \item If x is named, y is not named: returns y, but with names from x. Lengths
+##'     of x and y must be identical.
+##' \item If y is NULL or not provided, x is returned unaltered.
+##' }
 ##' @param x vector to be updated, may be named or not.
-##' @param y labels, possibly with names. If unnamed, must match
+##' @param y possibly a named vector. If unnamed, must match
 ##'     length of x. If named, and length is shorter than x, then
 ##'     name-value pairs in x will be replaced with name-value pairs
-##'     with y. If names in y are not in x, an error results unless
-##'     the augment = TRUE.
+##'     with y. If names in y are not in x, the augment argument
+##'     determines the result.
 ##' @param augment If TRUE, add new items in x from y. Otherwise,
 ##'     ignore named items in y that are not in x.
 ##' @param warnings Defaults as FALSE. Show warnings about augmentation
@@ -196,7 +199,7 @@ NULL
 ##' y <- c(b = 22)
 ##' modifyVector(x, y)
 ##' y <- c(c = 7, a = 13, e = 8)
-##' ## Will give warning unless augment = TRUE
+##' ## If augment = TRUE, will add more elements to x
 ##' modifyVector(x, y, augment = TRUE)
 ##' modifyVector(x, y)
 ##' x <- c("a", "b", "c")
@@ -210,7 +213,8 @@ NULL
 ##' ## Will give error unless augment = TRUE
 ##' modifyVector(x, y, augment = TRUE)
 modifyVector <- function(x, y, augment = FALSE, warnings = FALSE){
-    if (missing(x) || missing(y)) stop("modifyVector requires x and y")
+    if (missing(x) || is.null(x)) stop("modifyVector: x should not be null")
+    if (missing(y) || is.null(y)) return(x)
     ## neither has names, so values of y are names for x
     if (is.null(names(x)) && is.null(names(y))){
         if (length(x) == length(y)){
