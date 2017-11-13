@@ -172,8 +172,8 @@ NULL
 ##' \item Both vectors are named: values in x for which y names match will be
 ##'     updated with values from y. If \code{augment} is true, then named
 ##'     values in y that are not present in x will be added to x.
-##' \item If neither vector is named: returns a new vector with x as the names
-##'     and y as the values. Same as returning \code{names(y) <- x}.
+##' \item If neither vector is named: returns a new vector with x as the values
+##'     and y as the names. Same as returning \code{names(x) <- y}.
 ##' \item If x is not named, y is named: replaces elements in x with values of y
 ##'     where suitable (x matches names(y)). For matches, returns x = y[x]
 ##'     if names(y) include x.
@@ -204,7 +204,7 @@ NULL
 ##' modifyVector(x, y)
 ##' x <- c("a", "b", "c")
 ##' y <- c("income", "education", "sei")
-##' ## Same as names(y) <- x
+##' ## Same as names(x) <- y
 ##' modifyVector(x, y)
 ##' x <- c("a", "b", "c")
 ##' y <- c(a = "happy")
@@ -218,13 +218,13 @@ modifyVector <- function(x, y, augment = FALSE, warnings = FALSE){
     ## neither has names, so values of y are names for x
     if (is.null(names(x)) && is.null(names(y))){
         if (length(x) == length(y)){
-            names(y) = x
+            names(x) = y
         } else{
             MESSG <- paste("if neither x nor y has names,",
                            "then x and y must be of same length")
             stop(MESSG)
         }
-        return(y)
+        return(x)
     }
     
     ## x has names, but y does not,  y is new values of x

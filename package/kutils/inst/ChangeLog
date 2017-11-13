@@ -1,3 +1,20 @@
+2017-11-13  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R: varLabels works, tested in examples
+
+2017-11-12  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/utils.R (modifyVector): Clarify documentation, alter
+	so that if y is NULL, then return x unaltered.
+
+2017-11-10  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (testview): New function to compile and show
+	tex tables.
+	(buildSubtableForParamSet): if fits=NULL, then make sure it does
+	not print.
+	(buildSubtableForParamSet): working on group labels problem
+
 2017-11-09  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/semTable.R (insertParamTypes): constructed parameters,

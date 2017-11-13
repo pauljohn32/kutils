@@ -106,6 +106,8 @@
 ##'     "Root Mean Square Error of Approximation", cli = "CLI")}. The
 ##'     default labels are the upper-case fits names (except for
 ##'     "chisq", where a Greek letter is supplied when possible).
+##' @param varLabels Named vector of labels to replace variable names
+##'     in column 1 of SEM table.
 ##' @param groups Specify some group names for inclusion in the
 ##'     model. If \code{object} is just one SEM, but there are several
 ##'     groups within it, the parameters for each group will be
@@ -143,35 +145,40 @@
 ##' fit1 <- cfa(HS.model, data = HolzingerSwineford1939,
 ##'             std.lv = TRUE, meanstructure = TRUE)
 ##' fit1.t1 <- semTable(fit1, columns = c("est", "estse"),
-##'                     fits = c("chisq", "rmsea"), file = file.path(tempdir, "fit1.1"))
+##'                     fits = c("chisq", "rmsea"), file = file.path(tempdir, "fit1.t1"))
+##' if (interactive()) testtable("fit1.t1", tempdir)
 ##' fit1.t2 <- semTable(fit1, fits = c("chisq", "rmsea"),
 ##'                columns = c("est", "se"), columnLabels = c(se = "S.E."),
-##'                file = file.path(tempdir, "fit1.2"))
+##'                file = file.path(tempdir, "fit1.t2"))
+##' if (interactive()) testtable("fit1.t2", tempdir)
 ##' fit1.t3 <- semTable(fit1, fits = c("chisq", "rmsea"),
 ##'                columns = c("estsestars"),
 ##'                columnLabels = c("estsestars" = "Est(SE)"),
-##'                file = file.path(tempdir, "fit1.3"))
+##'                file = file.path(tempdir, "fit1.t3"))
+##' if (interactive()) testtable("fit1.t3", tempdir)
 ##' fit1.t4 <- semTable(fit1, fits = c("chisq", "rmsea"),
 ##'                columns = c("eststars", "p"),
 ##'                columnLabels = c("eststars" = "Est(SE)"),
-##'                file = file.path(tempdir, "fit1.4"))
+##'                file = file.path(tempdir, "fit1.t4"),
+##'                varLabels = c(x1 = "happy 1", x2 = "happy 2", x3 = "happy 3"))
+##' if (interactive()) testtable("fit1.t4", tempdir)
 ##' 
 ##' ## 2 groups
 ##' fit1.g <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE, group = "school")
 ##' fit1.gt1 <- semTable(fit1.g, columns = c("estsestars", "p"),
 ##'                columnLabels = c(estsestars = "Est w/stars", p = "p-value"),
-##'                file = file.path(tempdir, "fit1.g1"))
-##' testview("fit1.g1", tempdir)
+##'                file = file.path(tempdir, "fit1.gt1"))
+##' if (interactive()) testtable("fit1.gt1", tempdir)
 ##' ## Now name particular group by name
 ##' fit1.gt2 <- semTable(fit1.g, columns = c("estsestars", "p"),
 ##'                columnLabels = c(estsestars = "Est w/stars", p = "p-value"),
-##'                file = file.path(tempdir, "fit1.g2"), groups = "Pasteur")
-##' testview("fit1.g2", tempdir)
+##'                file = file.path(tempdir, "fit1.gt2"), groups = "Pasteur")
+##' if (interactive()) testtable("fit1.gt2", tempdir)
 ##' ## Name particular group by number
 ##' fit1.gt3 <- semTable(fit1.g, columns = c("estsestars", "p"),
 ##'                columnLabels = c(estsestars = "Est w/stars", p = "p-value"),
-##'                file = file.path(tempdir, "fit1.g3"), groups = 1)
-##' testview("fit1.g3", tempdir)
+##'                file = file.path(tempdir, "fit1.gt3"), groups = 1)
+##' if (interactive()) testtable("fit1.gt3", tempdir)
 ##' 
 ##' ## Fit same model with standardization
 ##' fit1.std <- update(fit1, std.lv = TRUE, std.ov = TRUE, meanstructure = TRUE) 
@@ -181,8 +188,8 @@
 ##' semTable(list("Ordinary" = fit1, "Standardized" = fit1.std),
 ##'     columns = list("Ordinary" = c("est", "se"), "Standardized" = c("est")),
 ##'     columnLabels = c(est = "Est", se = "SE"), file = file.path(tempdir, "fit1.2.2"))
-##' 
-##' cat(fit1.t1)
+##' if (interactive()) testtable("fit1.2.2", tempdir)
+##'
 ##' fit1.t2 <- semTable(fit1, fits = c("chisq", "rmsea"), standardized = TRUE)
 ##' cat(fit1.t2)
 ##' fit1.t3 <- semTable(fit1, fits = c("chisq", "rmsea", "tli"),
@@ -211,12 +218,19 @@
 ##'                                     "estsestars" = "Standardized Est."),
 ##'                    paramSets = c("loadings", "slopes", "latentcovariances"),
 ##'                    file = file.path(tempdir, "fit2.t1"), type = c("latex", "csv"))
+##' 
 ##' cat(fit2.t[["latex"]])
 ##' cat(fit2.t[["csv"]])
 ##' 
-##' fit2.t <- semTable(list("Ordinary" = fit2, "Standardized" = fit2.std), type = "html",
-##'                    file = file.path(tempdir, "fit2.t"))
+##' fit2.t <- semTable(list("Ordinary" = fit2, "Standardized" = fit2.std),
+##'               type = c("html", "latex"),
+##'               file = file.path(tempdir, "fit2.t"),
+##'               varLabels = c(x1 = "happy 1", x2 = "happy 2", x3 = "happy 3"))
+##'
 ##' if (interactive()) browseURL(file.path(tempdir, "fit2.t.html"))
+##' if (interactive()) testtable("fit2.t", tempdir)
+##'
+##' 
 ##' regmodel2 <- 'visual  =~ x1 + x2 + x3
 ##'               textual =~ x4 +  x6
 ##'               speed   =~  x8 + x9
@@ -225,11 +239,13 @@
 ##' fit3 <- sem(regmodel2, data = HolzingerSwineford1939, std.lv = TRUE,
 ##'             meanstructure = TRUE)
 ##'
-##' fit3.t1 <-  semTable(fit3, type = c("latex", "html", "csv"), columns = c("estsestars", "rsquare"), 
-##'             file = file.path(tempdir, "fit3.1"))
+##' fit3.t1 <-  semTable(fit3, type = c("latex", "html", "csv"),
+##'                      columns = c("estsestars", "rsquare"), 
+##'                      file = file.path(tempdir, "fit3.1"))
 ##' 
 ##' cat(fit3.t1[["latex"]])
-##' 
+##' if (interactive()) testtable("fit3.1", tempdir)
+##'
 ##' fit3.std <- update(fit2, std.lv = TRUE, std.ov = TRUE)
 ##'
 ##' fit3.std.t1 <- semTable(list("Mod 1" = fit2, "Mod 1 std" = fit2.std, "Mod 2" = fit3,
@@ -326,8 +342,9 @@
 semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                      columns = c(est = "Estimate", se = "SE", z = "z", p = "p"),
                      columnLabels, fits = c("chisq", "cfi", "tli", "rmsea"),
-                     fitLabels = toupper(fits), groups = NULL, type = "latex",
-                     longtable = FALSE, alpha =  c(0.05, 0.01, 0.001)) {
+                     fitLabels = toupper(fits), varLabels = NULL,
+                     groups = NULL, type = "latex", longtable = FALSE,
+                     alpha =  c(0.05, 0.01, 0.001)) {
     ## do.call(rbind, alist) unexpectedly converts characters to factors.
     ## it does not accept stringsAsFactors=FALSE,
     ## So set globally to avoid hassle
@@ -538,7 +555,6 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                       colnum = colnum, width = width)
     }
 
-    
     ##works for paramSets = "loadings" or "slopes"
     loadingMaker <- function(parameters, paramType = "loadings", colLabels, modelName) {
         report <- names(colLabels[[modelName]])
@@ -555,7 +571,7 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
             vname <- unique(x$lhs)
             ##if(paramType == "slopes") browser()
             rownames(x) <- paste(paramType, vname, x[ , "rhs"], sep = ".")
-            x <- data.frame(col1 = x$rhs, x[ , report, drop = FALSE])
+            x <- data.frame(col1 = modifyVector(x$rhs, varLabels), x[ , report, drop = FALSE])
             ## don't put "_BOC_" at beginning if in colnum 1
             attr(x, "title") <- makeSubtableTitle(vname, colnum = 1, width = 1,
                                     center = FALSE,  underline = TRUE)
@@ -572,29 +588,31 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
     ## paramType in c("intercepts", "means" "latentmeans", "latentvariances","residualcovariances"
     ## Check for complications: "latentcovariances" "residualvariances"
     ## "thresholds" "covariances"
-    parTableMaker <- function(trows, paramType, colLabels, modelName, col1name = "lhs"){
+    parTableMaker <- function(trows, paramType, colLabels, modelName){
         report <- names(colLabels[[modelName]])
         totalNcolumns <- min(9,  length(unname(unlist(colLabels))))
         ## trows <- parameters[parameters$paramType == paramType,, drop = FALSE]
         if(dim(trows)[1] == 0) return (NULL)
-      
+        varlabslhs <- modifyVector(trows$lhs, varLabels)
+        varlabsrhs <- modifyVector(trows$rhs, varLabels)
+        
         if (paramType == "thresholds"){
             thresnum <- substring(trows$rhs, 2, nchar(trows$rhs))
-            trows$col1 <- paste0(trows$lhs, "(", thresnum, ")")
+            trows$col1 <- paste0(varlabslhs, "(", thresnum, ")")
             rownames(trows) <- paste(paramType, trows[ , "lhs"], thresnum, sep = ".")
         } else if (paramType == "residualvariances"){
             rownames(trows) <- paste(paramType, trows[ , "lhs"], sep = ".")
-            trows$col1 <- trows[ , col1name]
+            trows$col1 <- varlabslhs
         } else if (paramType == "residualcovariances"){
-            trows$col1 <- paste0(trows$lhs, " w/", trows$rhs)
+            trows$col1 <- paste0(varlabslhs, " w/", varlabsrhs)
             rownames(trows) <- paste(paramType, trows[ , "lhs"], trows[ , "rhs"],  sep = ".")
         } else if (paramType == "latentcovariances"){
             trows$col1 <- paste0(trows$lhs, " w/", trows$rhs)
             rownames(trows) <- paste0(paramType, ".", trows[ , "lhs"],
                            ".", trows[ , "rhs"])
         } else {
-            trows$col1 <- trows[ , col1name]
-            rownames(trows) <- paste(paramType, trows[ , col1name], sep = ".")
+            trows$col1 <- varlabslhs
+            rownames(trows) <- paste(paramType, trows[ , "lhs"], sep = ".")
         }
         trows <- data.frame(col1 = trows$col1, trows[ , report, drop = FALSE])
         attr(trows, "title") <- makeSubtableTitle(paramSetLabels[paramType],
@@ -683,7 +701,7 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                 reslt[[jj]] <- info
             } else {
                 reslt[[jj]] <- parTableMaker(paramTableSplit[[jj]], paramType = jj, colLabels,
-                                            modelName = modelName, col1name = "lhs")
+                                            modelName = modelName)
             }
         }
 
@@ -1240,15 +1258,18 @@ NULL
 
 ##' Test viewer for tex tables
 ##'
-##' Creates the smallest possible latex file. Compiles it, then
-##' displays in viewer if system has \code{xdg-open} settings.
+##' Creates a small latex template file that includes a table
+##' file. Compiles it, then displays in viewer if system has
+##' \code{xdg-open} settings.
 ##' 
 ##' @param tablefile The base name of the table file
 ##' @param dir Directory where table is saved, same will be used for build.
 ##' @param tmpfn File name to be used by example document
 ##' @return NULL
+##' @export
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @examples
+##' \donttest{
 ##' require(lavaan)
 ##' tempdir <- tempdir()
 ##' HS.model <- ' visual  =~ x1 + x2 + x3
@@ -1260,8 +1281,9 @@ NULL
 ##'                columns = c("estsestars", "rsquare"),
 ##'                columnLabels = c("estsestars" = "Est(SE)"),
 ##'                file = file.path(tempdir, "fit1.t"))
-##' testview("fit1.t", tempdir)
-testview <- function(tablefile, dir, tmpfn = "tmp.tex"){
+##' if (interactive()) testtable("fit1.t", tempdir)
+##' }
+testtable <- function(tablefile, dir, tmpfn = "tmp.tex"){
     wd.orig <- getwd()
     isWindoze <- if(Sys.info()[['sysname']] == "Windows") TRUE else FALSE
     mynull <-  if(isWindoze) "> nul" else " > /dev/null"
