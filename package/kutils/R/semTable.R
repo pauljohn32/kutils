@@ -45,7 +45,6 @@
 ##'     or a named list of lavaan objects, e.g., \code{list("Model A"
 ##'     = obj1, "Model B" = obj2)}. Results will be displayed side by
 ##'     side.
-
 ##' @param paramSets Parameter sets to be included for each fitted
 ##'     object.  Valid values of the vector are \code{"all"} or a any
 ##'     of the following: \code{c("loadings", "slopes", "intercepts",
@@ -336,6 +335,34 @@
 ##'          file = file.path(tempdir, "fit5.3"), type = c("latex", "html", "csv"),
 ##'          longtable = TRUE)
 ##' if(interactive()) browseURL(file.path(tempdir, "fit5.3.html"))
+##'
+##' ## Model 5b - Revision of Model 5s
+##' model5b <-
+##'     '
+##'     # Cut some indicators from the measurement model
+##'     ind60 =~ x1 + x2 
+##'     dem60 =~ y1 + e*y2 + d*y3 + y4
+##'     dem65 =~ y5 + e*y6 + d*y7 
+##'     # regressions
+##'     dem60 ~ a*ind60
+##'     dem65 ~ c*ind60 + b*dem60
+##'     # cut out the residual correlations
+##'     # indirect effect (a*b)
+##'     ## := operator defines new parameters
+##'     ab := a*b
+##' 
+##'     ## total effect
+##'     total := c + (a*b)
+##'     '
+##' 
+##' fit5b <- sem(model5b, data=PoliticalDemocracy, se = "bootstrap",
+##' bootstrap = 100)
+##' semTable(list("Model 5" = fit5boot, "Model 5b" = fit5b),
+##'          columns = c("estsestars", "rsquare"),
+##'          file = file.path(tempdir, "fit5.5"),
+##'           type = c("latex", "html", "csv"),
+##'          longtable = TRUE)
+##' testtable("fit5.5", tempdir)
 ##' 
 ##' list.files(tempdir)
 ##' }
@@ -359,7 +386,8 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
     ## is round to 3, then show 2 digits
     frnd <- function(x, rnd = 2, digits = 2) {
         y <- formatC(round(x, rnd), format = 'f', digits = digits)
-        y[y == " NA"] <- ""
+        ## regex replace " NA" with "". 
+        y[grep("\\s*NA",y )] <- ""
         y
     }
 
@@ -571,7 +599,8 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
             vname <- unique(x$lhs)
             ##if(paramType == "slopes") browser()
             rownames(x) <- paste(paramType, vname, x[ , "rhs"], sep = ".")
-            x <- data.frame(col1 = modifyVector(x$rhs, varLabels), x[ , report, drop = FALSE])
+            x <- data.frame(col1 = modifyVector(x$rhs, varLabels),
+                            x[ , report, drop = FALSE])
             ## don't put "_BOC_" at beginning if in colnum 1
             attr(x, "title") <- makeSubtableTitle(vname, colnum = 1, width = 1,
                                     center = FALSE,  underline = TRUE)
@@ -757,7 +786,7 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
             ## if paramSet lacks desired table, make empty table for it
             if (is.null(tablList[[jj]])) {
                 y <- data.frame(col1 = paramnames[ , "col1"],
-                                matrix("-", ncol = length(colLabels[[jj]]),
+                                matrix("", ncol = length(colLabels[[jj]]),
                                        nrow = NROW(paramnames),
                                        dimnames = list(paramnames[ , "rownames"],
                                                        names(colLabels[[jj]]))))
@@ -769,12 +798,15 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                 rownames(y) <- rownames(paramnames)
                 y[ , match("col1", colnames(y))] <- NULL
                 tablList[[jj]] <- y
-                if(is.null(attr(tablList, "title"))) attr(tablList, "title") <- attr(tablList[[jj]], "title")
+                if (is.null(attr(tablList, "title"))){
+                    attr(tablList, "title") <- attr(tablList[[jj]], "title")
+                }
             }
         }
         ## that has a title attribute
         tablMatrix <- do.call(cbind,  tablList)
         tablMatrix <- cbind("col1" = paramnames[ , "col1"], tablMatrix)
+        tablMatrix[is.na(tablMatrix)] <- ""
         attr(tablMatrix, "title") <- attr(tablList, "title")
         markupTable(tablMatrix)
     }
@@ -1064,10 +1096,10 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         "_BRT_" = "", 
         "_BOCU_" = "& ",
         "_BR_" = "",
-        "_BT_" = if(longtable) paste0("\\\\begin{longtable}{l",
-                                      paste0(rep("r", Ncolumns), collapse = ""), "}")
-                 else paste0("\\\\begin{tabular}{l",
-                             paste0(rep("r", Ncolumns), collapse = ""), "}"),
+        "_BT_" = if(longtable) paste0("\\\\begin{longtable}{r",
+                                      paste0(rep("c", Ncolumns), collapse = ""), "}")
+                 else paste0("\\\\begin{tabular}{r",
+                             paste0(rep("c", Ncolumns), collapse = ""), "}"),
         "_EOL_" = "\n",
         "_HL_" = "\\\\hline", 
         "_UL_" = "\\\\underline{",
