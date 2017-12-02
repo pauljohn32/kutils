@@ -165,7 +165,7 @@ NULL
 ##' Use new information to update a vector. Similar in concept to
 ##' R's modify list
 ##'
-##' ##' Original purpose was to receive 2 named vectors, x and y, and copy
+##' Original purpose was to receive 2 named vectors, x and y, and copy
 ##' "updated" named values from y into x. If x or y are not named,
 ##' however, this will do something useful.
 ##' \itemize{

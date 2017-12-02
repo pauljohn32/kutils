@@ -1,3 +1,19 @@
+2017-12-01  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/likert.R (print.likert): likert returns now a list, this
+	prints first item.
+
+2017-11-30  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (keySave): varlab corrected for CSV files
+
+2017-11-16  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (buildParamSetSubtable): if NA in merged table,
+	change to "-"
+	(markupConvert): change indentation in column 1 to right, other
+	columns to centered.
+
 2017-11-13  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/semTable.R: varLabels works, tested in examples
