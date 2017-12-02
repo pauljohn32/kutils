@@ -870,7 +870,7 @@ keySave <- function(obj, file, na_ = ".", varlab){
     if (length(grep("csv$", tolower(file))) > 0){
         write.csv(obj, file = file, na = na_, row.names = FALSE)
         if(!identical(varlab, FALSE) && !is.null(attr(obj, "varlab"))){
-            varlab.orig <- attr(obj, "varlab.orig")
+            varlab.orig <- attr(obj, "varlab")
             varlab.mat <- cbind("name_new" = names(varlab.orig),
                                 "varlab" = varlab.orig)
             write.csv(varlab.mat,

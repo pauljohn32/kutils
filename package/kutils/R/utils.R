@@ -97,7 +97,7 @@ NULL
 ##'     values smaller than 0.01 get two stars, and so forth.  Must be
 ##'     same number of elements as alpha. These need not be asterixes,
 ##'     could be any character strings that users desire. See example.
-##' @return a character vector of asterixes, same length as pval
+##' @return a character vector of symbols (eg asterixes), same length as pval
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @export
 ##' @examples
@@ -119,8 +119,9 @@ starsig <-
         messg <- "alpha vector must have same number of elements as symbols vector"
         stop(messg)
     }
+    if(is.vector(pval) && !is.numeric(pval)) pval <- as.numeric(pval)
     nstars <- sapply(pval, function(x) sum(abs(x) < alpha))
-    sapply(nstars, function(y) symbols[y])
+    sapply(nstars, function(x) if(!is.na(x) && x > 0) symbols[x] else " ")
 }
 NULL
 
@@ -159,6 +160,117 @@ removeMatches <- function(x, y, padNA = FALSE){
     }
     x
 }
+NULL
+
+##' Use new information to update a vector. Similar in concept to
+##' R's modify list
+##'
+##' Original purpose was to receive 2 named vectors, x and y, and copy
+##' "updated" named values from y into x. If x or y are not named,
+##' however, this will do something useful.
+##' \itemize{
+##' \item Both vectors are named: values in x for which y names match will be
+##'     updated with values from y. If \code{augment} is true, then named
+##'     values in y that are not present in x will be added to x.
+##' \item If neither vector is named: returns a new vector with x as the values
+##'     and y as the names. Same as returning \code{names(x) <- y}.
+##' \item If x is not named, y is named: replaces elements in x with values of y
+##'     where suitable (x matches names(y)). For matches, returns x = y[x]
+##'     if names(y) include x.
+##' \item If x is named, y is not named: returns y, but with names from x. Lengths
+##'     of x and y must be identical.
+##' \item If y is NULL or not provided, x is returned unaltered.
+##' }
+##' @param x vector to be updated, may be named or not.
+##' @param y possibly a named vector. If unnamed, must match
+##'     length of x. If named, and length is shorter than x, then
+##'     name-value pairs in x will be replaced with name-value pairs
+##'     with y. If names in y are not in x, the augment argument
+##'     determines the result.
+##' @param augment If TRUE, add new items in x from y. Otherwise,
+##'     ignore named items in y that are not in x.
+##' @param warnings Defaults as FALSE. Show warnings about augmentation
+##'     of the target vector.
+##' @export
+##' @return an updated vector
+##' @author Paul Johnson
+##' @examples
+##' x <- c(a = 1, b = 2, c = 3)
+##' y <- c(b = 22)
+##' modifyVector(x, y)
+##' y <- c(c = 7, a = 13, e = 8)
+##' ## If augment = TRUE, will add more elements to x
+##' modifyVector(x, y, augment = TRUE)
+##' modifyVector(x, y)
+##' x <- c("a", "b", "c")
+##' y <- c("income", "education", "sei")
+##' ## Same as names(x) <- y
+##' modifyVector(x, y)
+##' x <- c("a", "b", "c")
+##' y <- c(a = "happy")
+##' modifyVector(x, y)
+##' y <- c(a = "happy", g = "glum")
+##' ## Will give error unless augment = TRUE
+##' modifyVector(x, y, augment = TRUE)
+modifyVector <- function(x, y, augment = FALSE, warnings = FALSE){
+    if (missing(x) || is.null(x)) stop("modifyVector: x should not be null")
+    if (missing(y) || is.null(y)) return(x)
+    ## neither has names, so values of y are names for x
+    if (is.null(names(x)) && is.null(names(y))){
+        if (length(x) == length(y)){
+            names(x) = y
+        } else{
+            MESSG <- paste("if neither x nor y has names,",
+                           "then x and y must be of same length")
+            stop(MESSG)
+        }
+        return(x)
+    }
+    
+    ## x has names, but y does not,  y is new values of x
+    ## but x keeps old names
+    if (!is.null(names(x)) && is.null(names(y))){
+        if (length(x) == length(y)){
+            x.names <- names(x)
+            x <- y
+            names(x) <- x.names
+        } else{
+            MESSG <- paste("if y has no names,",
+                           "x and y must be of same length")
+            stop(MESSG)
+        }
+        return(x)
+    }
+    
+    ## x has no names, but y does.  Assume user meant
+    ## to replace x *values* by y *names* and values. 
+    if (is.null(names(x)) && !is.null(names(y))){
+        ## x has no names, so we will give x its values
+        ## as its names. 
+        names(x) <- x
+        return(modifyVector(x, y, augment))
+    }
+    
+    ## x and y both have names, y may be different in length
+    x.names <- names(x)
+    y.names <- names(y)
+    inboth <- intersect(y.names, x.names)
+    yunique <- y[!y.names %in% x.names]
+    
+    x[inboth] <- y[inboth]
+    
+    if(augment){
+        x <- c(x, yunique)
+    } else {
+        if(length(yunique) > 0 && warnings){
+            MESSG <- paste("if augment = FALSE, elements in y",
+                           "with names not in names(x) will be discarded")
+            warning(MESSG)
+        }
+    }            
+    x
+}
+NULL
 
 
 ##' apply a vector of replacements, one after the other.

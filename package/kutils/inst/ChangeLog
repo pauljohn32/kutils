@@ -1,3 +1,13 @@
+
+2017-12-01  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/likert.R (print.likert): likert returns now a list, this
+	prints first item.
+
+2017-11-30  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (keySave): varlab corrected for CSV files
+
 2017-10-23  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/semTable.R (semTable): trow is now just results, does not
@@ -10,6 +20,118 @@
 	(observedMeanMaker): abbreviate trows stanzas
 	(roundSubtable): a common series of roundings is extracted from
 	the maker functions.
+
+2017-11-16  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (buildParamSetSubtable): if NA in merged table,
+	change to "-"
+	(markupConvert): change indentation in column 1 to right, other
+	columns to centered.
+
+2017-11-13  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R: varLabels works, tested in examples
+
+2017-11-12  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/utils.R (modifyVector): Clarify documentation, alter
+	so that if y is NULL, then return x unaltered.
+
+2017-11-10  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (testview): New function to compile and show
+	tex tables.
+	(buildSubtableForParamSet): if fits=NULL, then make sure it does
+	not print.
+	(buildSubtableForParamSet): working on group labels problem
+
+2017-11-09  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (insertParamTypes): constructed parameters,
+	cut out most of fixParamSets, omit constrained rows
+
+2017-11-06  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/utils.R (starsig): correct "character(0)" return when
+	no stars were called for!
+	(starsig): if pval is a vector, but not numeric, us as.numeric.
+	protects against columns set "as character" by formatC
+
+2017-11-05  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (buildSubtableForParamSet): Lots of
+	pussy-footing about changing the way labels are supplied and
+	information is passed among vectors.
+	(createEstSE): fix parameter rsquare for multi group
+
+	* ../R/utils.R (modifyVector): new utility vector to replace
+	named vector value selectively, also some other special feature
+	shown in examples.
+
+2017-11-03  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (extractModelSummary): multi-group fixes, treat
+	2 groups as 2 objects, rownames must be unique by group
+	(createEstSE): insert group.labels as new column, makes
+	multi-group work easier lalter on
+
+
+2017-11-02  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (extractParameters): error b/c colNames is list,
+	not vector anymore.
+	(markupConvert): \tabularnewline should always insert \n with it.
+	Results in "double spaced" tables, not problem in LaTeX output,
+	need to see if that is problem in other output formats.
+	(loadingMaker): fix the factor gotcha, where a character is
+	converted to a factor and R re-alphabetizes it.
+	(markupConvert): HTML markup fiddle, _BOC_BOM becomes
+	"_BOM". silly fiddle.
+
+2017-11-01  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (loadingMaker): now works with "slopes" and
+	"loadings" parameter sets, deleting slopeMaker
+	(parTableMaker): one table maker function, replaces
+	interceptMaker, observedMeanMaker, thresholdMaker, residualvarianceMaker,
+	residualcovarianceMaker, latentvarianceMaker,
+	latentcovarianceMaker, latentMeanMaker
+	(convertMarkupo): DANGER, _BOMC_ definition changed, now does not
+	have & at front. DANGER, DANGER.
+
+2017-10-30  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (cleanParamSets):  Reduce this:
+	      if (length(which(parameters$rhs %in% latents &
+                             parameters$lhs %in% latents &
+                             parameters$op == "~~")) > 0)
+              to if(any(params ...))
+
+
+
+2017-10-27  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (extractParameters): add trows class and
+	trowsList class to mark the items within the parameter tables.
+
+2017-10-26  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (getParamTable): new function to create
+	parameters object, call rounding function here, no need within
+	each stanza rename "cols" as "colNames", introduce "est(se)" as a
+	legal column name.
+	(parseParamTable): variables and latents cannot be global variables,
+	must be attributes of parameter table, in order to allow for more
+	than one model in this function
+	(parseParamTable): handles params here, each model can have separate
+	(latentMeanMaker): drop "gotcha" hit me again, chosing 1 column
+	from trows
+
+2017-10-25  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (markupTable): insert parameters as named
+	argument in the maker functions
+>>>>>>> cleanupSemTable.R
 
 2017-10-06  Paul Johnson  <pauljohn@delllap-16>
 
