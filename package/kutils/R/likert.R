@@ -34,12 +34,12 @@
 ##' vvector <- c("Strongly Disagree", "Disagree", "Neutral",
 ##'               "Agree", "Strongly Agree")
 ##' set.seed(2342234)
-##' N <- 142
+##' N <- 8
 ##' scales <-
-##'     data.frame(Vegas = factor(sample(1:5, N, replace = TRUE), labels = vvector),
-##'                NewYork = factor(sample(1:5, N, replace = TRUE), labels = vvector),
-##'                Paris = factor(sample(1:5, N, replace = TRUE), labels = vvector),
-##'                Berlin = factor(sample(1:5, N, replace = TRUE), labels = vvector))
+##'     data.frame(Vegas = factor(sample(1:5, N, replace = TRUE), levels = 1:5, labels = vvector),
+##'                NewYork = factor(sample(1:5, N, replace = TRUE),levels = 1:5, labels = vvector),
+##'                Paris = factor(sample(1:5, N, replace = TRUE), levels = 1:5, labels = vvector),
+##'                Berlin = factor(sample(1:5, N, replace = TRUE), levels = 1:5, labels = vvector))
 ##'
 ##' likert(scales)
 ##' 
@@ -72,15 +72,21 @@ likert <-  function(data, vlist, columnlabels, valuelabels,  outdir,
     
     ## add error checking
     ## All columns must have same factor levels, else stop
-    factorlevels <- unique(lapply(data, levels), stringsAsFactors = FALSE)
-    if(length(factorlevels) > 1) stop("All columns should have same factor levels")
-    factorlevels <- unlist(factorlevels)
-
+    factorlevels <- unique(lapply(data, levels))
+    if(length(factorlevels) > 1) {
+        warning("All columns do not have same factor levels, will append")
+        factorlevels <- unique(unlist(factorlevels))
+    } else {
+        factorlevels <- unlist(factorlevels)
+    }
+    
     if(!missing(valuelabels) && !is.null(valuelabels)){
         if(length(valuelabels) < length(factorlevels)){
             if(is.null(names(valuelabels))){
-                stop("valuelabels is incomplete or unnamed")
+                MESSG <- "valuelabels is incomplete or unnamed"
+                stop(MESSG)
             } else {
+                ## valuelabels is named, so replace
                 factorlevels <- modifyVector(factorlevels, valuelabels)
             }
         } else if (length(valuelabels) == length(factorlevels)){
@@ -107,10 +113,14 @@ likert <-  function(data, vlist, columnlabels, valuelabels,  outdir,
     } else {
         columnlabels <- colnames(data)
     }
-    
-    ##varCount <- sapply(data, table)
-    varCount <- apply(data, 2, table)
-    dimnames(varCount) = list(factorlevels, columnlabels)
+
+    varCount <- matrix(0, nrow = length(factorlevels), ncol = NCOL(data), dimnames = list(factorlevels, colnames(data)))
+    for (i in colnames(data)){
+        xxx <- table(data[ , i])
+        varCount[rownames(xxx), i ] <- xxx 
+    }
+    varCount <- sapply(data, table)
+    colnames(varCount) = columnlabels
     varSums <- colSums(varCount)
 
     varColPct <- 100.0 * sweep(varCount, 2, varSums, "/")
