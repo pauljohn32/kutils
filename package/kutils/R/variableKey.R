@@ -1145,7 +1145,7 @@ NULL
 ##' 
 keyImport <- function(key, ignoreCase = TRUE,
                       sep = c(character = "\\|", logical = "\\|",
-                              integer = "\\|", factor = "[\\|<]",
+                              integer = "\\|", factor = "\\|",
                               ordered = "[\\|<]", numeric = "\\|")
                       , na.strings = c("\\.", "", "\\s+",  "N/A")
                       , missSymbol = "."
@@ -1339,7 +1339,7 @@ keyImport <- function(key, ignoreCase = TRUE,
 ## ##' mydf.keylong.keylist
 makeKeylist <- function(key,
                         sep = c(character = "\\|", logical = "\\|",
-                              integer = "\\|", factor = "[\\|<]",
+                              integer = "\\|", factor = "\\|",
                               ordered = "[\\|<]", numeric = "\\|"),
                         na.strings = c("\\.", "", "\\s+",  "N/A"))
 {
@@ -1822,7 +1822,7 @@ keyDiagnostic <- function(dfold, dfnew, keylist, max.values = 20,
 ##' row.names(mydf.keylong) <- NULL
 ##' all.equal(mydf.keylong, mydf.keywide2long)
 wide2long <- function(key, sep = c(character = "\\|", logical = "\\|",
-                              integer = "\\|", factor = "[\\|<]",
+                              integer = "\\|", factor = "\\|",
                               ordered = "[\\|<]", numeric = "\\|"))
 {
     makeOneVar <- function(x){
@@ -2304,64 +2304,26 @@ print.keyDiff <- function(x, ...){
 }
 
 
-####' Checks a variable key for possible errors.
-####'
-####' @param key variable key object or a file path to a key
-####' @keywords internal
-####' @author Ben Kite <bakite@@ku.edu
-##keyChecker <- function(key){
-##    if (is.character(key)){
-##        key <- keyRead(key)
-##    }
-##    if (prod(c("name_old", "name_new", "class_old", "class_new",
-##               "value_old", "value_new") %in% names(key)) != 1L){
-##        stop ("At a minimum a variable key needs to have the following columns: name_old, name_new, class_old, class_new, value_old, value_new")
-##    }
-##    ## Deduce if this is a long key
-##    name_old.new <- paste0(key[ , "name_old"], ".", key[ , "name_new"])
-##    if (max(table(name_old.new)) > 1){
-##        long <- TRUE
-##    } else {
-##        long <- FALSE
-##    }
-##    if (long){
-##        if (identical(key, wide2long(long2wide(key)))){
-##            stop ("There is an error with this key. The structure changes when being transformed from long to wide, and then back to long.")
-##        }
-##    } else {
-##        if (identical(key, long2wide(wide2long(key)))){
-##            stop ("There is an error with this key. The structure changes when being transformed from wide to long, and then back to wide.")
-##        }
-##    }
-##    if (!long){
-##        xx <- strsplit(key$value_old, split = "[|<]", fixed = FALSE)
-##        xx.l <- sapply(xx, length)
-##        yy <- strsplit(key$value_new, "[|<]", fixed = FALSE)
-##        yy.l <- sapply(yy, length)
-##        inconsistent <- xx.l != yy.l
-##        issues <- key[inconsistent, "name_old"]
-##        if (length(issues) > 0){
-##            stop (paste0("The following variables have inconsistencies in the number of values listed between the value_old and value_new columns: ", issues))
-##        }
-##    }
-##    print("No errors with this key were detected.")
-##}
 
 
 
-##' Compares keys from different data sets for compatability
-##' of data classes. 
+##' Compares keys from different data sets; finds differences classes of variables.
+
+##' This used to check for similarity of keys from various data sets,
+##' one precursor to either combining the keys or merging the data
+##' sets themselves.
 ##'
 ##' When several supposedly "equivalent" data sets are used
 ##' to generate variable keys, there may be trouble. If variables
-##' with same name have different classes, keyApply might fail.
+##' with same name have different classes, keyApply might fail
+##' when applied to one of the data sets.
 ##'
 ##' This reports on differences in classes among keys. By default, it
 ##' looks for differences in "class_old", because that's where we
 ##' usually see trouble.
 ##'
 ##' The output here is diagnostic. The keys can be fixed manually, or the
-##' function keyClassFix can implement an automatic correction.
+##' function keysClassFix can implement an automatic correction.
 ##' @param keys A list with variable keys.
 ##' @param col Name of key column to check for equivalence. Default is "class_old", but
 ##' "class_new" can be checked as well.
@@ -2370,18 +2332,25 @@ print.keyDiff <- function(x, ...){
 ##'     the symbol "TEXT".
 ##' @return Data.frame summarizing class differences among keys
 ##' @author Paul Johnson
+##' @export
 ##' @examples
-##' dat1 <- data.frame(x1 = rnorm(100), x2 = sample(c("Male", "Female"),
-##'                    100, replace = TRUE))
+##' set.seed(234)
+##' dat1 <- data.frame(x1 = rnorm(100),
+##'                    x2 = sample(c("Male", "Female"), 100, replace = TRUE),
+##'                    x3_TEXT = "A", x4 = sample(1:10000, 100))
 ##' dat2 <- data.frame(x1 = rnorm(100), x2 = sample(c("Male", "Female"),
-##'                    100, replace = TRUE), stringsAsFactors = FALSE)
+##'                    100, replace = TRUE),
+##'                    x3_TEXT = sample(1:100, 100),
+##'                    stringsAsFactors = FALSE)
 ##' key1 <- keyTemplate(dat1)
 ##' key2 <- keyTemplate(dat2)
 ##' keys <- list(key1, key2)
+##' keysPoolCheck(keys)
 ##' ## See problem in class_old
-##' kutils:::keysPoolCheck(keys, col = "class_old")
+##' keysPoolCheck(keys, col = "class_old")
 ##' ## problems in class_new
-##' kutils:::keysPoolCheck(keys, col = "class_new")
+##' keysPoolCheck(keys, col = "class_new")
+##' keysPoolCheck(keys, excludere = "TEXT$")
 keysPoolCheck <- function(keys, col = "class_old", excludere = "TEXT$"){
     ## How spot trouble? class_old changes among keys?
     classnameold <- lapply(keys, function(x) {
@@ -2407,7 +2376,8 @@ keysPoolCheck <- function(keys, col = "class_old", excludere = "TEXT$"){
 
     classmerge$troublevar <- apply(classmerge, 1, function(x){length(unique(x[grep(col, names(x))])) > 1})
     classProblems <- classmerge[classmerge$troublevar, ]
-    classProblems[!grepl(excludere, classProblems$name_old), ]
+   
+    classProblems <- classProblems[!grepl(excludere, classProblems$name_old), ]
     classProblems
 }
 
@@ -2426,11 +2396,10 @@ keysPoolCheck <- function(keys, col = "class_old", excludere = "TEXT$"){
 ##' @param key A variable key object.
 ##' @param colname Leave as default to check consistency between classes, values, and names.
 ##' One can specify a check only on "class_old" or "class_new", for example.  But now that
-##' all work correctly, why not allow the checking to happen?
+##' all work correctly, I suggest you leave the default.
 ##' @param na.strings A regular expression of allowed text strings that represent missings.
 ##' Now it amounts to any of these: ".", "NA", "N/A", or any white space or tab as signified by \\s+.
-##' @return Profuse warnings will display problematic key portions. A list of failed key
-##' blocks will be returned.
+##' @return Profuse warnings and a list of failed key blocks.
 ##' @export
 ##' @author Paul Johnson <pauljohn@@ku.edu> and Ben Kite <bakite@@ku.edu>
 keyCheck <- function(key,
@@ -2497,13 +2466,14 @@ keyCheck <- function(key,
         }
     }
 
+
     if (long){
         if (!identical(key, wide2long(long2wide(key)))){
-            stop ("Key Structure error.")
+            stop ("Key error: wide2long(long2wide(key)) fails.")
         }
     } else {
         if (!identical(key, long2wide(wide2long(key)))){
-            stop ("Key Structure error.")
+            stop ("Key error: long2wide(wide2long(key)) fails.")
         }
     }
     if (length(keyfails) > 0){
@@ -2514,7 +2484,17 @@ keyCheck <- function(key,
 }
 
 
-##' Homogenize class values in a long key, or a list of keys
+##' Homogenize class values in a long key.
+##'
+##' For long-format keys, this is one way to correct for errors in
+##' "class_old" or "class_new" for common variables. For a long key
+##' created by stacking together several long keys, or for a list of
+##' long keys, this will try to homogenize the classes by using a
+##' "highest common denominator" approach.  If one key has x1 as a
+##' floating point, but another block of rows in the key has x1 as
+##' integer, then class must be changed to floating point
+##' (numeric). If another section of a key has x1 as a character, then
+##' character becomes the class.
 ##'
 ##' Users might run keyTemplate on several data sets, arriving
 ##' at keys that need to be combined.  The long versions of the
@@ -2551,9 +2531,8 @@ keyCheck <- function(key,
 ##' observed is c("ordered", "numeric", "character"). In that case,
 ##' the class is promoted to "character", it is the least common
 ##' denominator.
-##' @param keylong a long key, resulting from "stacking together"
-##'     several long keys for different data sets. If a stacked wide
-##'     key is provided it will converted to long format.
+##' @param keylong A list of long keys, or just one long key, presumably
+##'     a result of rbinding several long keys. 
 ##' @param keysplit a list of key blocks, each of which is to be
 ##'     inspected and homogenized. Not used if a key is provided.
 ##' @param classes A list of vectors specifying legal promotions.
@@ -2565,6 +2544,7 @@ keyCheck <- function(key,
 ##' @return A class-corrected version of the same format as the input,
 ##'     either a long key or a list of key elements.
 ##' @author Paul Johnson <pauljohn@@ku.edu>
+##' @export
 ##' @examples
 ##' dat1 <- data.frame(x1 = as.integer(rnorm(100)), x2 = sample(c("Apple", "Orange"),
 ##'                    100, replace = TRUE), x3 = ifelse(rnorm(100) < 0, TRUE, FALSE))
@@ -2574,41 +2554,55 @@ keyCheck <- function(key,
 ##' key1 <- keyTemplate(dat1, long = TRUE)
 ##' key2 <- keyTemplate(dat2, long = TRUE)
 ##' keys2stack <- rbind(key1, key2)
-##' keys2stack.fix <- kutils:::keyClassFix(keys2stack)
-##' keys2stack.fix2 <- kutils:::keyClassFix(keys2stack.fix, colname = "class_new")
+##' keys2stack.fix <- keysClassFix(keys2stack)
+##' keys2stack.fix2 <- keysClassFix(keys2stack.fix, colname = "class_new")
 ##' ## Sometimes this will not be able to homogenize
-##' dat1 <- data.frame(x1 = as.integer(rnorm(100)), x2 = sample(c("Apple", "Orange"),
-##'                    100, replace = TRUE))
-##' dat2 <- data.frame(x1 = rnorm(100), x2 = sample(c("Apple", "Orange"),
-##'                    100, replace = TRUE), stringsAsFactors = FALSE)
+##' dat1 <- data.frame(x1 = as.integer(rnorm(100)),
+##'                    x2 = sample(c("Apple", "Orange"), 100, replace = TRUE))
+##' dat2 <- data.frame(x1 = rnorm(100),
+##'                    x2 = sample(c("Apple", "Orange"), 100, replace = TRUE),
+##'                    stringsAsFactors = FALSE)
 ##' key1 <- keyTemplate(dat1, long = TRUE)
 ##' key2 <- keyTemplate(dat2, long = TRUE)
+##' ## Create a stack of keys for yourself
 ##' keys2stack <- rbind(key1, key2)
-##' keys2stack.fix <- kutils:::keyClassFix(keys2stack)
-## ##' ## Wide keys stacked together trigger an error
-## ##'
-## ##' dat1 <- data.frame(x1 = as.integer(rnorm(100)), x2 = sample(c("Apple", "Orange"),
-## ##'                    100, replace = TRUE))
-## ##' dat2 <- data.frame(x1 = rnorm(100), x2 = sample(c("Apple", "Orange"),
-## ##'                    100, replace = TRUE), stringsAsFactors = FALSE)
-## ##' key1 <- keyTemplate(dat1)
-## ##' key2 <- keyTemplate(dat2)
-## ##' keys2stack <- rbind(key1, key2)
-## ##' keys2stack.fix <- kutils:::keyClassFix(keys2stack)
-keyClassFix <- function(keylong = NULL, keysplit = NULL,
+##' keys.fix <- keysClassFix(keys2stack)
+##' ## We will create stack of keys for you
+##' keys.fix2 <- keysClassFix(list(key1, key2)) 
+##' ## View(keys.fix)
+##' ## View(keys.fix2)
+##'
+##' 
+##' If you have wide keys
+##' key1 <- keyTemplate(dat1)
+##' key2 <- keyTemplate(dat2)
+##' keysstack.wide <- rbind(wide2long(key1), wide2long(key2))
+##' keys.fix <- keysClassFix(keysstack.wide)
+##' keysClassFix(list(wide2long(key1), wide2long(key2)))
+keysClassFix <- function(keylong = NULL, keysplit = NULL,
                         classes = list(c("logical", "integer"),
                                        c("integer", "numeric"),
                                        c("ordered", "factor")),
                         colnames = c("class_old","class_new"),
                         textre = "TEXT$")
 {
+
+    if (is.list(keylong) && !is.data.frame(keylong)){
+        islongkey <- vapply(keylong, function(x){
+            inherits(x, "keylong")
+        }, logical(1))
+        if (any(!islongkey)){
+            MESSG <- "All elements in keylong list must be long keys"
+            stop(MESSG)
+        }
+        keylong <- do.call(rbind, keylong)
+    }
+        
     if (!is.null(keylong)){
         if (!is.null(keysplit)){
-            warning("A key and a keysplit were provided.  The keysplit argument is ignored")
+            warning("keysplit is ignored because keylong was not null")
         }
         if (!inherits(keylong, "keylong")) {
-            ##keylong <- kutils::wide2long(keylong)
-            ## TODO, work out a smooth wide2long conversion.
             stop("keylong is not recognized as a long key")
         } else {
             NULL
