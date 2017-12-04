@@ -288,22 +288,25 @@ assignRecode <- function(x, recode = NULL){
 ##' Check and Clean data.frame for usage with variable key functions
 ##'
 ##' Checks that the data.frame is made up of simple individual
-##' columns. Checks numeric columns to find out if they are
-##' acceptable to treat as integers. If they are acceptable to
-##' treat as integers, then convert those numeric to integer class
-##' variables.
+##' columns. Checks numeric columns to find out if they are acceptable
+##' to treat as integers. If they are acceptable to treat as integers,
+##' then convert those numeric to integer class variables.
 ##' @param dframe A data frame
 ##' @param safeNumericToInteger Default TRUE: Should we treat values
 ##'     which appear to be integers as integers? If a column is
 ##'     numeric, it might be safe to treat it as an integer.  In many
 ##'     csv data sets, the values coded c(1, 2, 3) are really
-##'     integers, not floats c(1.0, 2.0, 3.0). See
-##'     \code{safeInteger}.
+##'     integers, not floats c(1.0, 2.0, 3.0). See \code{safeInteger}.
+##' @param trimws Defaults as "both", in meaning of \code{which}
+##'     argument in \code{trimws} function.  Set as NULL if character
+##'     variables must not be trimmed to eliminate white
+##'     space. Otherwise, value should be one of \code{c("left",
+##'     "right", "both")}.
 ##' @export
 ##' @return A checked and cleaned data frame
 ##' @keywords internal
 ##' @author Paul Johnson <pauljohn@@ku.edu>
-cleanDataFrame <- function(dframe, safeNumericToInteger = TRUE){
+cleanDataFrame <- function(dframe, safeNumericToInteger = TRUE, trimws = "both"){
     if(!is.data.frame(dframe)){
         messg <- paste("keyUpdate: The dframe object must be a data frame")
         stop(messg)
@@ -325,6 +328,18 @@ cleanDataFrame <- function(dframe, safeNumericToInteger = TRUE){
                 dframe[ , i] <- tmp
         }
     }
+
+    ## Clean characters that have leading spaces to delete space
+    if (!is.null(trimws)){
+        for(i in colnames(dframe)){
+            if(is.character(dframe[ , i])){
+                dframe[ , i] <- trimws(dframe[ , i], which = trimws)
+            } else if (is.factor(dframe[ , i])){
+                levels(dframe[ , i]) <- trimws(levels(dframe[ , i]))
+            }
+        }
+    }
+    
     dframe
 }
 
@@ -550,17 +565,19 @@ isNA <- function(x, na.strings = c("\\.", "", "\\s+",  "N/A")){
 ##'     period, ".". Because R's symbol \code{NA} can be mistaken for
 ##'     the character string \code{"NA"}, we use a different
 ##'     (hopefully unmistakable) symbol in the key.
-##' @param safeNumericToInteger Default TRUE: Should we treat values
-##'     which appear to be integers as integers? If a column is
-##'     numeric, it might be safe to treat it as an integer.  In many
-##'     csv data sets, the values coded c(1, 2, 3) are really
-##'     integers, not floats c(1.0, 2.0, 3.0). See \code{safeInteger}.
 ##' @param varlab A key can have a companion data structure for
 ##'     variable labels. Default is FALSE, but the value may also be
 ##'     TRUE or a named vector of variable labels, such as
 ##'     \code{c("x1" = "happiness", "x2" = "wealth")}. The labels
 ##'     become an attribute of the key object. See Details for
 ##'     information on storage of varlabs in saved key files.
+##' @param safeNumericToInteger Default TRUE: Should we treat values
+##'     which appear to be integers as integers? If a column is
+##'     numeric, it might be safe to treat it as an integer.  In many
+##'     csv data sets, the values coded c(1, 2, 3) are really
+##'     integers, not floats c(1.0, 2.0, 3.0). See \code{safeInteger}.
+##' @param trimws Default is "both", user can change to "left", "right", or
+##'     set as NULL to avoid any trimming.
 ##' @return A key in the form of a data frame. May also be saved on
 ##'     disk if the file argument is supplied. The key may have an
 ##'     attribute "varlab", variable labels.
@@ -637,14 +654,14 @@ isNA <- function(x, na.strings = c("\\.", "", "\\s+",  "N/A")){
 ##'
 ##' list.files(dn)
 ##'
-
 keyTemplate <-
     function(dframe, long = FALSE, sort = FALSE,
              file = NULL, max.levels = 15, missings = NULL, missSymbol = ".",
-             safeNumericToInteger = TRUE,
+             safeNumericToInteger = TRUE, trimws = "both", 
              varlab = FALSE)
 {
-    dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
+    dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger,
+                             trimws = trimws)
 
     df.class <- sapply(dframe, function(x)class(x)[1])
     cn <- colnames(dframe)
@@ -1446,21 +1463,25 @@ NULL
 ##'     "keylong"
 ##' @param diagnostic Default TRUE: Compare the old and new data
 ##'     frames carefully with the keyDiagnostic function.
+##' @param drop Default TRUE. True implies drop = c("vars",
+##'     "vals"). TRUE applies to both variables ("vars") and values
+##'     ("vals"). "vars" means that a column will be omitted from data
+##'     if it is not in the key "name_old". Similarly, if anything
+##'     except "." appears in value_old, then setting drop="vals"
+##'     means omission of a value from key "value_old" causes
+##'     observations with those values to become NA.  This is the
+##'     original variable key behavior.  The drop argument allows
+##'     "partial keys", beginning with kutils version 1.12. drop =
+##'     FALSE means that neither values nor variables are omitted.
+##'     Rather than TRUE, one can specify either drop = "vars", or
+##'     drop = "vals".
 ##' @param safeNumericToInteger Default TRUE: Should we treat values
 ##'     which appear to be integers as integers? If a column is
 ##'     numeric, it might be safe to treat it as an integer.  In many
 ##'     csv data sets, the values coded c(1, 2, 3) are really
 ##'     integers, not floats c(1.0, 2.0, 3.0). See \code{safeInteger}.
-##' @param drop Default TRUE. True implies drop = c("vars",
-##'     "vals"). TRUE applies to both variables ("vars") and values
-##'     ("vals"). "vars" means that a column will be omitted from data
-##'     if it is not in the key "name_old". Similarly, "vals" means
-##'     omission from key "value_old" causes observations with those
-##'     values to become NA.  This is the original variable key
-##'     behavior.  The drop argument allows "partial keys", beginning
-##'     with kutils version 1.12. drop = FALSE means that neither
-##'     values nor variables are omitted.  Rather than TRUE, one can
-##'     specify either drop = "vars", or drop = "vals".
+##' @param trimws Default is "both", can change to "left", "right", or
+##'     set as NULL to avoid any trimming.
 ##' @param ignoreCase Default TRUE. If column name is capitalized
 ##'     differently than name_old in the key, but the two are
 ##'     otherwise identical, then the difference in capitalization
@@ -1498,7 +1519,8 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         if(drop) drop <- c("vars", "vals")
     }
 
-    dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger)
+    dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger,
+                             trimws = trimws)
     if (diagnostic) dforig <- dframe
 
     ## Need to snapshot class of input variables
