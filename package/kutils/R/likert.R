@@ -19,14 +19,16 @@
 ##' @param valuelabels A vector of values to beautify existing
 ##'     levels. If not supplied, factor levels will be used as row
 ##'     labels
-##' @param outdir Output directory
-##' @param fn file name for output: not used yet. See example for one
-##'     way to save result.
 ##' @param rows Should output be transposed. This may help if there
 ##'     are many variables that need to fit on the page.  Percentages
 ##'     will appear on the rows, rather than columns.
 ##' @param digits Number of decimals to display in percentages
-##' @return character vector
+##' @param ... Arguments to pass to R's table function. We suggest
+##'     \code{useNA = "always"} to add missing value information and
+##'     \code{exclude = original.value.label} to exclude values
+##'     observed. Currently, \code{useNA = "ifany"} does not work as expected,
+##'     the number of missings will be displayed, even if there are none.
+##' @return A list, including a table, column counts (called "counts"), column sums ("sums"), and column percents ("pcts").
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @importFrom xtable xtable print.xtable
 ##' @export
@@ -34,16 +36,25 @@
 ##' vvector <- c("Strongly Disagree", "Disagree", "Neutral",
 ##'               "Agree", "Strongly Agree")
 ##' set.seed(2342234)
-##' N <- 8
+##' N <- 28
 ##' scales <-
-##'     data.frame(Vegas = factor(sample(1:5, N, replace = TRUE), levels = 1:5, labels = vvector),
-##'                NewYork = factor(sample(1:5, N, replace = TRUE),levels = 1:5, labels = vvector),
-##'                Paris = factor(sample(1:5, N, replace = TRUE), levels = 1:5, labels = vvector),
-##'                Berlin = factor(sample(1:5, N, replace = TRUE), levels = 1:5, labels = vvector))
+##'     data.frame(Vegas = factor(sample(1:5, N, replace = TRUE),
+##'         levels = 1:5, labels = vvector),
+##'                NewYork = factor(sample(1:5, N, replace = TRUE),
+##'         levels = 1:5, labels = vvector),
+##'                Paris = factor(sample(1:5, N, replace = TRUE),
+##'         levels = 1:5, labels = vvector),
+##'                Berlin = factor(sample(1:5, N, replace = TRUE),
+##'         levels = 1:5, labels = vvector))
 ##'
 ##' likert(scales)
+##'
+##' likert(scales, exclude = "Disagree")
+##'
+##' likert(scales, exclude = "Strongly Disagree", useNA = "ifany")
 ##' 
 ##' (mySummary1 <- likert(data = scales, vlist = c("Vegas", "NewYork", "Paris")))
+##' mySummary1[["pcts"]]
 ##' 
 ##' (mySummary2 <- likert(scales, vlist = c("Vegas", "NewYork", "Paris"),
 ##'                     valuelabels = c("SD", "D", "N", "A", "SA")))
@@ -51,15 +62,14 @@
 ##'                     valuelabels = c("Strongly Disagree" = "Strong Disagreement")))
 ##'
 ##' (mySummary5 <- likert(scales, vlist = c("Vegas", "NewYork", "Paris"),
-##'       valuelabels = c("SD", "D", "N", "A", "NA"),
+##'       valuelabels = c("SD", "D", "N", "A", "SA"),
 ##'       columnlabels = c("Vegas" = "Sin City"), rows = TRUE))
 ##' 
-##'  ## Example of how one might write this in a file. The fn argument is not currently
-##'  ## enabled, but the following will work.
-##'  ## print(xtable::xtable(mySummary1, digits = 0), type = "html", file = "varCount-1.html")       
+##'  ## Example of how one might write this in a file. 
+##'  ## print(xtable::xtable(mySummary1[[1]], digits = 1), type = "html", file = "varCount-1.html")       
 ##'   
-likert <-  function(data, vlist, columnlabels, valuelabels,  outdir,
-                    fn, rows = FALSE, digits = 2){
+likert <-  function(data, vlist, columnlabels, valuelabels,
+                    rows = FALSE, digits = 2, ...){
     ## xxx <- lapply(data[ , vlist], table)
     ## t(sapply(data[, vlist], table))
     ## TODO: Insert check that variables have same levels
@@ -69,6 +79,15 @@ likert <-  function(data, vlist, columnlabels, valuelabels,  outdir,
     } else {
         vlist <- colnames(data)
     }
+
+    ## If variable is not factor, coerce as factor
+    if(any(!sapply(data, is.factor))){
+        for (i in colnames(data)){
+            data[ , i] <- as.factor(data[ , i])
+        }
+    }
+    
+    dots <- list(...)
     
     ## add error checking
     ## All columns must have same factor levels, else stop
@@ -79,6 +98,10 @@ likert <-  function(data, vlist, columnlabels, valuelabels,  outdir,
     } else {
         factorlevels <- unlist(factorlevels)
     }
+    if (length(dots$exclude) > 0) {
+        factorlevels <- factorlevels[-match(dots$exclude, factorlevels)]
+    }
+
     
     if(!missing(valuelabels) && !is.null(valuelabels)){
         if(length(valuelabels) < length(factorlevels)){
@@ -113,13 +136,21 @@ likert <-  function(data, vlist, columnlabels, valuelabels,  outdir,
     } else {
         columnlabels <- colnames(data)
     }
+    
+    ## User wants missings:
+    if ("exclude" %in% names(dots) && is.null(dots$exclude) || (length(dots$useNA) > 0 && dots$useNA != "no")){
+        data[is.na(data)] <- "NA"
+        factorlevels <- c(factorlevels, "NA")
+    }
+    
+    varCount <- matrix(0, nrow = length(factorlevels), ncol = NCOL(data),
+                       dimnames = list(factorlevels, colnames(data)))
 
-    varCount <- matrix(0, nrow = length(factorlevels), ncol = NCOL(data), dimnames = list(factorlevels, colnames(data)))
     for (i in colnames(data)){
-        xxx <- table(data[ , i])
+        xxx <- table(data[ , i], ...)
         varCount[rownames(xxx), i ] <- xxx 
     }
-    varCount <- sapply(data, table)
+
     colnames(varCount) = columnlabels
     varSums <- colSums(varCount)
 
@@ -141,7 +172,7 @@ likert <-  function(data, vlist, columnlabels, valuelabels,  outdir,
     if (!rows) {
         res <- list(table = freqTab, count = varCount, sums = varSums, pcts = varColPct)
     } else {
-        res <- list(table = t(freqTab), count = t(varCount), sums = varSums, pcts = t(varColPct))
+        res <- list(table = t(freqTab), counts = t(varCount), sums = varSums, pcts = t(varColPct))
     }
     class(res) <- c("likert", class(res))
     res
@@ -150,7 +181,7 @@ likert <-  function(data, vlist, columnlabels, valuelabels,  outdir,
 
 ##' print method for likert tables
 ##'
-##' cat is called on first item in list
+##' Nothing fancy here. \code{cat} is called on first item in list
 ##' @param x likert object, 1st item will be printed
 ##' @param ... 
 ##' @return Nothing
@@ -159,6 +190,4 @@ likert <-  function(data, vlist, columnlabels, valuelabels,  outdir,
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 print.likert <- function(x, ...){
     print(x[[1]])
-    MESSG <- paste("likert is a list, also includes:", paste(names(x)[-1], collapse = " "), "\n")
-    cat(MESSG)
 }
