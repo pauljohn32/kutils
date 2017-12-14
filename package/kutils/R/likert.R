@@ -26,9 +26,12 @@
 ##' @param ... Arguments to pass to R's table function. We suggest
 ##'     \code{useNA = "always"} to add missing value information and
 ##'     \code{exclude = original.value.label} to exclude values
-##'     observed. Currently, \code{useNA = "ifany"} does not work as expected,
-##'     the number of missings will be displayed, even if there are none.
-##' @return A list, including a table, column counts (called "counts"), column sums ("sums"), and column percents ("pcts").
+##'     observed. Currently, \code{useNA = "ifany"} does not work as
+##'     expected, the number of missings will be displayed, even if
+##'     there are none.
+##' @return A list, including a frequency table (called "freqTab"),
+##'     column counts ("counts"), column sums ("sums"), and
+##'     column percents ("pcts").
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @importFrom xtable xtable print.xtable
 ##' @export
@@ -66,7 +69,8 @@
 ##'       columnlabels = c("Vegas" = "Sin City"), rows = TRUE))
 ##' 
 ##'  ## Example of how one might write this in a file. 
-##'  ## print(xtable::xtable(mySummary1[[1]], digits = 1), type = "html", file = "varCount-1.html")       
+##'  ## print(xtable::xtable(mySummary1[[1]], digits = 1),
+##'  ##       type = "html", file = "varCount-1.html")       
 ##'   
 likert <-  function(data, vlist, columnlabels, valuelabels,
                     rows = FALSE, digits = 2, ...){
@@ -155,17 +159,17 @@ likert <-  function(data, vlist, columnlabels, valuelabels,
     varSums <- colSums(varCount)
 
     varColPct <- 100.0 * sweep(varCount, 2, varSums, "/")
-    varColPct <-  formatC(varColPct, digits = digits, format = "f")
+    varColPct.char <-  formatC(varColPct, digits = digits, format = "f")
     
-    freqTab <- matrix(NA, nrow = NROW(varColPct), ncol = NCOL(varColPct))
-    dimnames(freqTab) <- list(rownames(varColPct), colnames(varColPct))
+    freqTab <- matrix(NA, nrow = NROW(varColPct.char), ncol = NCOL(varColPct.char))
+    dimnames(freqTab) <- list(rownames(varColPct.char), colnames(varColPct.char))
     
-    for(i in 1:NROW(varColPct)) {
-        freqTab[i, ] <- paste0(varColPct[i, ], "% (", varCount[i, ], ")")
+    for(i in 1:NROW(varColPct.char)) {
+        freqTab[i, ] <- paste0(varColPct.char[i, ], "% (", varCount[i, ], ")")
     }
     
     ## freqTab <- rbind( rep(paste0("Pct (Count)")), freqTab)
-    ## colnames(freqTab) <- colnames(varColPct)
+    ## colnames(freqTab) <- colnames(varColPct.char)
     freqTab <- rbind(freqTab, varSums)
     rownames(freqTab)[NROW(freqTab)] <- "Total"
 
@@ -183,11 +187,11 @@ likert <-  function(data, vlist, columnlabels, valuelabels,
 ##'
 ##' Nothing fancy here. \code{cat} is called on first item in list
 ##' @param x likert object, 1st item will be printed
-##' @param ... 
+##' @param ... Arguments passed to print method
 ##' @return Nothing
 ##' @method print likert
 ##' @export
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 print.likert <- function(x, ...){
-    print(x[[1]])
+    print(x[[1]], ...)
 }
