@@ -1,4 +1,4 @@
-%% LyX 2.2.2 created this file.  For more info, see http://www.lyx.org/.
+%% LyX 2.2.3 created this file.  For more info, see http://www.lyx.org/.
 %% Do not edit unless you really know what you are doing.
 \documentclass[english,american,noae]{scrartcl}
 \usepackage{lmodern}
@@ -22,7 +22,7 @@
 <<echo=F>>=
   if(exists(".orig.enc")) options(encoding = .orig.enc)
 @
-\newcommand{\code}[1]{\texttt{#1}}
+\providecommand*{\code}[1]{\texttt{#1}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
 %\VignetteIndexEntry{variablekey}
@@ -475,7 +475,7 @@ these functions work effectively, but we have experienced some troubles
 related to the way spreadsheets store character strings. If the key
 in long format has a column of values ``Yes'',''No'', and ``'',
 the wide representation should be ``Yes|No|'', but there is some
-inclination to say we should have nested quotation marks, as in ``''Yes''|''No''|''''''.
+inclination to say we should have nested quotation marks, as in ``''Yes''|''No''|''{}''{}''.
 That kind of string will not generally survive importation to and
 export from a spread sheet at the current time.
 
@@ -890,7 +890,6 @@ x6 & x6 & integer & integer & 1$|$2$|$3$|$4$|$5 & 1$|$2$|$3$|$4$|$5 & c(-9) & \\
 \end{tabular}
 }
 \end{table}
-
 
 \subsection{Class conversions}
 

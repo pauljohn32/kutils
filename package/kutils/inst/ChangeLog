@@ -1,3 +1,35 @@
+2017-12-20  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/importQualtrix.R (importQualtrics): new function to ease
+	qualtrix imports.
+
+	* ../R/anonomize.R: new function to de-identify name columns
+
+	* ../R/utils.R (getFiles): remove getFiles, which was copied
+	from crmda package.
+
+2017-12-14  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/likert.R (likert): return the percentages in the list as
+	floating point numbers, not as characters.
+
+2017-12-04  Paul Johnson  <pauljohn@delllap-16>
+
+	* unitTests/runit.VariableKey.R (test.keysClassFix): unitTests on
+	keysClassFix fail if class_new or class_old is FALSE, whole
+	function does not make sense if we make that restriction.
+
+	* ../R/variableKey.R (keyImport): factor separator now only "|",
+	no longer either "|" or "<". For ordered variables, both still
+	allowed.
+	(cleanDataFrame): trimws on character and factor levels, otherwise
+	key must include " Strongly Disagree" and "Strongly Disagree". The
+	trimws argument has to be added to keyTemplate, keyImport, and
+	keyApply. Default will be "both".
+
+	* ../R/likert.R (likert): add ... argument, then deal with exclude
+	and useNA in function. Not 100% working because useNA="ifany" is
+	not correctly managed.
 
 2017-12-01  Paul Johnson  <pauljohn@delllap-16>
 
@@ -218,6 +250,10 @@
 	symbol NA.
 	(keyTemplate): delete the outdir argument. Was dumb!
 	(smartSave): use Excel Workbook.
+
+2017-10-24  Paul Johnson  <pauljohn@delllap-16>
+
+	* semTable.R (markupTable): Insert EOC BOC EOR syntax into numeric table
 
 2017-09-25  Paul Johnson  <pauljohn@delllap-16>
 
