@@ -1,3 +1,9 @@
+2017-12-27  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/mergeCheck.R: new function for inspecting merges
+
+	* ../R/importQualtrics.R (importQualtrics): add XLSX file handling
+
 2017-12-20  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/importQualtrix.R (importQualtrics): new function to ease

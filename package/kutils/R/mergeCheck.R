@@ -15,13 +15,14 @@
 ##'     supplied, then \code{by.y} is assumed to be same as \code{by}.
 ##' @param incomparables values in the key (by) variable that are
 ##'     ignored for matching. We default to include these values as
-##'     incomparables: c(NULL, NA, NaN, Inf, "\s+", ""). Note this is
+##'     incomparables: c(NULL, NA, NaN, Inf, "\\s+", ""). Note this is
 ##'     a larger list of incomparables than assumed by R merge (which
 ##'     assumes only NULL). 
 ##' @return A list of data structures that are displayed for keys and
 ##'     data sets.  The return is \code{list(keysBad, keysDuped,
 ##'     unmatched)}. \code{unmatched} is a list with 2 elements, the
 ##'     unmatched cases from \code{x} and \code{y}.
+##' @export
 ##' @author Paul Johnson
 ##' @examples
 ##' df1 <- data.frame(id = 1:7, x = rnorm(7))
@@ -35,7 +36,7 @@
 ##' df2 <- data.frame(idy = c(2:6, 9:10), x = rnorm(7))
 ##' mergeCheck(df1, df2, by.x = "idx", by.y = "idy")
 mergeCheck <- function(x, y, by, by.x = by, by.y = by,
-                       incomparables = c(NULL, NA, NaN, Inf, "\s+", "")) {
+                       incomparables = c(NULL, NA, NaN, Inf, "\\s+", "")) {
 
     ## copied from R base merge function
     fix.by <- function(by, df) {
@@ -126,10 +127,13 @@ mergeCheck <- function(x, y, by, by.x = by, by.y = by,
 ##' Print out the result of mergeCheck function.
 ##'
 ##' This is a placeholder for a more elaborate print method
-##' to be prepared in the future.
+##' to be prepared in the future. Please advise us what might
+##' be most helpful.
 ##' @param x keycheck output from mergeCheck 
 ##' @param ... Other arguments
 ##' @return None, side effect if print to screen
+##' @method print keycheck
+##' @export
 ##' @author Paul Johnson
 print.keycheck <- function(x, ...){
     if (length(x$keysBad) > 0){

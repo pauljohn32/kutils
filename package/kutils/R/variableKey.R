@@ -2298,7 +2298,7 @@ print.keyDiff <- function(x, ...){
 ##' usually see trouble.
 ##'
 ##' The output here is diagnostic. The keys can be fixed manually, or the
-##' function keysClassFix can implement an automatic correction.
+##' function keysPool can implement an automatic correction.
 ##' @param keys A list with variable keys.
 ##' @param col Name of key column to check for equivalence. Default is "class_old", but
 ##' "class_new" can be checked as well.
@@ -2459,7 +2459,8 @@ keyCheck <- function(key,
 }
 
 
-##' Homogenize class values in a long key.
+##' Homogenize class values and create a long key by pooling variable
+##' keys.
 ##'
 ##' For long-format keys, this is one way to correct for errors in
 ##' "class_old" or "class_new" for common variables. For a long key
@@ -2506,13 +2507,14 @@ keyCheck <- function(key,
 ##' observed is c("ordered", "numeric", "character"). In that case,
 ##' the class is promoted to "character", it is the least common
 ##' denominator.
-##' @param keylong A list of long keys, or just one long key, presumably
-##'     a result of rbinding several long keys. 
-##' @param keysplit a list of key blocks, each of which is to be
-##'     inspected and homogenized. Not used if a key is provided.
+##' @param keylong A list of long keys, or just one long key,
+##'     presumably a result of rbinding several long keys.
+##' @param keysplit Not often needed for user-level code. A list of
+##'     key blocks, each of which is to be inspected and
+##'     homogenized. Not used if a keylong argument is provided.
 ##' @param classes A list of vectors specifying legal promotions.
-##' @param colnames Either c("class_old","class_new), ""class_old", or "class_new". 
-##'     The former is the default.
+##' @param colnames Either c("class_old","class_new), ""class_old", or
+##'     "class_new".  The former is the default.
 ##' @param textre A regular expression matching a column name to be
 ##'     treated as character. Default matches any variable name ending
 ##'     in "TEXT"
@@ -2529,8 +2531,8 @@ keyCheck <- function(key,
 ##' key1 <- keyTemplate(dat1, long = TRUE)
 ##' key2 <- keyTemplate(dat2, long = TRUE)
 ##' keys2stack <- rbind(key1, key2)
-##' keys2stack.fix <- keysClassFix(keys2stack)
-##' keys2stack.fix2 <- keysClassFix(keys2stack.fix, colname = "class_new")
+##' keys2stack.fix <- keysPool(keys2stack)
+##' keys2stack.fix2 <- keysPool(keys2stack.fix, colname = "class_new")
 ##' ## Sometimes this will not be able to homogenize
 ##' dat1 <- data.frame(x1 = as.integer(rnorm(100)),
 ##'                    x2 = sample(c("Apple", "Orange"), 100, replace = TRUE))
@@ -2541,20 +2543,21 @@ keyCheck <- function(key,
 ##' key2 <- keyTemplate(dat2, long = TRUE)
 ##' ## Create a stack of keys for yourself
 ##' keys2stack <- rbind(key1, key2)
-##' keys.fix <- keysClassFix(keys2stack)
+##' keys.fix <- keysPool(keys2stack)
 ##' ## We will create stack of keys for you
-##' keys.fix2 <- keysClassFix(list(key1, key2)) 
+##' keys.fix2 <- keysPool(list(key1, key2)) 
 ##' ## View(keys.fix)
 ##' ## View(keys.fix2)
 ##'
 ##' 
-##' ## If you have wide keys
+##' ## If you have wide keys, convert them with wide2long, either by
 ##' key1 <- keyTemplate(dat1)
 ##' key2 <- keyTemplate(dat2)
 ##' keysstack.wide <- rbind(wide2long(key1), wide2long(key2))
-##' keys.fix <- keysClassFix(keysstack.wide)
-##' keysClassFix(list(wide2long(key1), wide2long(key2)))
-keysClassFix <- function(keylong = NULL, keysplit = NULL,
+##' keys.fix <- keysPool(keysstack.wide)
+##' ## or
+##' keysPool(list(wide2long(key1), wide2long(key2)))
+keysPool <- function(keylong = NULL, keysplit = NULL,
                         classes = list(c("logical", "integer"),
                                        c("integer", "numeric"),
                                        c("ordered", "factor")),
