@@ -35,7 +35,7 @@
 ##' df2 <- data.frame(idy = c(2:6, 9:10), x = rnorm(7))
 ##' mergeCheck(df1, df2, by.x = "idx", by.y = "idy")
 mergeCheck <- function(x, y, by, by.x = by, by.y = by,
-                       incomparables = c(NULL, NA, NaN, Inf, "\s+", "")) {
+                       incomparables = c(NULL, NA, NaN, Inf, "\\s+", "")) {
 
     ## copied from R base merge function
     fix.by <- function(by, df) {
