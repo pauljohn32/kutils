@@ -313,8 +313,8 @@ peek <-
 ##' dev.new. This is suitable for Windows, Linux, and
 ##' Macintosh operating systems.
 ##'
-##' The argument in dev.new named noRStudioGD seems to aimed at same
-##' puroose. But it does not do what I want and documentation is too
+##' The argument in dev.new named noRStudioGD seems to be aimed at same
+##' purpose. But it does not do what I want and documentation is too
 ##' sparse.
 ##' @param ... Currently, height and width parameters that would be
 ##'     suitable with dev.new
@@ -323,7 +323,7 @@ peek <-
 ##' @export
 ##' @examples
 ##' \donttest{
-##' dev.create(height = 7, width = 3)
+##' if(interactive()) dev.create(height = 7, width = 3)
 ##' dev.off()
 ##' }
 dev.create <- function(...){
