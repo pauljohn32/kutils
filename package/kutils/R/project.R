@@ -64,37 +64,21 @@
 ##'     working directory unchanged.
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @examples
-##' tempdir <- tempdir()
-##' setwd(tempdir)
-##' dir.create("test0")
-##' setwd("test0")
-##' initProject()
-##' list.files(all.files = TRUE)
-##' setwd(tempdir)
-##' dir.create("test1")
-##' setwd("test1")
+##' projdir1 <- file.path(tempdir(), "test1")
+##' dir.create(projdir1, recursive = TRUE)
+##' initProject(dir = projdir1)
+##' list.files(projdir1, all.files = TRUE)
+##' projdir2 <- file.path(tempdir(), "test2")
+##' dir.create(projdir2, recursive = TRUE)
 ##' ## demonstrate ability to create other directories
-##' initProject(admin = "admin", clientfiles = "client")
-##' list.files(all.files = TRUE)
-##' setwd(tempdir)
-##' dir.create("test2/R", recursive = TRUE)
-##' setwd("test2/R")
-##' initProject(adir = "accounting")
-##' list.files(all.files = TRUE)
-##' list.files("../", all.files = TRUE)
-##' setwd(tempdir)
-##' initProject("test3")
-##' list.files("test3", all.files = TRUE)
-##' setwd(tempdir)
-##' ## demonstrate ability to create other directories
-##' initProject(file.path(tempdir, "test4"),
-##'             list(mdir = "Mplus", sasdir = "SAS"))
-##' list.files(file.path(tempdir, "test4"), all.files = TRUE)
-##' setwd(tempdir)
+##' initProject(dir = projdir2, admin = "admin", clientfiles = "client")
+##' list.files(projdir2, all.files = TRUE)
 ##' ## demonstrate ability to nullify standard directories
-##' initProject("test5", odir = NA, tdir = NA, writedir = NA)
-##' list.files("test5", all.files = TRUE)
-##' unlink(c("test1", "test2", "test3", "test4", "test5"), recursive = TRUE)
+##' projdir3 <- file.path(tempdir(), "test3")
+##' dir.create(projdir3, recursive = TRUE)
+##' initProject(projdir3, odir = NA, tdir = NA, writedir = NA)
+##' list.files(projdir3, all.files = TRUE)
+##' unlink(c("projdir1", "projdir2", "projdir3"), recursive = TRUE)
 initProject <- function(dir = NULL, ddir = "data",
                     wdir = "workingdata", odir = "output",
                     tdir = "tmp", ldir = "lit",
