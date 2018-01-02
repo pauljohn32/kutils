@@ -673,10 +673,10 @@ test.keyRead <- function() {
 }
 
 
-## test keyClassFix() function:
+## test keyPool() function:
 ##   1. Legal conversions (on both or a single class column)
 ##   2. Non-legal conversions result in warning
-test.keysClassFix <- function() {
+test.keysPool <- function() {
     ## setup
     dat1 <- data.frame(x1 = as.integer(rnorm(100)),
                        x2 = sample(c("Apple", "Orange"), 100, replace = TRUE),
@@ -690,20 +690,20 @@ test.keysClassFix <- function() {
     stackedKeys <- rbind(key1, key2)
 
     ## check default usage with promotable classes
-    stackedKeysFix <- kutils:::keysClassFix(stackedKeys)
+    stackedKeysFix <- kutils:::keysPool(stackedKeys)
     checkEquals(stackedKeysFix$class_old,
                 stackedKeysFix$class_new,
                 c(rep("numeric", 4), rep("factor", 3), rep("numeric", 5)))
 
     ## PJ 20171204: this check fails, it doesn't make sense to check this.
     ## ## check change restricted to class_old
-    ## stackedKeysFix2 <- kutils:::keysClassFix(stackedKeys, colnames="class_old")
+    ## stackedKeysFix2 <- kutils:::keysPool(stackedKeys, colnames="class_old")
     ## checkEquals(stackedKeysFix2$class_old,
     ##             c(rep("numeric", 7), rep("factor", 6), rep("numeric", 6)))
     
     ## PJ 20171204: this check fails, it doesn't make sense to check this.
     ## check change restricted to class_new
-    ## stackedKeysFix3 <- kutils:::keysClassFix(stackedKeys, colnames="class_new")    
+    ## stackedKeysFix3 <- kutils:::keysPool(stackedKeys, colnames="class_new")    
     ## checkEquals(stackedKeysFix3$class_new,
     ##            c(rep("numeric", 7), rep("factor", 6), rep("numeric", 6)))
     
@@ -716,7 +716,7 @@ test.keysClassFix <- function() {
     key3 <- keyTemplate(dat3, long = TRUE)
     key4 <- keyTemplate(dat4, long = TRUE)
     stackedKeys2 <- rbind(key3, key4)
-    stackedKeys2Fix <- tryCatch(kutils:::keysClassFix(stackedKeys2),
+    stackedKeys2Fix <- tryCatch(kutils:::keysPool(stackedKeys2),
                                 warning=function(w) w)
     checkTrue("warning" %in% class(stackedKeys2Fix))
 }
