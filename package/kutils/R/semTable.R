@@ -1297,7 +1297,7 @@ NULL
 ##' @param tablefile The base name of the table file
 ##' @param dir Directory where table is saved, same will be used for build.
 ##' @param tmpfn File name to be used by example document
-##' @return NULL
+##' @return LaTeX log, returned from shell function.
 ##' @export
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @examples
@@ -1319,8 +1319,7 @@ testtable <- function(tablefile, dir, tmpfn = "tmp.tex"){
     wd.orig <- getwd()
     isWindoze <- if(Sys.info()[['sysname']] == "Windows") TRUE else FALSE
     mynull <-  if(isWindoze) "> nul" else " > /dev/null"
-    setwd(dir)
-    
+      
     x1 <- "
 \\documentclass[english]{article}
 \\usepackage[T1]{fontenc}
@@ -1335,8 +1334,8 @@ testtable <- function(tablefile, dir, tmpfn = "tmp.tex"){
 
     x3 <- "\\end{document}\n"
 
-    cat(x1, x2, x3, file = tmpfn)
-    cmd <- paste("pdflatex", tmpfn, " && pdflatex", tmpfn)
+    cat(x1, x2, x3, file = file.path(dir, tmpfn))
+    cmd <- paste("cd", dir, ";", "pdflatex", tmpfn, " && pdflatex", tmpfn)
     
     if (isWindoze){
         out1 <- tryCatch(shell(cmd, intern = TRUE))
@@ -1345,9 +1344,8 @@ testtable <- function(tablefile, dir, tmpfn = "tmp.tex"){
         print(MESSG)
     } else {
         out1 <- tryCatch(system(cmd, intern = TRUE))
-        cmd2 <- paste("xdg-open", gsub(".tex", ".pdf", tmpfn))
+        cmd2 <- paste("xdg-open", file.path(dir, gsub(".tex", ".pdf", tmpfn)))
         out2 <- tryCatch(system(cmd2, intern = TRUE))
     }
-    
-    setwd(wd.orig)
+    invisible(out1)
 }
