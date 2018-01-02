@@ -30,14 +30,6 @@
 ##' are displayed in the same block style as parameters
 ##' }
 ##'
-##' The default columns are:
-##' \enumerate{
-##' \item the parameter estimates,
-##' \item the standard errors,
-##' \item standardized parameter estimates, and
-##' \item standardized standard errors.
-##' }
-##'
 ##' The columns parameter is used to specify different columns,
 ##' while columnLabels will alter the displayed labels for them.
 ##' 
@@ -189,11 +181,10 @@
 ##'     columnLabels = c(est = "Est", se = "SE"), file = file.path(tempdir, "fit1.2.2"))
 ##' if (interactive()) testtable("fit1.2.2", tempdir)
 ##'
-##' fit1.t2 <- semTable(fit1, fits = c("chisq", "rmsea"), standardized = TRUE)
+##' fit1.t2 <- semTable(fit1, fits = c("chisq", "rmsea"))
 ##' cat(fit1.t2)
 ##' fit1.t3 <- semTable(fit1, fits = c("chisq", "rmsea", "tli"),
-##'                     columns = c("est", "se"),
-##'                     standardized = TRUE)
+##'                columns = c("est", "se"))
 ##' cat(fit1.t3)
 ##' 
 ##' ## Can create file if desired
@@ -206,7 +197,8 @@
 ##'              visual ~ textual + speed
 ##' '
 ##'
-##' fit2 <- sem(regmodel1, data = HolzingerSwineford1939, std.lv = TRUE, meanstructure = TRUE)
+##' fit2 <- sem(regmodel1, data = HolzingerSwineford1939, std.lv = TRUE,
+##'             meanstructure = TRUE)
 ##'
 ##' fit2.std <- update(fit2, std.lv = TRUE, std.ov = TRUE, meanstructure = TRUE) 
 ##'
@@ -251,11 +243,13 @@
 ##'               "Mod 3 std" = fit3.std), columns = c("estsestars"), type = c("html"),
 ##'                file = file.path(tempdir, "fit3.std.t1"))
 ##' cat(fit3.std.t1)
-##' if(interactive) browseURL(file.path(tempdir, "fit3.std.t1.html"))
+##' if(interactive()) browseURL(file.path(tempdir, "fit3.std.t1.html"))
 ##'
 ##' fit3 <- sem(regmodel1, data = HolzingerSwineford1939, group = "school")
+##' ## if specify 2 types, get a list of them back
 ##' fit3.t1 <- semTable(fit3, type = c("latex", "html"))
-##' cat(fit3.t1)
+##' cat(fit3.t1[["latex"]])
+##' cat(fit3.t1[["html"]])
 ##' fit3.t2 <- semTable(fit3, columns = c("est", "se"),
 ##'                      columnLabels = c(est = "Est.", se = "S.E."))
 ##' cat(fit3.t2)
