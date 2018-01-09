@@ -33,7 +33,6 @@ importQualtrics <- function (file, namerow = 1, skip = 3, questrow = NULL,
                          stringsAsFactors = stringsAsFactors,
                          skip = skip, header = FALSE)
     } else {
-        require(openxlsx)
         startRow <- skip + 1
         dat1 <- read.xlsx(file, skipEmptyCols = FALSE,
                           colNames = FALSE)
