@@ -17,8 +17,9 @@
 ##' @name natlongsurv
 ##' @docType data
 ##' @usage data(natlongsurv)
-##' @author US Bureau of Labor Statistics
-##' @references \url{https://www.nlsinfo.org/investigator}
+##' @author Paul Johnson <pauljohn@@ku.edu>
+##' @source National Longitudinal Surveys public-use data set (Bureau of Labor Statistics, 2018).
+##' @references Bureau of Labor Statistics. 2018.  NLS Original Cohors: Mature and Young Women, US National Longitudinal Surveys Public Use Data Sets \url{https://www.bls.gov/nls/nlsorig.htm}.
 ##' @format A data frame with 2867 rows and 29 variables:
 ##'
 ##'\itemize{
