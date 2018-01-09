@@ -20,7 +20,7 @@
 ##'     read.csv. Does not affect importation of Excel files.
 ##' @importFrom openxlsx read.xlsx
 ##' @export
-##' @return Data frame that has attribute "questions" is questrow is
+##' @return Data frame that has attribute "questions" if questrow is
 ##'     specified.
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 importQualtrics <- function (file, namerow = 1, skip = 3, questrow = NULL,
@@ -33,6 +33,7 @@ importQualtrics <- function (file, namerow = 1, skip = 3, questrow = NULL,
                          stringsAsFactors = stringsAsFactors,
                          skip = skip, header = FALSE)
     } else {
+        require(openxlsx)
         startRow <- skip + 1
         dat1 <- read.xlsx(file, skipEmptyCols = FALSE,
                           colNames = FALSE)

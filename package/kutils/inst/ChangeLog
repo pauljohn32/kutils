@@ -1,6 +1,6 @@
 2018-01-02  Paul Johnson  <pauljohn@delllap-16>
 
-	* ../R/peek.R (projects, semTable): eliminate setwd and device creator 
+	* ../R/peek.R (projects, semTable): eliminate setwd and device creator
 
 2017-12-27  Paul Johnson  <pauljohn@delllap-16>
 
