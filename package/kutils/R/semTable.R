@@ -101,10 +101,10 @@
 ##'     in column 1 of SEM table.
 ##' @param groups Specify some group names for inclusion in the
 ##'     model. If \code{object} is just one SEM, but there are several
-##'     groups within it, the parameters for each group will be
-##'     displayed side by side.  All groups will be displayed by
-##'     default.  User should specify a vector of group names here to
-##'     select some groups for display.
+##'     groups within it, the parameters for all groups will be
+##'     displayed side by side.  If ONLY SOME groups should be
+##'     included, then specify groups as either names of fit objects
+##'     or as integers for elements of the groups vector.
 ##' @param type Choose "latex", "html", "csv", or a vector including
 ##'     any or all of these. If several are specified, ie,
 ##'     \code{c("latex", "html", "csv")}, a list of 3 sets of markup
@@ -112,8 +112,17 @@
 ##' @param file Base name for output file. Specify "mymodel" to get
 ##'     output files "mymodel.tex", "mymodel.html", or "mymodel.csv",
 ##'     depending on the value of \code{type}.
+##' @param table.float If TRUE, create a LaTeX floating table object
+##'     in which the tabular created here will reside. Default is
+##'     FALSE.
+##' @param caption Caption for table (if table.float=TRUE) or
+##'     longtable output. Ignored otherwise.
+##' @param label LaTeX label for this object (for
+##'     cross-references). Only used if table.float = TRUE or
+##'     longtable = TRUE.
 ##' @param longtable If TRUE, use longtable for LaTeX
-##'     documents. Default is FALSE.
+##'     documents. Default is FALSE. If true, \code{table} argument is
+##'     ignored.
 ##' @param alpha Thresholds for p-values that determine number of
 ##'     stars.  Defaults as \code{c(0.05, 0.01, 0.001)} for
 ##'     \code{c("*", "**", "***")}.
@@ -364,7 +373,8 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                      columns = c(est = "Estimate", se = "SE", z = "z", p = "p"),
                      columnLabels, fits = c("chisq", "cfi", "tli", "rmsea"),
                      fitLabels = toupper(fits), varLabels = NULL,
-                     groups = NULL, type = "latex", longtable = FALSE,
+                     groups = NULL, type = "latex", table.float = FALSE,
+                     caption = NULL, label = NULL, longtable = FALSE,
                      alpha =  c(0.05, 0.01, 0.001)) {
     ## do.call(rbind, alist) unexpectedly converts characters to factors.
     ## it does not accept stringsAsFactors=FALSE,
@@ -1052,8 +1062,9 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
   
     markedResults <- finalizeMarkup(paramSetNames, colLabels)
     
-    result <- markupConvert(markedResults, type = type,
-                            longtable = longtable, file = file,
+    result <- markupConvert(markedResults, type = type,longtable = longtable,
+                            table.float = table.float,
+                            caption = caption, label = label, file = file,
                             columns = colLabels)
     attr(result, "markedResults") <- markedResults
     result
@@ -1074,11 +1085,33 @@ NULL
 ##' @return a list of marked up character objects
 ##' @author Paul Johnson
 markupConvert <- function(marked, type = c("latex", "html", "csv"),
-                        longtable = FALSE, file = NULL, columns)
+                          table.float = FALSE, longtable = FALSE,
+                          caption = NULL, label = NULL, 
+                          file = NULL, columns)
 {
     ##num of columns, except for col1
     Ncolumns <- length(unname(unlist(columns)))
-    
+
+    ## a tabular
+    ttabular <-   paste0("\\\\begin{tabular}{r",
+                              paste0(rep("c", Ncolumns), collapse = ""), "}\n")
+    ## longtable
+    if(!longtable && !table.float){
+        tcode <- ttabular
+    } else {
+        if(longtable){
+            tcode <-  paste0("\\\\begin{longtable}{r",
+                             paste0(rep("c", Ncolumns), collapse = ""), "}")
+        } else if (table.float){
+            tcode <- "\\\\begin{table}\n"
+            tcode <- paste0(tcode, ttabular)
+        } else {
+            MESSG <- "Logic error in markupConvert"
+            stop(MESSG)
+        }
+        if (!is.null(caption)) tcode <- paste0(tcode, "\n\\\\caption{", caption, "}")
+        if (!is.null(label)) tcode <- paste0(tcode, "\n\\\\label{", label, "}") 
+    } 
     ## Replacement strings for LaTeX output
     latexreplace <- c(
         "_LB_" = "\\\n",
@@ -1090,17 +1123,21 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         "_BRT_" = "", 
         "_BOCU_" = "& ",
         "_BR_" = "",
-        "_BT_" = if(longtable) paste0("\\\\begin{longtable}{r",
-                                      paste0(rep("c", Ncolumns), collapse = ""), "}")
-                 else paste0("\\\\begin{tabular}{r",
-                             paste0(rep("c", Ncolumns), collapse = ""), "}"),
+        "_BT_" = tcode,  
         "_EOL_" = "\n",
         "_HL_" = "\\\\hline", 
         "_UL_" = "\\\\underline{",
         "_EOUL_" = "}",
         "_SEPU_" = " &", 
         "_SEP_" = " &", 
-        "_EOT_" = if (longtable) "\\\\end{longtable}" else "\\\\end{tabular}",
+        "_EOT_" = if (longtable) {
+                      "\\\\end{longtable}"
+                  } else if (table.float) {
+                      "\\\\end{tabular}
+                       \\\\end{table}"
+                  } else {
+                      "\\\\end{tabular}"
+                  },
         "_BOMR1_" = "& \\\\multirow{1}{c}{",
         "_BOMR2_" = "& \\\\multirow{2}{c}{",
         "_BOMC1_" = "\\\\multicolumn{1}{c}{",
