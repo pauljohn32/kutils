@@ -1,3 +1,9 @@
+2018-03-26  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (markupConvert): _STAR0_ trick to manipulate
+	lineup.
+	* ../R/semTable.R: label, caption, table, longtable fixes
+
 2018-01-02  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/peek.R (projects, semTable): eliminate setwd and device creator

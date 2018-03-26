@@ -128,6 +128,7 @@
 ##'     \code{c("*", "**", "***")}.
 ##' @importFrom stats pnorm
 ##' @importFrom lavaan lavInspect
+##' @importFrom plyr mapvalues
 ##' @return Markup for SEM table, or a list of markup character
 ##'     strings, one for each value of \code{type}.
 ##' @export
@@ -519,6 +520,7 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                                parameters$est/parameters$se, NA)
         parameters$p <- 2*pnorm(abs(parameters$z), lower.tail = FALSE)
         parameters$starsig <- starsig(parameters$p, alpha = alpha, symbols = starsymbols)
+        parameters$starsig <- ifelse(grepl("^\\s*$", parameters$starsig), "_STAR0_", parameters$starsig)
         parameters$estse <- createEstSE(parameters)
         parameters$eststars <- createEstSE(parameters, se = FALSE, stars = TRUE)
         parameters$estsestars <- createEstSE(parameters, stars = TRUE)
@@ -626,8 +628,11 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
         totalNcolumns <- min(9,  length(unname(unlist(colLabels))))
         ## trows <- parameters[parameters$paramType == paramType,, drop = FALSE]
         if(dim(trows)[1] == 0) return (NULL)
-        varlabslhs <- modifyVector(trows$lhs, varLabels)
-        varlabsrhs <- modifyVector(trows$rhs, varLabels)
+        ## 20180326: fixing threshold bug
+        ##varlabslhs <- modifyVector(trows$lhs, varLabels)
+        ##varlabsrhs <- modifyVector(trows$rhs, varLabels)
+        varlabslhs <- plyr::mapvalues(trows$lhs, names(varLabels), varLabels)
+        varlabsrhs <- plyr::mapvalues(trows$rhs, names(varLabels), varLabels)
         
         if (paramType == "thresholds"){
             thresnum <- substring(trows$rhs, 2, nchar(trows$rhs))
@@ -1079,7 +1084,10 @@ NULL
 ##' @param marked A character string
 ##' @param type Output type, can be a vector or any one of "latex",
 ##'     "html", and "csv".
+##' @param table.float TRUE if you want insertion of '\\begin{table}'
 ##' @param longtable should a tabular or a longtable object be created?
+##' @param caption A caption to use if either longtable or table is TRUE
+##' @param label A LaTeX label for cross-references
 ##' @param file A file stub, to which ".tex", ".html", or ".csv" can be added
 ##' @param columns For SEM table, the list of columns objects
 ##' @return a list of marked up character objects
@@ -1110,7 +1118,10 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
             stop(MESSG)
         }
         if (!is.null(caption)) tcode <- paste0(tcode, "\n\\\\caption{", caption, "}")
-        if (!is.null(label)) tcode <- paste0(tcode, "\n\\\\label{", label, "}") 
+        if (!is.null(label)) tcode <- paste0(tcode, "\n\\\\label{", label, "}")
+        if (longtable){
+            tcode <- paste0(tcode, "\n\\\\endfirsthead\n\\\\endhead\n")
+        }
     } 
     ## Replacement strings for LaTeX output
     latexreplace <- c(
@@ -1169,8 +1180,9 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         "_SIGMA_" = "$\\\\sigma$",
         "_NBSP_" = " ",
         "_FIXED_" = "$^+$",
-        "_STAR1_" = "$^{*}$",
-        "_STAR2_" = "$^{**}$",
+        "_STAR0_" = "$\\\\phantom{{^{***}}}$",
+        "_STAR1_" = "$^{*}\\\\phantom{{^{**}}}$",
+        "_STAR2_" = "$^{**}\\\\phantom{{^{*}}}$",
         "_STAR3_" = "$^{***}$"
     )
 
@@ -1226,6 +1238,7 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         "_SIGMA_" = "&sigma;",
         "_NBSP_" = "&nbsp;",
         "_FIXED_" = "<sup>+</sup>",
+        "_STAR0_" = "&nbsp;",
         "_STAR1_" = "<sup>*</sup>",
         "_STAR2_" = "<sup>**</sup>",
         "_STAR3_" = "<sup>***</sup>",
@@ -1282,6 +1295,7 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         "_SIGMA_" = "sigma",
         "_NBSP_" = " ",
         "_FIXED_" = "+",
+        "_STAR0_" = "", 
         "_STAR1_" = "*",
         "_STAR2_" = "**",
         "_STAR3_" = "**"
