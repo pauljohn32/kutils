@@ -99,19 +99,20 @@
 ##'     "chisq", where a Greek letter is supplied when possible).
 ##' @param varLabels Named vector of labels to replace variable names
 ##'     in column 1 of SEM table.
-##' @param groups Specify some group names for inclusion in the
-##'     model. If \code{object} is just one SEM, but there are several
-##'     groups within it, the parameters for all groups will be
-##'     displayed side by side.  If ONLY SOME groups should be
-##'     included, then specify groups as either names of fit objects
-##'     or as integers for elements of the groups vector.
+##' @param groups All groups will be printed, unless a subset is
+##'     requested here. Estimates for all groups will be displayed
+##'     side by side. If ONLY SOME groups should be included, then
+##'     specify groups as either names of fit objects or as integers
+##'     for elements of the groups vector.
 ##' @param type Choose "latex", "html", "csv", or a vector including
 ##'     any or all of these. If several are specified, ie,
 ##'     \code{c("latex", "html", "csv")}, a list of 3 sets of markup
 ##'     will be returned.
-##' @param file Base name for output file. Specify "mymodel" to get
-##'     output files "mymodel.tex", "mymodel.html", or "mymodel.csv",
-##'     depending on the value of \code{type}.
+##' @param file Base name for output file. Depending on \code{type},
+##'     suffixes "tex", "html" and "csv" may be added. That is,
+##'     specify "mymodel" to get output files "mymodel.tex",
+##'     "mymodel.html", or "mymodel.csv", depending on the value of
+##'     \code{type}.
 ##' @param table.float If TRUE, create a LaTeX floating table object
 ##'     in which the tabular created here will reside. Default is
 ##'     FALSE.
@@ -146,23 +147,46 @@
 ##' fit1 <- cfa(HS.model, data = HolzingerSwineford1939,
 ##'             std.lv = TRUE, meanstructure = TRUE)
 ##' fit1.t1 <- semTable(fit1, columns = c("est", "estse"),
-##'                     fits = c("chisq", "rmsea"), file = file.path(tempdir, "fit1.t1"))
+##'                     fits = c("chisq", "rmsea"), file = file.path(tempdir, "fit1.t1"),
+##'                     varLabels = c("x1" = "hello"))
 ##' if (interactive()) testtable("fit1.t1", tempdir)
-##' fit1.t2 <- semTable(fit1, fits = c("chisq", "rmsea"),
-##'                columns = c("est", "se"), columnLabels = c(se = "S.E."),
-##'                file = file.path(tempdir, "fit1.t2"))
+##' ## Now demonstrate variable labels
+##' vl <- c(visual = "Visual", textual = "Textual", speed = "Speed",
+##'        x1 = "V1", x2 = "V2", x3 = "V3")
+##' fit1.t2 <- semTable(fit1, columns = c("est", "estse"),
+##'                     fits = c("chisq", "rmsea"), file = file.path(tempdir, "fit1.t2"),
+##'                     varLabels = vl)
 ##' if (interactive()) testtable("fit1.t2", tempdir)
-##' fit1.t3 <- semTable(fit1, fits = c("chisq", "rmsea"),
+##' ## floating table
+##' fit1.t3 <- semTable(fit1, columns = c("est", "estse"),
+##'                     fits = c("chisq", "rmsea"), file = file.path(tempdir, "fit1.t3"),
+##'                     varLabels = vl, table.float = TRUE,
+##'                     caption = "Holzinger Swineford 1939",
+##'                     label = "tab:hs1939")
+##' if (interactive()) testtable("fit1.t3", tempdir)
+##' fit1.t4 <- semTable(fit1, columns = c("est", "estse"),
+##'                     fits = c("chisq", "rmsea"), file = file.path(tempdir, "fit1.t3"),
+##'                     varLabels = vl, longtable = TRUE,
+##'                     caption = "Holzinger Swineford 1939",
+##'                     label = "tab:hs1939")
+##' if (interactive()) testtable("fit1.t4", tempdir)
+##' fit1.t5 <- semTable(fit1, fits = c("chisq", "rmsea"),
+##'                columns = c("est", "se"), columnLabels = c(se = "S.E."),
+##'                file = file.path(tempdir, "fit1.t5"))
+##' if (interactive()) testtable("fit1.t5", tempdir)
+##' fit1.t6 <- semTable(fit1, fits = c("chisq", "rmsea"),
 ##'                columns = c("estsestars"),
 ##'                columnLabels = c("estsestars" = "Est(SE)"),
-##'                file = file.path(tempdir, "fit1.t3"))
-##' if (interactive()) testtable("fit1.t3", tempdir)
-##' fit1.t4 <- semTable(fit1, fits = c("chisq", "rmsea"),
+##'                file = file.path(tempdir, "fit1.t6"))
+##' if (interactive()) testtable("fit1.t6", tempdir)
+##' vl <- c(x1 = "happy 1", x2 = "happy 2", x3 = "happy 3",
+##'         visual = "Seeing", textual = "Thumb Texting")
+##' fit1.t7 <- semTable(fit1, fits = c("chisq", "rmsea"),
 ##'                columns = c("eststars", "p"),
 ##'                columnLabels = c("eststars" = "Est(SE)"),
-##'                file = file.path(tempdir, "fit1.t4"),
-##'                varLabels = c(x1 = "happy 1", x2 = "happy 2", x3 = "happy 3"))
-##' if (interactive()) testtable("fit1.t4", tempdir)
+##'                file = file.path(tempdir, "fit1.t7"),
+##'                varLabels = vl, longtable = TRUE)
+##' if (interactive()) testtable("fit1.t7", tempdir)
 ##' 
 ##' ## 2 groups
 ##' fit1.g <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE, group = "school")
@@ -408,6 +432,7 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
         trows$p <- frnd(trows$p, 3, 3)
         trows$p <- gsub("0\\.", "\\.", trows$p)
         trows$est <- ifelse(trows$free == 0, paste0(trows$est, "_FIXED_"), trows$est)
+        if (any(trows$free == 0)) FIXED <<- TRUE
         trows[trows$free == 0, intersect(colnames(trows), c("se", "z", "p", "stdse"))] <- ""
         ## missings are a problem, maybe in other variables too
         if("rsquare" %in% colnames(trows)){
@@ -605,17 +630,29 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
             vname <- unique(x$lhs)
             ##if(paramType == "slopes") browser()
             rownames(x) <- paste(paramType, vname, x[ , "rhs"], sep = ".")
-            x <- data.frame(col1 = modifyVector(x$rhs, varLabels),
+            x <- data.frame(col1 = replace(x$rhs, names(varLabels), varLabels),
                             x[ , report, drop = FALSE])
             ## don't put "_BOC_" at beginning if in colnum 1
-            attr(x, "title") <- makeSubtableTitle(vname, colnum = 1, width = 1,
-                                    center = FALSE,  underline = TRUE)
+            ## 20180327: use varLabels for factor names too
+            attr(x, "title") <- makeSubtableTitle(replace(vname, names(varLabels), varLabels),
+                                                  colnum = 1,
+                                                  width = 1,
+                                                  center = FALSE,
+                                                  underline = TRUE)
             class(x) <- c("trows", class(x))
             x
         })
         info
     }
 
+    ## local immitation of mapvalues, with no warnings or NA checking
+    replace <- function(x, from, to){
+        if(is.null(from) || is.null(to)) return(x)
+        idx <- match(x, from)
+        idxNNA <- !is.na(idx)
+        x[idxNNA] <- to[idx[idxNNA]]
+        x
+    }
     ## works for other paramSets, ones that are simple tables, no lists.
     ## replace the "maker" functions with one function.
     ## Only difference between maker functions was in calculation of col1 and
@@ -631,8 +668,8 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
         ## 20180326: fixing threshold bug
         ##varlabslhs <- modifyVector(trows$lhs, varLabels)
         ##varlabsrhs <- modifyVector(trows$rhs, varLabels)
-        varlabslhs <- plyr::mapvalues(trows$lhs, names(varLabels), varLabels)
-        varlabsrhs <- plyr::mapvalues(trows$rhs, names(varLabels), varLabels)
+        varlabslhs <- replace(trows$lhs, names(varLabels), varLabels)
+        varlabsrhs <- replace(trows$rhs, names(varLabels), varLabels)
         
         if (paramType == "thresholds"){
             thresnum <- substring(trows$rhs, 2, nchar(trows$rhs))
@@ -645,7 +682,7 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
             trows$col1 <- paste0(varlabslhs, " w/", varlabsrhs)
             rownames(trows) <- paste(paramType, trows[ , "lhs"], trows[ , "rhs"],  sep = ".")
         } else if (paramType == "latentcovariances"){
-            trows$col1 <- paste0(trows$lhs, " w/", trows$rhs)
+            trows$col1 <- paste0(varlabslhs, " w/", varlabsrhs)
             rownames(trows) <- paste0(paramType, ".", trows[ , "lhs"],
                            ".", trows[ , "rhs"])
         } else {
@@ -728,6 +765,7 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
         reslt <- list()
         for(jj in names(paramTableSplit)){
             if (jj %in% c("loadings", "slopes")){
+                
                 info <- loadingMaker(paramTableSplit[[jj]], paramType = jj,
                                      colLabels, modelName)
                 if (!is.null(info)){
@@ -859,12 +897,16 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
         modelHeaderRow <- paste0("_BR__EOC__BOC_",
                                  paste0("_BOMC", colNameCounts, "_", names(colNameCounts), "_EOMC_", collapse = "_BOC_"),
                                  "_EOR_\n _HL_\n", collapse = " ")
+        starnote <- if (any(c("eststars", "estsestars") %in% sapply(colLabels, names))) {
+                        paste0(starsymbols, "p<", alpha, collapse = ", ")
+                    } else ""
+        fixnote <-  if(TRUE) paste0("_FIXED_", "Fixed parameter") else ""
         tablesuffix <-  paste0("_LB_",
-                               paste0("_FIXED_", "Fixed parameter_LB_", "\n"),
-                               if (any(c("eststars", "estsestars") %in% sapply(colLabels, names)))
-                                   paste0(starsymbols, " p < ", alpha, collapse = ", "))
-
-        resmark <- paste("_BT_\n", modelHeaderRow, colHeaderRow, results2, "_HL__EOT_\n", tablesuffix)
+                               if(fixnote != "") paste0("_BOML", totalNcolumns, "_", fixnote, "_EOMC__EOR__LB_"),
+                               if(starnote != "") paste0("_BOML", totalNcolumns, "_", starnote, "_EOMC__EOR__LB_"))
+                               
+        resmark <- paste("_BTABULAR_\n", modelHeaderRow, colHeaderRow, results2, "_HL__LB_",
+                         tablesuffix, "_ETABULAR__LB_")
         resmark
     }
 
@@ -1060,7 +1102,8 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
             }
         }
     }
-    
+
+    FIXED <- FALSE
     paramSetsFound <- unique(unlist(lapply(paramList, function(x) names(x))))
     ## re-order paramSetsFound according to standard list
     paramSetNames <- intersect(names(paramSetLabels), paramSetsFound)
@@ -1110,17 +1153,17 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         if(longtable){
             tcode <-  paste0("\\\\begin{longtable}{r",
                              paste0(rep("c", Ncolumns), collapse = ""), "}")
+            if (!is.null(caption)) tcode <- paste0(tcode, "\n\\\\caption{", caption, "}")
+            if (!is.null(label)) tcode <- paste0(tcode, "\n\\\\label{", label, "}")
+            tcode <- paste0(tcode, "\n\\\\endfirsthead\n\\\\endhead\n")
         } else if (table.float){
             tcode <- "\\\\begin{table}\n"
+            if (!is.null(caption)) tcode <- paste0(tcode, "\n\\\\caption{", caption, "}")
+            if (!is.null(label)) tcode <- paste0(tcode, "\n\\\\label{", label, "}")
             tcode <- paste0(tcode, ttabular)
         } else {
             MESSG <- "Logic error in markupConvert"
             stop(MESSG)
-        }
-        if (!is.null(caption)) tcode <- paste0(tcode, "\n\\\\caption{", caption, "}")
-        if (!is.null(label)) tcode <- paste0(tcode, "\n\\\\label{", label, "}")
-        if (longtable){
-            tcode <- paste0(tcode, "\n\\\\endfirsthead\n\\\\endhead\n")
         }
     } 
     ## Replacement strings for LaTeX output
@@ -1134,14 +1177,14 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         "_BRT_" = "", 
         "_BOCU_" = "& ",
         "_BR_" = "",
-        "_BT_" = tcode,  
+        "_BTABULAR_" = tcode,  
         "_EOL_" = "\n",
         "_HL_" = "\\\\hline", 
         "_UL_" = "\\\\underline{",
         "_EOUL_" = "}",
         "_SEPU_" = " &", 
         "_SEP_" = " &", 
-        "_EOT_" = if (longtable) {
+        "_ETABULAR_" = if (longtable) {
                       "\\\\end{longtable}"
                   } else if (table.float) {
                       "\\\\end{tabular}
@@ -1199,14 +1242,14 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         "_BRT_" = paste("<tr><td style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;"),
         "_BOCU_" = paste("<td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;"),
         "_BR_" = "<tr><td>",
-        "_BT_" =  "<table cellpadding=\"10\">\n",
+        "_BTABULAR_" =  "<table cellpadding=\"10\">\n",
         "_EOL_" = "\n",
         "_HL_" =  "",
         "_UL_" =  "<span style=\"text-decoration: underline;\">",
         "_EOUL_" = "</span>",
         "_SEPU_" = "</td><td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;",
         "_SEP_" = "</td><td>",
-        "_EOT_" = "</table>",
+        "_ETABULAR_" = "</table>",
         "_BOMR1_" = "<td rowspan = '1'>",
         "_BOMR2_" = "<td rowspan = '2'>",
         "_BOMC1_" = "<td colspan = '1'; align = 'center'>",
@@ -1256,14 +1299,14 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         "_BRT_" = "", 
         "_BOCU_" = ",",
         "_BR_" = "",
-        "_BT_" = "",
+        "_BTABULAR_" = "",
         "_EOL_" = "\n",
         "_HL_" = "", 
         "_UL_" = "",
         "_EOUL_" = "",
         "_SEPU_" = "", 
         "_SEP_" = ",", 
-        "_EOT_" = "",
+        "_ETABULAR_" = "",
         "_BOMR1_" = "",
         "_BOMR2_" = "",
         "_BOMC1_" = "",
