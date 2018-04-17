@@ -30,9 +30,12 @@ NULL
 
 ##' Removes redundant words from beginnings of character strings
 ##'
-##' In Qualtrix data, we sometimes find repeated words in column names.
-##' This changes a vector c("Philadelphia_Philadelphia_3", "Denver_Denver_4")
-##' to c("Philadelphia_3", "Denver_4")
+##' In Qualtrix data, we sometimes find repeated words in column
+##' names. For whatever reason, the variable names have repeated words
+##' like "Philadelphia_Philadelphia_3".  This function changes a
+##' vector c("Philadelphia_Philadelphia_3", "Denver_Denver_4") to
+##' c("Philadelphia_3", "Denver_4"). It is non destructive, so that
+##' other values will not be altered.
 ##' 
 ##' See \url{https://stackoverflow.com/questions/43711240/r-regular-expression-match-omit-several-repeats}
 ##' @param x Character vector
@@ -215,6 +218,17 @@ NULL
 modifyVector <- function(x, y, augment = FALSE, warnings = FALSE){
     if (missing(x) || is.null(x)) stop("modifyVector: x should not be null")
     if (missing(y) || is.null(y)) return(x)
+
+    ## local immitation of mapvalues, with no warnings or NA checking
+    replace <- function(x, from, to){
+        if(is.null(from) || is.null(to)) return(x)
+        ##:ess-bp-start::browser@nil:##
+idx <- match(x, from)
+        idxNNA <- !is.na(idx)
+        x[idxNNA] <- to[idx[idxNNA]]
+        x
+    }
+    
     ## neither has names, so values of y are names for x
     if (is.null(names(x)) && is.null(names(y))){
         if (length(x) == length(y)){
@@ -254,10 +268,9 @@ modifyVector <- function(x, y, augment = FALSE, warnings = FALSE){
     ## x and y both have names, y may be different in length
     x.names <- names(x)
     y.names <- names(y)
-    inboth <- intersect(y.names, x.names)
     yunique <- y[!y.names %in% x.names]
     
-    x[inboth] <- y[inboth]
+    x <- replace(x, y.names, y)
     
     if(augment){
         x <- c(x, yunique)

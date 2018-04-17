@@ -1,3 +1,28 @@
+2018-04-17  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/factors.R (reverse): grep needed fixed = TRUE, else literal
+	"." was matching everything.  Users cannot pass in regular
+	expressions for eol.
+
+	* ../R/variableKey.R (keyTemplateSPSS): export this function. Fix
+	sorting of variables. They did not come out in same order as
+	SPSS. Only way I could think of: turn key wide, then order rows.
+
+2018-03-27  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (loadingMaker): varLabels for table titles
+	loadings/slopes.
+
+	* ../R/semTable.R: bottom notes now nested in multicolumn at
+	bottom.
+
+	* ../R/utils.R (deduper): clarify description
+	(modifyVector): cause repeat values in input to all be replaced,
+	not just first. Uses replace function similar to mapvalues
+
+	* ../R/semTable.R (parTableMaker): replace function created, don't
+	use mapvalues to fix varLabels because it is annoying
+
 2018-03-26  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/semTable.R (markupConvert): _STAR0_ trick to manipulate

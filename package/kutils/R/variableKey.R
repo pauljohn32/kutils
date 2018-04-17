@@ -2836,10 +2836,8 @@ keyTemplateSPSS <- function(dat, long = TRUE){
                                    value_old = val, value_new = val.level, stringsAsFactors = FALSE)
         ## match(datn[match(levels(datf$Q76), datf$Q76),"Q76"])
     })
-    ##    if (direction == "num2fac"){
     keylong <- rbind(do.call(rbind, partA), do.call(rbind, partB))
     ## 20180418: variables did not come out in same order as SPSS.
-    ## Only way I could think of: turn key wide, then order rows
     keywide <- long2wide(keylong)
     rownames(keywide) <- keywide$name_old
     keywide <- keywide[colnames(datf), ]
