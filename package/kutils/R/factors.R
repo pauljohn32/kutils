@@ -17,7 +17,9 @@
 ##' missing before inspecting the pattern of observed values.
 ##' 
 ##' @param x a factor variable
-##' @param eol values to be kept at the end of the list
+##' @param eol values to be kept at the end of the list. Does not
+##'     accept regular expresssions, just literal text strings
+##'     representing values.
 ##' @export
 ##' @return a new factor variable with reversed values
 ##' @author Paul Johnson <pauljohn@@ku.edu>
@@ -38,13 +40,33 @@
 ##' ## Unintended side-effect, but interesting.
 ##' yr2 <- reverse(y, eol = "C")
 ##' yr2
+##' ## What about a period as a value (SAS missing)
+##' z <- factor(c("a", "b", "c", "b", "c", "."))
+##' reverse(z)
+##' z <- factor(c(".", "a", "b", "c", "b", "c", "."))
+##' reverse(z)
+##' ## How about R NA's
+##' z <- factor(c(".", "a", NA, "b", "c", "b", NA, "c", "."))
+##' z
+##' reverse(z)
+##' z <- ordered(c(".", "a", NA, "b", "c", "b", NA, "c", "."))
+##' z
+##' str(z)
+##' ## Put "." at end of list
+##' zr <- reverse(z, eol = ".")
+##' zr
+##' str(zr)
+##' z <- ordered(c(".", "c", NA, "e", "a", "c", NA, "e", "."),
+##'          levels = c(".", "c", "e", "a"))
+##' reverse(z, eol = ".")
+##' reverse(z, eol = c("a", "."))
 reverse <- function(x, eol = c("Skip", "DNP")){
     if (!is.factor(x)) stop("your variable is not a factor")
     class_old <- class(x)
     rlevels <- rev(levels(x))
     if (length(eol) > 0){
         for (jj in eol){
-            if (length(yyy <- grep(jj, rlevels))){
+            if (length(yyy <- grep(jj, rlevels, fixed = TRUE))){
                 rlevels <- c(rlevels[-yyy], jj)
             }
         }
