@@ -2811,6 +2811,7 @@ keyLookup <- function(x, key, get = "name_old"){
 ##' @param long TRUE returns a long key, otherwise a wide key
 ##' @return A variable key (long or wide)
 ##' @importFrom foreign read.spss
+##' @export
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 keyTemplateSPSS <- function(dat, long = TRUE){
     datf <- read.spss(dat, max.value.labels = 15, to.data.frame = TRUE,
@@ -2837,7 +2838,13 @@ keyTemplateSPSS <- function(dat, long = TRUE){
     })
     ##    if (direction == "num2fac"){
     keylong <- rbind(do.call(rbind, partA), do.call(rbind, partB))
-    if (long) return(keylong)
-    else return(long2wide(keylong))
+    ## 20180418: variables did not come out in same order as SPSS.
+    ## Only way I could think of: turn key wide, then order rows
+    keywide <- long2wide(keylong)
+    rownames(keywide) <- keywide$name_old
+    keywide <- keywide[colnames(datf), ]
+    if (!long) return(keywide)
+    ## else turn the wide key long
+    wide2long(keywide)
 }
 
