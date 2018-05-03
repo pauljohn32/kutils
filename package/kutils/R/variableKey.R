@@ -450,27 +450,27 @@ isNA <- function(x, na.strings = c("\\.", "", "\\s+",  "N/A")){
     ismissing
 }
 
-##' Create variable key template
+##' Create variable key template (in memory or in a file)
 ##'
 ##' A variable key is a human readable document that describes the
 ##' variables in a data set. A key can be revised and re-imported by R
-##' to recode data. This might
-##' also be referred to as a "programmable codebook."  This function
-##' inspects a data frame, takes notice of its variable names, their
-##' classes, and legal values, and then it creates a table summarizing
-##' that information. The aim is to create a document that principal
+##' to recode data. This might also be referred to as a
+##' "programmable codebook."  This function inspects a data frame,
+##' takes notice of its variable names, their classes, and legal
+##' values, and then it creates a table summarizing that
+##' information. The aim is to create a document that principal
 ##' investigators and research assistants can use to keep a project
 ##' well organized.  Please see the vignette in this package.
 ##'
-##' The variable key can be created in two formats.  The original
-##' style of the variable key has one row per variable. It has a style
-##' for compact notation about current values and required recodes.
-##' That is more compact, probably easier for experts to use, but
-##' perhaps more complicated for non-programmers. The long style
-##' variable key has one row per value per variable.  Thus, in a
-##' larger project, the long style key can be quite voluminous. However,
-##' in a larger project, the long style key seems to be more likely to
-##' generate the intended result.
+##' The variable key can be created in two formats, wide and long.
+##' The original style of the variable key, wide, has one row per
+##' variable. It has a style for compact notation about current values
+##' and required recodes.  That is more compact, probably easier for
+##' experts to read, but perhaps more difficult to edit. The long
+##' style variable key has one row per value per variable.  Thus, in a
+##' larger project, the long key can have many rows. However, in a
+##' larger project, the long style key is easier to edit with a spread
+##' sheet program.
 ##'
 ##' After a key is created, it should be re-imported into R with the
 ##' \code{kutils::keyImport} function.  Then the key structure can
@@ -555,10 +555,9 @@ isNA <- function(x, na.strings = c("\\.", "", "\\s+",  "N/A")){
 ##' mydf$x4[sample(1:N, 10)] <- 999
 ##' mydf$x5[sample(1:N, 10)] <- -999
 ##'
-##' ## This puts copy in temp working directory, unless package build flag
-##' ## is set
-##' RECOMPILE <- FALSE
-##' dn <- if(!RECOMPILE) tempdir() else "../inst/extdata"
+##' ## Note: If we change this example data, we need to save a copy in
+##' ## "../inst/extdata" for packacing
+##' dn <- tempdir()
 ##' write.csv(mydf, file = file.path(dn, "mydf.csv"), row.names = FALSE)
 ##' mydf.templ <- keyTemplate(mydf, file = file.path(dn, "mydf.templ.csv"),
 ##'                           varlab = TRUE)
@@ -612,6 +611,21 @@ keyTemplate <-
              safeNumericToInteger = TRUE, trimws = "both", 
              varlab = FALSE)
 {
+    if (class(dframe)[1] != "data.frame"){
+        MESSG <- paste("Warning: keyTemplate is intended for an R *data.frame*,",
+                       "not subclasses like tibbles or data.tables.",
+                       "keyTemplate coerced your input",
+                       "with as.data.frame().\n")
+        if (inherits(dframe, "data.frame")){
+            ## Coerce without warning, but print message
+            cat(MESSG)
+        } else {
+            ## Elevate the message to a warning
+            warning(MESSG)
+        }
+        dframe <- as.data.frame(dframe)
+    }
+            
     dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger,
                              trimws = trimws)
 
@@ -640,18 +654,29 @@ keyTemplate <-
 
     ## Returns all unique values, inserts NA at end if not present
     getUnique <- function(xname){
-        if (df.class[[xname]] == "numeric") return (as.numeric(NA))
-        if (df.class[[xname]] %in% c("integer", "character", "logical", "Date")){
-            val <- unique(dframe[ , xname])
+        ## For discrete variables integer, character, logical:
+        if (df.class[[xname]] %in% c("integer", "character", "logical")){
+            val <- unique(dframe[ , xname, drop = TRUE])
             ##pj 20170926: new sort method keeps missing on end, sets NA as missSymbol
+            ##pj 20180502: tibble fails on following order function.
             val.sort <- val[order(val)]
             if(!NA %in% val.sort) val.sort <- c(val.sort, NA)
             return(val.sort)
         }
+        ## For discrete variables factor, ordered:
         if (df.class[[xname]] %in% c("factor", "ordered")){
             return(c(levels(dframe[ , xname]), NA))
         }
-        stop("keyTemplate getUnique function failed")
+        ## if coercion check passes, then use "as" to coerce the missing
+        if (checkCoercion(c(NA), df.class[[xname]])) {
+            value <- NA
+            mytext <- paste0("as.",  df.class[[xname]], "(value)")
+            res <- eval(parse(text = mytext))
+            return(res)
+        } else{
+            ## Give up trying to cast the NA type
+            return(c(NA))
+        }
     }
 
     ## First, make a long key
@@ -1000,7 +1025,10 @@ NULL
 ##'
 ##' This eliminates any characters matched by the regular expression
 ##' `\\s` if they appear at the beginning of a string or at its
-##' end. It does not alter spaces in the interior of a string
+##' end. It does not alter spaces in the interior of a string. This
+##' was created when I was not aware of R's \code{trimws} and the purpose
+##' is the same. On our TODO list, we intend to eliminate this function
+##' and replace its use with \code{trimws}
 ##' @param x A character vector
 ##' @return If x is a character vector, return is a character vector
 ##'     with leading and trailing white space values removed. If x is
@@ -1021,13 +1049,12 @@ zapspace <- function(x){
 NULL
 
 
-##' Import a file (or key object). Will check and if possible clean up
-##' for use as variable key
+##' Import/validate a key object or import/validate a key from a file.
 ##'
 ##' After the researcher has updated the key by filling in new names
 ##' and values, we import that key file. This function can import the
 ##' file by its name, after deducing the file type from the suffix, or
-##' it can receive a key object.
+##' it can receive a key object from memory.
 ##'
 ##' This can be either a wide or long format key file.
 ##'
@@ -1053,8 +1080,8 @@ NULL
 ##' appearing in value_new are treated as missing scores in the new
 ##' data set to be created.
 ##' 
-##' @param key A file name, ending in csv, xlsx or rds, or a key
-##'     object.
+##' @param key A key object (class key or keylong) or a file name
+##'     character string (ending in csv, xlsx or rds).
 ##' @param ignoreCase In the use of this key, should we ignore
 ##'     differences in capitalization of the "name_old" variable?
 ##'     Sometimes there are inadvertent misspellings due to changes in
@@ -1069,8 +1096,8 @@ NULL
 ##'     This is relevant in \code{name_new} as well as
 ##'     \code{value_new}. In spreadsheet cells, we treat "empty"
 ##'     cells, or values like "." or "N/A", as missing with defaults
-##'     ".", "", "\\s" (white space), and "N/A". Change that if those are
-##'     not to be treated as missings.
+##'     ".", "", "\\s" (white space), and "N/A". Change that if those
+##'     are not to be treated as missings.
 ##' @param ... additional arguments for read.csv or read.xlsx.
 ##' @param keynames Don't use this unless you are very careful. In our
 ##'     current scheme, the column names in a key should be
@@ -1081,7 +1108,8 @@ NULL
 ##'     keynames = c(name_old = "oldvar", name_new = "newname",
 ##'     class_old = "vartype", class_new = "class", value_old =
 ##'     "score", value_new = "val").
-##' @param missSymbol Defaults to period "." as missing value indicator.
+##' @param missSymbol Defaults to period "." as missing value
+##'     indicator.
 ##' @export
 ##' @return key object, should be same "wide" or "long" as the input
 ##'     Missing symbols in value_old and value_new converted to ".".
@@ -1439,7 +1467,7 @@ NULL
 ##'     otherwise identical, then the difference in capitalization
 ##'     will be ignored.
 ##' @param debug Default FALSE. If TRUE, emit some warnings.
-##' @return A recoded version of dframe
+##' @return A new data.frame object, with renamed and recoded variables
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @export
 ##' @importFrom plyr mapvalues
@@ -1472,6 +1500,20 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         if(drop) drop <- c("vars", "vals")
     }
 
+    if (class(dframe)[1] != "data.frame"){
+        MESSG <- paste("Warning: keyApply is intended for an R *data.frame*,",
+                       "not subclasses like tibbles or data.tables.",
+                       "keyApply coerced your input",
+                       "with as.data.frame().\n")
+        if (inherits(dframe, "data.frame")){
+            ## Coerce without warning, but print message
+            cat(MESSG)
+        } else {
+            ## Elevate the message to a warning
+            warning(MESSG)
+        }
+        dframe <- as.data.frame(dframe)
+    }
     dframe <- cleanDataFrame(dframe, safeNumericToInteger = safeNumericToInteger,
                              trimws = trimws)
     if (diagnostic) dforig <- dframe
@@ -1559,7 +1601,8 @@ keyApply <- function(dframe, key, diagnostic = TRUE,
         if (length(v$recodes) > 0 && !all(is.na(v$recodes))) {
             for (cmd in v$recodes) xnew <- assignRecode(xnew, cmd)
             if(!inherits(xnew, v$class_new)) {
-                messg <- paste("Recode function did not match class_new.")
+                messg <- paste("keyApply: the key's recode function for the variable",
+                               v$name_old, " did generate correct output class")
                 print(v)
                 stop(messg)
             }
@@ -1941,7 +1984,7 @@ all.equal.key <- function(target, current, ..., check.attributes = FALSE){
 }
 
 
-##' An all.equal method for variable wide keys
+##' An all.equal method for variable long keys
 ##'
 ##' Disregards attributes by defaults. Before comparing the two keys,
 ##' the values are sorted by \code{"name_new")}.

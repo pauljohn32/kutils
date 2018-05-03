@@ -1,3 +1,10 @@
+2018-05-01  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (keyTemplate): remove "RECOMPILE" flag in
+	keyTemplate example code
+	(getUnique): in keyTemplate, trying to pass through unfamiliar
+	classes with value_old = "." and value_new = "."
+
 2018-04-17  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/factors.R (reverse): grep needed fixed = TRUE, else literal
