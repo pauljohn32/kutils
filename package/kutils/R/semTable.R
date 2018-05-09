@@ -630,8 +630,10 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
             vname <- unique(x$lhs)
             ##if(paramType == "slopes") browser()
             rownames(x) <- paste(paramType, vname, x[ , "rhs"], sep = ".")
-            x <- data.frame(col1 = replace(x$rhs, names(varLabels), varLabels),
-                            x[ , report, drop = FALSE])
+            xlabels <- replace(x$rhs, names(varLabels), varLabels)
+            ## 20180509: Get rid of underscores in var names, no matter what
+            xlabels <- gsub("_", ".", xlabels, fixed = TRUE)
+            x <- data.frame(col1 = xlabels,  x[ , report, drop = FALSE])
             ## don't put "_BOC_" at beginning if in colnum 1
             ## 20180327: use varLabels for factor names too
             attr(x, "title") <- makeSubtableTitle(replace(vname, names(varLabels), varLabels),
@@ -665,12 +667,10 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
         totalNcolumns <- min(9,  length(unname(unlist(colLabels))))
         ## trows <- parameters[parameters$paramType == paramType,, drop = FALSE]
         if(dim(trows)[1] == 0) return (NULL)
-        ## 20180326: fixing threshold bug
-        ##varlabslhs <- modifyVector(trows$lhs, varLabels)
-        ##varlabsrhs <- modifyVector(trows$rhs, varLabels)
         varlabslhs <- replace(trows$lhs, names(varLabels), varLabels)
         varlabsrhs <- replace(trows$rhs, names(varLabels), varLabels)
-        
+        varlabslhs <- gsub("_", ".",  varlabslhs, fixed = TRUE)
+        varlabsrhs <- gsub("_", ".",  varlabsrhs, fixed = TRUE)
         if (paramType == "thresholds"){
             thresnum <- substring(trows$rhs, 2, nchar(trows$rhs))
             trows$col1 <- paste0(varlabslhs, "(", thresnum, ")")
@@ -913,7 +913,7 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
     ## Now actual work begins.
     ##    
     starsymbols <- c("_STAR1_", "_STAR2_", "_STAR3_")
-
+    if(!is.null(varLabels)) varLabels <- gsub("_", ".", varLabels, fixed = TRUE)
     ## Import and clarify the "object" argument.  If names are
     ## missing, will create.  If object is NOT a list, it is just one
     ## lavaan object, create a list, put that inside a list, so we can

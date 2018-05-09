@@ -1,3 +1,12 @@
+2018-05-09  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (semTable): obliterate underscores in variable
+	names and variable labels. escaping in general does not work
+	because of "pasted together" markup structure. Must rethink.
+
+	* ../R/utils.R (modifyVector): error in replacement of named items
+	discovered and corrected.
+
 2018-05-01  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (keyTemplate): remove "RECOMPILE" flag in

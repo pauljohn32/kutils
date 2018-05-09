@@ -222,8 +222,7 @@ modifyVector <- function(x, y, augment = FALSE, warnings = FALSE){
     ## local immitation of mapvalues, with no warnings or NA checking
     replace <- function(x, from, to){
         if(is.null(from) || is.null(to)) return(x)
-        ##:ess-bp-start::browser@nil:##
-idx <- match(x, from)
+        idx <- match(x, from)
         idxNNA <- !is.na(idx)
         x[idxNNA] <- to[idx[idxNNA]]
         x
@@ -268,14 +267,18 @@ idx <- match(x, from)
     ## x and y both have names, y may be different in length
     x.names <- names(x)
     y.names <- names(y)
-    yunique <- y[!y.names %in% x.names]
-    
-    x <- replace(x, y.names, y)
+    y.unique <- y[!y.names %in% x.names]
+    y.names.unique <- names(y.unique)
+    y.names.notunique <- y.names[!y.names %in% y.names.unique]
+
+    ## 20180509: this appears to have been an error
+    ##x <- replace(x, y.names, y)
+    x <- replace(x, x[y.names.notunique], y[y.names.notunique])
     
     if(augment){
-        x <- c(x, yunique)
+        x <- c(x, y.unique)
     } else {
-        if(length(yunique) > 0 && warnings){
+        if(length(y.unique) > 0 && warnings){
             MESSG <- paste("if augment = FALSE, elements in y",
                            "with names not in names(x) will be discarded")
             warning(MESSG)
