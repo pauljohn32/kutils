@@ -2847,9 +2847,13 @@ keyLookup <- function(x, key, get = "name_old"){
 }
 
 
-##' Import an SPSS file, create a key representing the numeric -> factor transition
+
+##' Import an SPSS file, create a key representing the numeric ->
+##' factor transition
 ##'
-##' This is a way to keep track of the scores that are used in the SPSS file
+##' This is a way to keep track of the scores that are used in the SPSS file.
+##' It is also an easy way to start a new variable key that makes it convenient
+##' to work on the value_new column with R text functions.
 ##' @param dat A character string path to the SPSS file
 ##' @param long TRUE returns a long key, otherwise a wide key
 ##' @return A variable key (long or wide)
@@ -2860,11 +2864,42 @@ keyTemplateSPSS <- function(dat, long = TRUE){
     datf <- read.spss(dat, max.value.labels = 15, to.data.frame = TRUE,
                       use.value.labels = TRUE)
     datn <- read.spss(dat, to.data.frame = TRUE, use.value.labels = FALSE)
+    key <- statdatKey(datf, datn, long)
+    key
+}
+
+
+
+##' Import a Stata (version 12 or lower) file, create a key
+##' representing the numeric -> factor transition
+##'
+##' This is a way to keep track of the scores that are used in the Stata file.
+##' It is also an easy way to start a new variable key that makes it convenient
+##' to work on the value_new column with R text functions.
+##' @param dat A character string path to the Stata file
+##' @param long TRUE returns a long key, otherwise a wide key
+##' @return A variable key (long or wide)
+##' @importFrom foreign read.dta
+##' @export
+##' @author Paul Johnson <pauljohn@@ku.edu>
+keyTemplateStata <- function(dat, long = TRUE){
+    datf <- read.spss(dat, max.value.labels = 15, to.data.frame = TRUE,
+                      use.value.labels = TRUE)
+    datn <- read.spss(dat, to.data.frame = TRUE, use.value.labels = FALSE)
+    key <- statdatKey(datf, datn, long)
+    key
+}
+
+##' keyFactors: private function that does work for keyTemplateSPSS and
+##' key template Stata
+##' @param datf Data frame with factors
+##' @param datn Numeric data frame
+##' @param long Should the result be a long or wide key
+statdatKey <- function(datf, datn, long = TRUE){
     numericTF <- vapply(datf, is.numeric, logical(1)) 
     notnumeric <- colnames(datf)[!numericTF]
     isnumeric <- colnames(datf)[numericTF]
     
-   
     partA <- lapply(isnumeric, function(i) {
         data.frame(name_old = i, name_new = i,
                    class_old = class(datf[ , i])[1], class_new = class(datf[ , i])[1],
@@ -2888,4 +2923,3 @@ keyTemplateSPSS <- function(dat, long = TRUE){
     ## else turn the wide key long
     wide2long(keywide)
 }
-
