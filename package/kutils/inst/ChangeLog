@@ -1,3 +1,9 @@
+2018-05-11  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/variableKey.R (keyTemplateStata): New function, same
+	purpose as keyTemplateSPSS
+	(statdatKey): does work for keyTemplateStata and keyTemplateSPSS
+
 2018-05-09  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/semTable.R (semTable): obliterate underscores in variable

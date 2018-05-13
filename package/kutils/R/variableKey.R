@@ -2883,9 +2883,8 @@ keyTemplateSPSS <- function(dat, long = TRUE){
 ##' @export
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 keyTemplateStata <- function(dat, long = TRUE){
-    datf <- read.spss(dat, max.value.labels = 15, to.data.frame = TRUE,
-                      use.value.labels = TRUE)
-    datn <- read.spss(dat, to.data.frame = TRUE, use.value.labels = FALSE)
+    datf <- read.dta(dat, convert.factors = TRUE)
+    datn <- read.dta(dat, convert.factors = FALSE)
     key <- statdatKey(datf, datn, long)
     key
 }
