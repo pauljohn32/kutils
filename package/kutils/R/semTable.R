@@ -104,15 +104,10 @@
 ##'     side by side. If ONLY SOME groups should be included, then
 ##'     specify groups as either names of fit objects or as integers
 ##'     for elements of the groups vector.
-##' @param type Choose "latex", "html", "csv", or a vector including
-##'     any or all of these. If several are specified, ie,
-##'     \code{c("latex", "html", "csv")}, a list of 3 sets of markup
-##'     will be returned.
-##' @param file Base name for output file. Depending on \code{type},
-##'     suffixes "tex", "html" and "csv" may be added. That is,
-##'     specify "mymodel" to get output files "mymodel.tex",
-##'     "mymodel.html", or "mymodel.csv", depending on the value of
-##'     \code{type}.
+##' @param type Choose "latex", "html", or "csv"
+##' @param file Base name for output file. This function will
+##'     insert suffix, either "tex", "html" and "csv". That is,
+##'     specify "mymodel," NOT  "mymodel.tex".
 ##' @param table.float If TRUE, create a LaTeX floating table object
 ##'     in which the tabular created here will reside. Default is
 ##'     FALSE.
@@ -122,16 +117,20 @@
 ##'     cross-references). Only used if table.float = TRUE or
 ##'     longtable = TRUE.
 ##' @param longtable If TRUE, use longtable for LaTeX
-##'     documents. Default is FALSE. If true, \code{table} argument is
-##'     ignored.
+##'     documents. Default is FALSE. If true, \code{table.float}
+##'     argument is ignored.
+##' @param print.results If TRUE, marked up result will be displayed
+##'     within the session. Otherwise, result is returned silently and
+##'     user can use \code{cat} to dislay it. Don't use \code{print}
+##'     because it inserts unwanted decorations.
 ##' @param alpha Thresholds for p-values that determine number of
 ##'     stars.  Defaults as \code{c(0.05, 0.01, 0.001)} for
 ##'     \code{c("*", "**", "***")}.
 ##' @importFrom stats pnorm
 ##' @importFrom lavaan lavInspect
 ##' @importFrom plyr mapvalues
-##' @return Markup for SEM table, or a list of markup character
-##'     strings, one for each value of \code{type}.
+##' @return Markup for SEM table. Includes an attribute "markedResults", which
+##'     can be converted to other markup formats by the function markupConvert.
 ##' @export
 ##' @author Ben Kite <bakite@@ku.edu> Paul Johnson <pauljohn@@ku.edu>
 ##' @examples \donttest{
@@ -185,8 +184,11 @@
 ##'                columns = c("eststars", "p"),
 ##'                columnLabels = c("eststars" = "Est(SE)"),
 ##'                file = file.path(tempdir, "fit1.t7"),
-##'                varLabels = vl, longtable = TRUE)
+##'                varLabels = vl, longtable = TRUE, type = "latex")
+##' 
 ##' if (interactive()) testtable("fit1.t7", tempdir)
+##' # Change output format to csv
+##' cat(markupConvert(attr(fit1.t7, "markedResults"), type = "csv"))
 ##' 
 ##' ## 2 groups
 ##' fit1.g <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE, group = "school")
@@ -215,17 +217,16 @@
 ##'     columnLabels = c(est = "Est", se = "SE"), file = file.path(tempdir, "fit1.2.2"))
 ##' if (interactive()) testtable("fit1.2.2", tempdir)
 ##'
-##' fit1.t2 <- semTable(fit1, fits = c("chisq", "rmsea"))
+##' fit1.t2 <- semTable(fit1, fits = c("chisq", "rmsea"), print.results = FALSE)
 ##' cat(fit1.t2)
 ##' fit1.t3 <- semTable(fit1, fits = c("chisq", "rmsea", "tli"),
 ##'                columns = c("est", "se"))
-##' cat(fit1.t3)
-##' 
-##' ## Can create file if desired
+##'
+##' ## Can create file with cat
 ##' cat(fit1.t3, file = file.path(tempdir, "fit1.t3.tex"))
 ##' 
 ##' ## Basic SEM
-##' regmodel1 <- 'visual  =~ x1 + x2 + x3
+##' regmodel1 <- 'visual  =~ x1 + x2 + x3 
 ##'              textual =~ x4 + x5 + x6
 ##'              speed   =~ x7 + x8 + x9
 ##'              visual ~ textual + speed
@@ -241,19 +242,22 @@
 ##'                                    "Standardized" = c("estsestars")),
 ##'                    columnLabels = c("est" = "Est", "se" = "Std.Err.", "p" = "p",
 ##'                                     "estsestars" = "Standardized Est."),
-##'                    paramSets = c("loadings", "slopes", "latentcovariances"),
-##'                    file = file.path(tempdir, "fit2.t1"), type = c("latex", "csv"))
-##' 
-##' cat(fit2.t[["latex"]])
-##' cat(fit2.t[["csv"]])
+##'                    paramSets = c("loadings", "intercepts", "slopes", "latentcovariances"),
+##'                    file = file.path(tempdir, "fit2.t1"), type = "latex")
+##'
+##' if (interactive()) testtable("fit2.t1", tempdir)
+##'
+##' # Change output format to csv
+##' cat(markupConvert(attr(fit2.t, "markedResults"), type = "csv"))
+##' cat(markupConvert(attr(fit2.t, "markedResults"), type = "html"))
 ##' 
 ##' fit2.t <- semTable(list("Ordinary" = fit2, "Standardized" = fit2.std),
-##'               type = c("html", "latex"),
+##'               type = c("html"),
 ##'               file = file.path(tempdir, "fit2.t"),
-##'               varLabels = c(x1 = "happy 1", x2 = "happy 2", x3 = "happy 3"))
+##'               varLabels = c(x1 = "happy 1", x2 = "happy 2", x3 = "happy 3"),
+##'               print.results = FALSE)
 ##'
 ##' if (interactive()) browseURL(file.path(tempdir, "fit2.t.html"))
-##' if (interactive()) testtable("fit2.t", tempdir)
 ##'
 ##' 
 ##' regmodel2 <- 'visual  =~ x1 + x2 + x3
@@ -264,41 +268,36 @@
 ##' fit3 <- sem(regmodel2, data = HolzingerSwineford1939, std.lv = TRUE,
 ##'             meanstructure = TRUE)
 ##'
-##' fit3.t1 <-  semTable(fit3, type = c("latex", "html", "csv"),
+##' fit3.t1 <-  semTable(fit3, type = c("latex"),
 ##'                      columns = c("estsestars", "rsquare"), 
-##'                      file = file.path(tempdir, "fit3.1"))
+##'                      file = file.path(tempdir, "fit3.1"),
+##'                      print.results = FALSE)
 ##' 
-##' cat(fit3.t1[["latex"]])
+##' cat(fit3.t1)
 ##' if (interactive()) testtable("fit3.1", tempdir)
 ##'
 ##' fit3.std <- update(fit2, std.lv = TRUE, std.ov = TRUE)
 ##'
 ##' fit3.std.t1 <- semTable(list("Mod 1" = fit2, "Mod 1 std" = fit2.std, "Mod 2" = fit3,
-##'               "Mod 3 std" = fit3.std), columns = c("estsestars"), type = c("html"),
-##'                file = file.path(tempdir, "fit3.std.t1"))
-##' cat(fit3.std.t1)
+##'               "Mod 3 std" = fit3.std), columns = c("estsestars"), type = "html",
+##'                file = file.path(tempdir, "fit3.std.t1"), print.results = FALSE)
 ##' if(interactive()) browseURL(file.path(tempdir, "fit3.std.t1.html"))
 ##'
 ##' fit3 <- sem(regmodel1, data = HolzingerSwineford1939, group = "school")
 ##' ## if specify 2 types, get a list of them back
-##' fit3.t1 <- semTable(fit3, type = c("latex", "html"))
-##' cat(fit3.t1[["latex"]])
-##' cat(fit3.t1[["html"]])
+##' fit3.t1 <- semTable(fit3, type = "latex")
 ##' fit3.t2 <- semTable(fit3, columns = c("est", "se"),
 ##'                      columnLabels = c(est = "Est.", se = "S.E."))
-##' cat(fit3.t2)
 ##'
-##' fit3.t2 <- semTable(fit3, fits = c("chisq", "rmsea", "cfi"))
+##' fit3.t2 <- semTable(fit3, fits = c("chisq", "rmsea", "cfi"), print.results = FALSE)
 ##' cat(fit3.t2)
 ##'
 ##' fit3.t2 <- semTable(fit3, columns = c("estsestars"),
 ##'             fits = c("chisq", "rmsea", "cfi"), type = "html",
 ##'             file = file.path(tempdir, "fit3.t2"))
-##' cat(fit3.t2)
 ##' if(interactive()) browseURL(file.path(tempdir, "fit3.t2.html"))
 ##'  
 ##' fit3.t2 <- semTable(fit3, fits = c("rmsea", "cfi"))
-##' cat(fit3.t2)
 ##' 
 ##' model <- "factor =~ .7*y1 + .7*y2 + .7*y3 + .7*y4
 ##'                  y1 | -1*t1 + 1*t2
@@ -348,21 +347,26 @@
 ##' fit5 <- sem(model5, data=PoliticalDemocracy)
 ##' fit5boot <- sem(model5, data=PoliticalDemocracy, se = "bootstrap", bootstrap = 100)
 ##' 
-##' semTable(list("Democracy" = fit5), columns = c("estsestars", "rsquare"),
-##'            file = file.path(tempdir, "fit5.1"), type = c("html", "latex"))
-##' if(interactive()) browseURL(file.path(tempdir, "fit5.1.html"))
+##' fit5.t1 <- semTable(list("Democracy" = fit5), columns = c("estsestars", "rsquare"),
+##'            file = file.path(tempdir, "fit5.1t"), type = "html",
+##'            print.results = FALSE)
+##' if(interactive()) browseURL(file.path(tempdir, "fit5.t1.html"))
+##'
+##' ## convert same object to LaTeX, save file, then test
+##' cat(markupConvert(attr(fit5.t1, "markedResults"), type = "latex"),
+##'          file = file.path(tempdir, "fit5.t1.tex"))
+##' if (interactive()) testtable("fit5.t1", tempdir)
 ##' 
 ##' semTable(list("Democracy" = fit5, "Bootstrapped SE" = fit5boot),
 ##'          columns = c("estsestars", "rsquare"),
-##'          file = file.path(tempdir, "fit5.2"), type = c("latex", "html", "csv"),
+##'          file = file.path(tempdir, "fit5.2"), type = "latex",
 ##'          longtable = TRUE)
 ##' 
 ##' semTable(list("Democracy" = fit5, "Bootstrapped SE" = fit5boot),
 ##'          columns = c("estsestars", "rsquare"),
 ##'          paramSets = c("loadings", "slopes", "residualvariances", "constructed"),
-##'          file = file.path(tempdir, "fit5.3"), type = c("latex", "html", "csv"),
+##'          file = file.path(tempdir, "fit5.3"), type = "latex",
 ##'          longtable = TRUE)
-##' if(interactive()) browseURL(file.path(tempdir, "fit5.3.html"))
 ##'
 ##' ## Model 5b - Revision of Model 5s
 ##' model5b <-
@@ -388,9 +392,9 @@
 ##' semTable(list("Model 5" = fit5boot, "Model 5b" = fit5b),
 ##'          columns = c("estsestars", "rsquare"),
 ##'          file = file.path(tempdir, "fit5.5"),
-##'           type = c("latex", "html", "csv"),
+##'           type = "latex",
 ##'          longtable = TRUE)
-##' testtable("fit5.5", tempdir)
+##' if(interactive()) testtable("fit5.5", tempdir)
 ##' 
 ##' list.files(tempdir)
 ##' }
@@ -400,7 +404,7 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                      fitLabels = toupper(fits), varLabels = NULL,
                      groups = NULL, type = "latex", table.float = FALSE,
                      caption = NULL, label = NULL, longtable = FALSE,
-                     alpha =  c(0.05, 0.01, 0.001)) {
+                     print.results = TRUE, alpha =  c(0.05, 0.01, 0.001)) {
     ## do.call(rbind, alist) unexpectedly converts characters to factors.
     ## it does not accept stringsAsFactors=FALSE,
     ## So set globally to avoid hassle
@@ -590,17 +594,17 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
         parameters
     }
 
-    ## The trows objects have an attribute "title" and this
+    ## The trows objects have an attribute "blocktitle" and this
     ## formats that
-    applyTitleMarkup <- function(title){
+    applyTitleMarkup <- function(blocktitle){
         header  <- "_BR_"
         ## Tricky business b/c row markup does not call for _BOC_ in column 1,
         ## that's provided by "_BR_".
-        header <- paste0(header, gsub("_CONTENT_", title$title, title$markup), "_EOR_")
+        header <- paste0(header, gsub("_CONTENT_", blocktitle$content, blocktitle$markup), "_EOR_")
         header
     }
     
-    makeSubtableTitle <- function(title, colnum = 1, width = 1, center = TRUE, underline = TRUE){
+    makeSubtableTitle <- function(blocktitle, colnum = 1, width = 1, center = TRUE, underline = TRUE){
         colalign <- if(center) "_BOMC" else "_BOML"
         ## Need a separator if colnum > 1. This is ripple effect of removing & from _BOMC_ definition.
         ## Because we assume it is always BOMC, now must add _BOC_ before _BOMC_
@@ -610,8 +614,9 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                   } else {
                       paste0(prefix, colalign, width, "__CONTENT__EOMC_")
                   }
-        title <- list(title = title, markup = markup,
-                      colnum = colnum, width = width)
+        blocktitle <- list(content = blocktitle, markup = markup,
+                           colnum = colnum, width = width)
+        blocktitle
     }
 
     ##works for paramSets = "loadings" or "slopes"
@@ -628,7 +633,6 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
             ## drop gotcha, if x has one row from df now it is a list.
             if(class(x)[1] == "list") x <- as.data.frame(x)
             vname <- unique(x$lhs)
-            ##if(paramType == "slopes") browser()
             rownames(x) <- paste(paramType, vname, x[ , "rhs"], sep = ".")
             xlabels <- replace(x$rhs, names(varLabels), varLabels)
             ## 20180509: Get rid of underscores in var names, no matter what
@@ -636,11 +640,11 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
             x <- data.frame(col1 = xlabels,  x[ , report, drop = FALSE])
             ## don't put "_BOC_" at beginning if in colnum 1
             ## 20180327: use varLabels for factor names too
-            attr(x, "title") <- makeSubtableTitle(replace(vname, names(varLabels), varLabels),
-                                                  colnum = 1,
-                                                  width = 1,
-                                                  center = FALSE,
-                                                  underline = TRUE)
+            attr(x, "blocktitle") <- makeSubtableTitle(replace(vname, names(varLabels), varLabels),
+                                                       colnum = 1,
+                                                       width = 1,
+                                                       center = FALSE,
+                                                       underline = TRUE)
             class(x) <- c("trows", class(x))
             x
         })
@@ -690,7 +694,7 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
             rownames(trows) <- paste(paramType, trows[ , "lhs"], sep = ".")
         }
         trows <- data.frame(col1 = trows$col1, trows[ , report, drop = FALSE])
-        attr(trows, "title") <- makeSubtableTitle(paramSetLabels[paramType],
+        attr(trows, "blocktitle") <- makeSubtableTitle(paramSetLabels[paramType],
                                                   colnum = 2,
                                                   width = totalNcolumns,
                                                   underline = TRUE)
@@ -722,12 +726,20 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
         newdf
     }
 
+
+    ## 20180513: handle markup of paraset lists for loading and slopes
+    markupList <- function(alist) {
+        header <- applyTitleMarkup(attr(alist, "blocktitle"))
+        #trowsf <- trows[ , c("col1", report)]
+        res <- vapply(alist, markupTable, character(1))
+        res2 <- paste(header, paste(res, collapse = " "))
+        return(res2)
+    } 
           
     ## A trows object is a matrix, this inserts formatting markup.
-    ## trows also has attribute "title", which is used to create
+    ## trows also has attribute "blocktitle", which is used to create
     ## row 1 in the markup result
     markupTable <- function(trows) {
-        #trowsf <- trows[ , c("col1", report)]
         trowsf <- trows
         for(i in 1:(NCOL(trowsf) -1)){
             trowsf[ , i] <- paste0(trowsf[ , i], "_EOC__BOC_")
@@ -735,10 +747,10 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
         trowsf[ , 1] <- paste0("_BR_", trowsf[, 1])
         trowsf[ , NCOL(trowsf)] <- paste0(trowsf[ , NCOL(trowsf)], "_EOC__EOR_")
         res <- paste0(apply(trowsf, 1, paste, collapse = ""), collapse = "\n")
-        ## TODO 20171028 CAUTION: workaround here b/c title info sometimes missing, must
+        ## TODO 20171028 CAUTION: workaround here b/c blocktitle info sometimes missing, must
         ## go back find why it is missing
-        if (!is.null(attr(trows, "title"))){
-            header <- applyTitleMarkup(attr(trows, "title"))
+        if (!is.null(attr(trows, "blocktitle"))){
+            header <- applyTitleMarkup(attr(trows, "blocktitle"))
             res <- paste0(header, "\n", res, "\n")
         }
         return(res)
@@ -769,9 +781,9 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                 info <- loadingMaker(paramTableSplit[[jj]], paramType = jj,
                                      colLabels, modelName)
                 if (!is.null(info)){
-                    attr(info, "title") <- makeSubtableTitle(paramSetLabels["loadings"],
-                                                             colnum = 2,
-                                                             width = length(report))
+                    attr(info, "blocktitle") <- makeSubtableTitle(paramSetLabels["loadings"],
+                                                                  colnum = 2,
+                                                                  width = length(report))
                     class(info) <- c("trowsList", class(info))
                 }
                 reslt[[jj]] <- info
@@ -808,10 +820,10 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
             info["chisq", ] <- yy
         }
         
-        attr(info, "title") <- makeSubtableTitle(paramSetLabels["fits"],
-                                                 colnum = 2,
-                                                 width = totalNcolumns,
-                                                 underline = TRUE)
+        attr(info, "blocktitle") <- makeSubtableTitle(paramSetLabels["fits"],
+                                                      colnum = 2,
+                                                      width = totalNcolumns,
+                                                      underline = TRUE)
         
         class(info) <- c("trowsList", class(info))
         info
@@ -823,7 +835,7 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
     ## together side by side, with markup.
     ## If one table is NULL, replace with empty DF
     ## for others, expand rows to same size
-    buildParamSetSubtable <- function(tablList, colLabels){
+    cbindParamSet <- function(tablList, colLabels){
         ## xxx table unique rownames and col1 values, to find all possible vars
         xxx <- lapply(tablList, function(x) cbind(rownames = rownames(x),
                                                   col1 = x[ , "col1"]))
@@ -845,23 +857,24 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                 rownames(y) <- rownames(paramnames)
                 y[ , match("col1", colnames(y))] <- NULL
                 tablList[[jj]] <- y
-                if (is.null(attr(tablList, "title"))){
-                    attr(tablList, "title") <- attr(tablList[[jj]], "title")
+                if (is.null(attr(tablList, "blocktitle"))){
+                    attr(tablList, "blocktitle") <- attr(tablList[[jj]], "blocktitle")
                 }
             }
         }
-        ## that has a title attribute
+        ## that has a blocktitle attribute
         tablMatrix <- do.call(cbind,  tablList)
         tablMatrix <- cbind("col1" = paramnames[ , "col1"], tablMatrix)
         tablMatrix[is.na(tablMatrix)] <- ""
-        attr(tablMatrix, "title") <- attr(tablList, "title")
-        markupTable(tablMatrix)
+        attr(tablMatrix, "blocktitle") <- attr(tablList, "blocktitle")
+        tablMatrix
     }
 
-
-    ## take paramList from environment, then iterate through the sections
-    ## and impose markup needed.
-    finalizeMarkup <- function(paramSetNames, colLabels){
+    ###########
+    ## 20180513
+    ## Creates a list of tables, not applying markup yet
+    ## trying to postpone markup application. 
+    gatherParamSetsList <- function(paramSetNames, colLabels){
         colNameCounts <- lapply(colLabels, length)
         colHeaderRow <- unname(unlist(colLabels))
         totalNcolumns <- min(9,  length(colHeaderRow))## If more than 9, give up at centering
@@ -877,22 +890,42 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                 hh <- list()
                 for(i in varnames) {
                     subList <- lapply(tablList, function(x) x[[i]])
-                    hh[[i]] <- buildParamSetSubtable(subList, colLabels)
+                    hh[[i]] <- cbindParamSet(subList, colLabels)
                 }
-                res <- paste0(hh, collapse = " ")
+                ##res <- paste0(hh, collapse = " ")
                 ## Improvise a section heading for loadings and slopes
-                title <- makeSubtableTitle(paramSetLabels[jj], colnum = 2,
+                blocktitle <- makeSubtableTitle(paramSetLabels[jj], colnum = 2,
                                            width = totalNcolumns, underline = TRUE)
-                header <- applyTitleMarkup(title)
-                res <- paste0(header, res)
+                ## qqq header <- applyTitleMarkup(blocktitle)
+                ## qqq res <- paste0(header, res)
+                attr(hh, "blocktitle") <- blocktitle
+                return(hh)
             } else {
-                res <- buildParamSetSubtable(tablList, colLabels)
+                hh <- cbindParamSet(tablList, colLabels)
+                return(hh)
             }
-            res
+            stop("semTable: bug in buildSubtableForParamSet. Please report")
         }
         
         results <- lapply(paramSetNames, buildSubtableForParamSet)
-        results2 <- paste(results, collapse = "")
+        results
+    }
+    
+    ############
+    ## take paramList from environment, then iterate through the sections
+    ## and impose markup needed.
+    finalizeMarkup <- function(paramSetsList, colLabels) {
+        colNameCounts <- lapply(colLabels, length)
+        colHeaderRow <- unname(unlist(colLabels))
+        totalNcolumns <- min(9,  length(colHeaderRow))## If more than 9, give up at centering
+          
+        results2 <- lapply(paramSetsList, function(x) if(class(x)[1] == "data.frame"){
+                                                          markupTable(x)}
+                                                      else {
+                                                          markupList(x)
+                                                          })
+        results2 <- paste(results2, collapse = "")
+        
         colHeaderRow <- paste("_BR__EOC__BOC_", paste(colHeaderRow, collapse = "_EOC__BOC_"), "_EOC__EOR_\n _HL_\n")
         modelHeaderRow <- paste0("_BR__EOC__BOC_",
                                  paste0("_BOMC", colNameCounts, "_", names(colNameCounts), "_EOMC_", collapse = "_BOC_"),
@@ -906,7 +939,8 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                                if(starnote != "") paste0("_BOML", totalNcolumns, "_", starnote, "_EOMC__EOR__LB_"))
                                
         resmark <- paste("_BTABULAR_\n", modelHeaderRow, colHeaderRow, results2, "_HL__LB_",
-                         tablesuffix, "_ETABULAR__LB_")
+                         tablesuffix, "_ETABULAR__LB_\n")
+        attr(resmark, "colLabels") <- colLabels
         resmark
     }
 
@@ -1103,30 +1137,39 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
         }
     }
 
+    ## This is a marker that will turn TRUE if the table needs FIXED param label
     FIXED <- FALSE
     paramSetsFound <- unique(unlist(lapply(paramList, function(x) names(x))))
     ## re-order paramSetsFound according to standard list
     paramSetNames <- intersect(names(paramSetLabels), paramSetsFound)
-  
-    markedResults <- finalizeMarkup(paramSetNames, colLabels)
+
+    paramSetsList <- gatherParamSetsList(paramSetNames, colLabels)
+    markedResults <- finalizeMarkup(paramSetsList, colLabels)
     
-    result <- markupConvert(markedResults, type = type,longtable = longtable,
+    result <- markupConvert(markedResults, type = type, longtable = longtable,
                             table.float = table.float,
                             caption = caption, label = label, file = file,
                             columns = colLabels)
     attr(result, "markedResults") <- markedResults
-    result
+        
+    if (print.results) cat(result, "\n")
+    invisible(result)
 }
 NULL
 
 
 
-##' Convert marked-up characters to latex, html, or csv
+##' Convert marked-up semTable structures to latex, html, or csv
 ##'
-##' The conversion key tables are included in the code of the function
+##' The conversion key tables are included in the code of the function.
+##'
+##' The semTable uses a customized markup framework that uses character
+##' sequences that begin and end with underscores, such as "_BOMC2_ for
+##' "begin of multi-column entity that will use 2 columns". These
+##' special markups need to be converted into "tex", "html", or "csv"
+##' formats.
 ##' @param marked A character string
-##' @param type Output type, can be a vector or any one of "latex",
-##'     "html", and "csv".
+##' @param type Output type, latex", "html", or "csv".
 ##' @param table.float TRUE if you want insertion of '\\begin{table}'
 ##' @param longtable should a tabular or a longtable object be created?
 ##' @param caption A caption to use if either longtable or table is TRUE
@@ -1134,12 +1177,14 @@ NULL
 ##' @param file A file stub, to which ".tex", ".html", or ".csv" can be added
 ##' @param columns For SEM table, the list of columns objects
 ##' @return a list of marked up character objects
+##' @export
 ##' @author Paul Johnson
 markupConvert <- function(marked, type = c("latex", "html", "csv"),
                           table.float = FALSE, longtable = FALSE,
                           caption = NULL, label = NULL, 
                           file = NULL, columns)
 {
+    if(missing(columns)) columns <- attr(marked, "colLabels")
     ##num of columns, except for col1
     Ncolumns <- length(unname(unlist(columns)))
 
@@ -1344,35 +1389,26 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         "_STAR3_" = "**"
     )
 
-    result <- list()
-    if (!is.na(match("latex", type))) {
-        latexmarkup <- mgsub(names(latexreplace), latexreplace, marked)
+    if (tolower(type) %in% c("latex", "tex")) {
+        result <- mgsub(names(latexreplace), latexreplace, marked)
         if (!is.null(file)){
-            cat(latexmarkup, file = paste0(file, ".tex"))
+            cat(result, file = paste0(file, ".tex"))
         }
-        result[["latex"]] <- latexmarkup
-    }
-
-    if (!is.na(match("html", type))) {
-        htmlmarkup <- mgsub(names(htmlreplace), htmlreplace, marked)
-         if (!is.null(file)){
-             cat(htmlmarkup, file = paste0(file, ".html"))
-         }
-         result[["html"]] <- htmlmarkup
-    }
-
-    if (!is.na(match("csv", type))) {
-        csvmarkup <- mgsub(names(csvreplace), csvreplace, marked)
+    } else if (tolower(type) %in% c("html")){
+        result <- mgsub(names(htmlreplace), htmlreplace, marked)
         if (!is.null(file)){
-            cat(csvmarkup, file = paste0(file, ".csv"))
+            cat(result, file = paste0(file, ".html"))
         }
-        result[["csv"]] <- csvmarkup
+    } else if (!is.na(match("csv", type))) {
+        result <- mgsub(names(csvreplace), csvreplace, marked)
+        if (!is.null(file)){
+            cat(result, file = paste0(file, ".csv"))
+        }
+    } else {
+        MESSG <- "convertMarkup type argument incorrect"
+        stop(MESSG)
     }
-
-    if(length(type) == 1){
-        return(result[[1]])
-    }
-    result
+    return(result)
 }
 NULL
 
