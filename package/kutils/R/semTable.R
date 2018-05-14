@@ -1442,10 +1442,15 @@ NULL
 testtable <- function(tablefile, dir, tmpfn = "tmp.tex"){
     wd.orig <- getwd()
     isWindoze <- if(Sys.info()[['sysname']] == "Windows") TRUE else FALSE
+    type <- if(isWindoze) "cmd" else "sh"
     mynull <-  if(isWindoze) "> nul" else " > /dev/null"
-      
-    x1 <- "
-\\documentclass[english]{article}
+
+    ## If user forgets to remove .tex on end of filename, do it
+    ## for them
+    tablefile <- gsub("\\.tex", "", tablefile)
+    
+    x1 <- 
+"\\documentclass[english]{article}
 \\usepackage[T1]{fontenc}
 \\usepackage[utf8]{inputenc}
 \\usepackage{geometry}
@@ -1460,17 +1465,33 @@ testtable <- function(tablefile, dir, tmpfn = "tmp.tex"){
     x3 <- "\\end{document}\n"
 
     cat(x1, x2, x3, file = file.path(dir, tmpfn))
-    cmd <- paste("cd", dir, ";", "pdflatex", tmpfn, " && pdflatex", tmpfn)
-    
+    cmd <- paste("pdflatex -interaction=batchmode ",
+                 shQuote(tmpfn, type),
+                 " && pdflatex -interaction=batchmode ",
+                 shQuote(tmpfn, type))
+    wd.orig <- getwd()
+    setwd(dir)
+    on.exit(setwd(wd.orig))
+    resltfn <- file.path(dir, gsub(".tex", ".pdf", tmpfn))
     if (isWindoze){
         out1 <- tryCatch(shell(cmd, intern = TRUE))
-        MESSG <- paste("Please open this file:",
-                       file.path(dir, gsub(".tex", ".pdf", tmpfn)))
-        print(MESSG)
+        if(file.exists(resltfn)){
+            MESSG <- paste("Please open this file:", resltfn)
+            print(MESSG)
+        } else {
+            MESSG <- paste("pdflatex failed to compile a test document including", tablefile)
+            stop(MESSG)
+        }
     } else {
         out1 <- tryCatch(system(cmd, intern = TRUE))
-        cmd2 <- paste("xdg-open", file.path(dir, gsub(".tex", ".pdf", tmpfn)))
-        out2 <- tryCatch(system(cmd2, intern = TRUE))
+        if(file.exists(resltfn)){
+            cmd2 <- paste("xdg-open", resltfn)
+            out2 <- tryCatch(system(cmd2, intern = TRUE))
+        } else {
+            MESSG <- paste("pdflatex failed to compile a test document including", tablefile)
+            stop(MESSG)
+        }
     }
-    invisible(out1)
+  
+    invisible(resltfn)
 }
