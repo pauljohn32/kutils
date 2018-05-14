@@ -1452,6 +1452,7 @@ testtable <- function(tablefile, dir, tmpfn = "tmp.tex"){
 \\geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
 \\usepackage{babel}
 \\usepackage{longtable}
+\\usepackage[normalem]{ulem}
 \\begin{document}
 "
     x2 <- paste0("\\include{", tablefile, "}\n")
