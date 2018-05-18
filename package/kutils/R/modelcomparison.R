@@ -306,6 +306,7 @@ compareLavaan <- function(models,
             if(!is.null(print.xtable.args$file)) {
                 cat(texcode, file = print.xtable.args$file)
             }
+            if(print.results) cat(texcode)
             return(invisible(texcode))
         } else {
             print.xtable.argz <- list(type = "html",
@@ -325,6 +326,7 @@ compareLavaan <- function(models,
             if(!is.null(print.xtable.args$file)) {
                 cat(htmlcode, file = print.xtable.args$file)
             }
+            if(print.results) cat(texcode)
             return(invisible(htmlcode))
         }
     }
