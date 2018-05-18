@@ -1151,8 +1151,9 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                             caption = caption, label = label, file = file,
                             columns = colLabels)
     attr(result, "markedResults") <- markedResults
-        
+    class(result) <- "kutable"    
     if (print.results) cat(result, "\n")
+    
     invisible(result)
 }
 NULL

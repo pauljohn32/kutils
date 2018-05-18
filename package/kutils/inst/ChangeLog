@@ -1,3 +1,14 @@
+2018-05-18  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/modelcomparison.R (print.kutable): class "kutable" created,
+	prevent unsightly output from compareLavaan and semTable.
+
+2018-05-13  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/semTable.R (testtable): -batchmode and escape file name
+	(semTable): redesign sequence to delay markup
+	application. Planning for plain text output, alternative output mechanism.
+
 2018-05-11  Paul Johnson  <pauljohn@delllap-16>
 
 	* ../R/variableKey.R (keyTemplateStata): New function, same

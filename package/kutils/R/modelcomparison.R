@@ -306,7 +306,7 @@ compareLavaan <- function(models,
             if(!is.null(print.xtable.args$file)) {
                 cat(texcode, file = print.xtable.args$file)
             }
-            if(print.results) cat(texcode)
+            class(texcode) <- "kutable"
             return(invisible(texcode))
         } else {
             print.xtable.argz <- list(type = "html",
@@ -326,7 +326,7 @@ compareLavaan <- function(models,
             if(!is.null(print.xtable.args$file)) {
                 cat(htmlcode, file = print.xtable.args$file)
             }
-            if(print.results) cat(texcode)
+            class(htmlcode) <- "kutable"
             return(invisible(htmlcode))
         }
     }
@@ -339,4 +339,13 @@ compareLavaan <- function(models,
 
 
 
-
+##' @method print kutable
+##' @export
+##' @param x   object to be printed
+##' @param ... optional arguments, corrently ignored
+##' @return x unchanged
+print.kutable <- function(x, ...){
+    if(is.character(x)) cat(x)
+    else print(x)
+    x
+}
