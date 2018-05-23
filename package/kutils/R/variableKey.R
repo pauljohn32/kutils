@@ -60,7 +60,7 @@ safeInteger <- function(x, tol = .Machine$double.eps,
         return(NULL)
     }
 
-    if(max(x, na.rm = TRUE) > vmax){
+    if(max(x, na.rm = TRUE) > vmax) {
         messg <- paste0("Values in x exceed the maximum integer value of ",
                         vmax, ". ", "safeInteger cannot be used safely ",
                         "for this variable. Original value is returned.")
@@ -1094,10 +1094,10 @@ NULL
 ##'     regular expressions in supplying separator values.
 ##' @param na.strings Values that should be converted to missing data.
 ##'     This is relevant in \code{name_new} as well as
-##'     \code{value_new}. In spreadsheet cells, we treat "empty"
-##'     cells, or values like "." or "N/A", as missing with defaults
-##'     ".", "", "\\s" (white space), and "N/A". Change that if those
-##'     are not to be treated as missings.
+##'     \code{value_new}. In spreadsheet cells, we treat "empty" cells
+##'     (the string ""), or values like "." or "N/A", as missing with
+##'     defaults ".", "", "\\s" (white space), and "N/A". Change that
+##'     if those are not to be treated as missings.
 ##' @param ... additional arguments for read.csv or read.xlsx.
 ##' @param keynames Don't use this unless you are very careful. In our
 ##'     current scheme, the column names in a key should be
@@ -1153,20 +1153,64 @@ keyImport <- function(key, ignoreCase = TRUE,
 
     legalClasses = c("integer", "numeric", "double", "factor",
                      "ordered", "character", "logical")
-    if(!is.null(keynames)){
-        keynames.std <- c(name_old = "name_old",
-                          name_new = "name_new",
-                          class_old = "class_old",
-                          class_new = "class_new",
-                          value_old = "value_old",
-                          value_new = "value_new",
-                          missings = "missings",
-                          recodes = "recodes")
-        keynames.std[names(keynames)] <- keynames
-        key <- colnamesReplace(key, newnames = names(keynames.std), oldnames = keynames.std)
-    }
-    ## TODO: omit blank rows
+    keynames.std <- c("name_old",
+                      "name_new",
+                      "class_old",
+                      "class_new",
+                      "value_old",
+                      "value_new",
+                      "missings",
+                      "recodes")
 
+    if(!is.null(keynames)){
+        ## User supplied keynames, so reverse their keynames
+        ## to put corrected names onto the  key
+        colnames(key) <- mapvalues(colnames(key), from = keynames,
+                                   to = names(keynames), warn_missing=FALSE)
+    }
+    ## Use partial matching to try to fix column names that editor
+    ## may have altered accidentally. 
+    ## If key does not include all of the expected
+    ## names, this uses partial matching to replace the existing
+    ## unrecognized names.
+    if (any(!keynames.std %in% colnames(key))) { 
+        key.oldnames <- colnames(key)
+        ## Filter out oldnames that don't pmatch, rm the NAs
+        key.oldnames.pmatches <- na.omit(key.oldnames[pmatch(key.oldnames, keynames.std)])
+        keynames.std.pmatches <- keynames.std[pmatch(key.oldnames.pmatches, keynames.std)]
+        colnames(key) <- mapvalues(colnames(key),
+                                   from = key.oldnames.pmatches,
+                                   to = keynames.std.pmatches)
+    }
+    ## Now, what to do if columns are missing?
+    ## if no "name_old" "class_old", "value_old", then quit
+    ## if "name_new", "class_new", "value_new" missing, then copy from old.
+    ## if "missings" and "recodes" are missing, create new full of ""
+    ## TODO: omit blank rows
+    cols.required <- c("name_old", "class_old", "value_old")
+    cols.copyable <- c("name_new", "class_new", "value_new")
+    cols.blankable <- c("missings", "recodes")
+    if(any(!cols.required %in% colnames(key))){
+        MESSG <- paste0("Key is missing columns: ",
+                 paste0(cols.required[!cols.required %in% colnames(key)], collapse = " "))
+        stop(MESSG)
+    }
+    if(any(!cols.copyable %in% colnames(key))){
+        cols.missing <- cols.copyable[!cols.copyable %in% colnames(key)]
+        for(i in cols.missing) {
+            j <- gsub("new$", "old", i)
+            key[ , i] <- key[ ,j]
+        }
+    }
+    if(any(!cols.blankable %in% colnames(key))){
+        cols.missing <- cols.blankable[!cols.blankable %in% colnames(key)]
+        for(i in cols.missing) {
+            key[ , i] <- ""
+        }
+    }
+
+    
+   
     uniquifyNameNew <- function(key, long = FALSE){
         ## wide key easy!
         if(!long){
