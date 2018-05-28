@@ -106,8 +106,7 @@
 ##'     for elements of the groups vector.
 ##' @param type Choose "latex", "html", or "csv"
 ##' @param file Base name for output file. This function will
-##'     insert suffix, either "tex", "html" and "csv". That is,
-##'     specify "mymodel," NOT  "mymodel.tex".
+##'     insert suffix, either "tex", "html" and "csv".
 ##' @param table.float If TRUE, create a LaTeX floating table object
 ##'     in which the tabular created here will reside. Default is
 ##'     FALSE.
@@ -1393,16 +1392,19 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
     if (tolower(type) %in% c("latex", "tex")) {
         result <- mgsub(names(latexreplace), latexreplace, marked)
         if (!is.null(file)){
-            cat(result, file = paste0(file, ".tex"))
+            if (!isTRUE(grepl(".tex$", file))) file <- paste0(file, ".tex")
+            cat(result, file)
         }
     } else if (tolower(type) %in% c("html")){
         result <- mgsub(names(htmlreplace), htmlreplace, marked)
         if (!is.null(file)){
+            if (!isTRUE(grepl(".html$", file))) file <- paste0(file, ".html")
             cat(result, file = paste0(file, ".html"))
         }
     } else if (!is.na(match("csv", type))) {
         result <- mgsub(names(csvreplace), csvreplace, marked)
         if (!is.null(file)){
+            if (!isTRUE(grepl(".csv$", file))) file <- paste0(file, ".csv")
             cat(result, file = paste0(file, ".csv"))
         }
     } else {
@@ -1448,7 +1450,7 @@ testtable <- function(tablefile, dir, tmpfn = "tmp.tex"){
 
     ## If user forgets to remove .tex on end of filename, do it
     ## for them
-    tablefile <- gsub("\\.tex", "", tablefile)
+    tablefile <- gsub("\\.tex$", "", tablefile)
     
     x1 <- 
 "\\documentclass[english]{article}
