@@ -144,10 +144,23 @@
 ##'               speed   =~ x7 + x8 + x9'
 ##' fit1 <- cfa(HS.model, data = HolzingerSwineford1939,
 ##'             std.lv = TRUE, meanstructure = TRUE)
-##' fit1.t1 <- semTable(fit1, columns = c("est", "estse"),
+##' ## Try a LaTeX file first
+##' fit1.t1 <- semTable(fit1, columns = c("estse", "p"),
 ##'                     fits = c("chisq", "rmsea"), file = file.path(tempdir, "fit1.t1"),
-##'                     varLabels = c("x1" = "hello"))
-##' if (interactive()) testtable("fit1.t1", tempdir)
+##'                     varLabels = c("x1" = "hello"), type = "latex", print.results = FALSE)
+##' ## If you have a working version of pdflatex in your system path, 
+##' if (interactive()) testtable("fit1.t1.tex", tempdir)
+##' fit1.t1 <- semTable(fit1, columns = c("estse", "p"),
+##'                     fits = c("chisq", "rmsea"), file = file.path(tempdir, "fit1.t1.html"),
+##'                     varLabels = c("x1" = "hello"), type = "html", print.results = FALSE)
+##' ## Use file attribute to get full file name
+##' browseURL(attr(fit1.t1, "file"))
+##' ## Try CSV output next
+##' fit1.t1 <- semTable(fit1, columns = c("estse", "p"),
+##'                     fits = c("chisq", "rmsea"), file = file.path(tempdir, "fit1.t1"),
+##'                     varLabels = c("x1" = "hello"), type = "csv", print.results = FALSE)
+##' ## Go inspect this file with a spread sheet program:
+##' attr(fit1.t1, "file")
 ##' ## Now demonstrate variable labels
 ##' vl <- c(visual = "Visual", textual = "Textual", speed = "Speed",
 ##'        x1 = "V1", x2 = "V2", x3 = "V3")
@@ -1141,17 +1154,17 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
     paramSetsFound <- unique(unlist(lapply(paramList, function(x) names(x))))
     ## re-order paramSetsFound according to standard list
     paramSetNames <- intersect(names(paramSetLabels), paramSetsFound)
-
+   
     paramSetsList <- gatherParamSetsList(paramSetNames, colLabels)
     markedResults <- finalizeMarkup(paramSetsList, colLabels)
-    
+  
     result <- markupConvert(markedResults, type = type, longtable = longtable,
-                            table.float = table.float,
-                            caption = caption, label = label, file = file,
+                            table.float = table.float, caption = caption, label = label, file = file,
                             columns = colLabels)
     attr(result, "markedResults") <- markedResults
+    attr(result, "unmarkedResults") <- paramSetsList
     class(result) <- "kutable"    
-    if (print.results) cat(result, "\n")
+    if (print.results) cat(result, "\n") else cat("\n")
     
     invisible(result)
 }
@@ -1287,7 +1300,7 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         "_BRT_" = paste("<tr><td style=\"border-top: solid thin black; border-collapse:collapse;\">&nbsp;"),
         "_BOCU_" = paste("<td style=\"border-bottom: solid thin black; border-collapse:collapse;\">&nbsp;"),
         "_BR_" = "<tr><td>",
-        "_BTABULAR_" =  "<table cellpadding=\"10\">\n",
+        "_BTABULAR_" =  "<table style=\"padding-right:20px;padding-left:20px;\">\n",
         "_EOL_" = "\n",
         "_HL_" =  "",
         "_UL_" =  "<span style=\"text-decoration: underline;\">",
@@ -1393,25 +1406,26 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         result <- mgsub(names(latexreplace), latexreplace, marked)
         if (!is.null(file)){
             if (!isTRUE(grepl(".tex$", file))) file <- paste0(file, ".tex")
-            cat(result, file)
+            cat(result, file = file)
         }
     } else if (tolower(type) %in% c("html")){
         result <- mgsub(names(htmlreplace), htmlreplace, marked)
         if (!is.null(file)){
             if (!isTRUE(grepl(".html$", file))) file <- paste0(file, ".html")
-            cat(result, file = paste0(file, ".html"))
+            cat(result, file = file)
         }
     } else if (!is.na(match("csv", type))) {
         result <- mgsub(names(csvreplace), csvreplace, marked)
         if (!is.null(file)){
             if (!isTRUE(grepl(".csv$", file))) file <- paste0(file, ".csv")
-            cat(result, file = paste0(file, ".csv"))
+            cat(result, file = file)
         }
     } else {
         MESSG <- "convertMarkup type argument incorrect"
         stop(MESSG)
     }
-    return(result)
+    attr(result, "file") <- file
+    invisible(result)
 }
 NULL
 
