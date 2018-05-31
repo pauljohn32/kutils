@@ -1982,7 +1982,7 @@ long2wide <- function(keylong, na.strings = c("\\.", "", "\\s+",  "N/A"),
             missings <- n2NA(unique(x$missings))
             missings <- if (all(is.na(missings))) "" else na.omit(missings)
         }
-        if(is.null(x$recodes) || all(is.na(d$recodes))) {
+        if(is.null(x$recodes) || all(is.na(x$recodes))) {
             recodes <- ""
         } else{
             recodes <- n2NA(unique(x$recodes))
