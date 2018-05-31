@@ -1976,10 +1976,18 @@ long2wide <- function(keylong, na.strings = c("\\.", "", "\\s+",  "N/A"),
         sep_old <- if(unique(x$class_old) == "ordered") "<" else "|"
         sep_new <- if(unique(x$class_new) == "ordered") "<" else "|"
         ## Replace "" with NA, then get rid of NAs
-        missings <- n2NA(unique(x$missings))
-        missings <- na.omit(missings)
-        recodes <- n2NA(unique(x$recodes))
-        recodes <- na.omit(recodes)
+        if(is.null(x$missings) || all(is.na(x$missings))){
+            missings <- ""
+        } else {
+            missings <- n2NA(unique(x$missings))
+            missings <- if (all(is.na(missings))) "" else na.omit(missings)
+        }
+        if(is.null(x$recodes) || all(is.na(d$recodes))) {
+            recodes <- ""
+        } else{
+            recodes <- n2NA(unique(x$recodes))
+            recodes <- if (all(is.na(recodes))) "" else na.omit(recodes)
+        }
         values <- cbind(value_old = x$value_old, value_new = x$value_new)
         values <- unique(values)
         values <- sortStanza(values)
