@@ -343,7 +343,7 @@ getFiles(texfiles, pkg = "stationery")
 \end_layout
 
 \begin_layout Title
-The Variable Key Overview
+The Variable Key
 \begin_inset Argument 1
 status open
 
@@ -550,6 +550,10 @@ vb for bold upright math for matrices
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -564,32 +568,7 @@ begin{frame}
 
 
 \backslash
-frametitle{About CRMDA}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout ColumnsTopAligned
-
-\end_layout
-
-\begin_deeper
-\begin_layout Column
-6cm
-\end_layout
-
-\begin_layout Standard
-
-\size larger
-\begin_inset Flex URL
-status open
-
-\begin_layout Plain Layout
-
-http://crmda.ku.edu
+frametitle{About CRMDA (http://crmda.ku.edu})}
 \end_layout
 
 \end_inset
@@ -602,26 +581,7 @@ Research project planning & support
 \end_layout
 
 \begin_layout Itemize
-Data/stat consulting (fee for service)
-\end_layout
-
-\begin_layout Itemize
-\begin_inset CommandInset href
-LatexCommand href
-name "Summer Statistical Institute"
-target "http://crmda.ku.edu/statscamp"
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Itemize
-Software Carpentry-ish workshops, training for Git, shell, LaTeX, stat packs
-\end_layout
-
-\begin_layout Column
-6cm
+Software workshops, R, Mplus, Git, shell, LaTeX, stat pack
 \end_layout
 
 \begin_layout Itemize
@@ -629,11 +589,7 @@ High performance computing access point
 \end_layout
 
 \begin_layout Itemize
-R package development for various purposes
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
+My R packages (
 \begin_inset Flex Code
 status open
 
@@ -643,36 +599,7 @@ rockchalk
 
 \end_inset
 
-: regression plots & tables
-\end_layout
-
-\begin_layout Itemize
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-portableParallelSeeds
-\end_layout
-
-\end_inset
-
-: HPC random stream manager
-\end_layout
-
-\begin_layout Itemize
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-kutils
-\end_layout
-
-\end_inset
-
-: data structuring strategies
-\end_layout
-
-\begin_layout Itemize
+: regression plots & tables, 
 \begin_inset Flex Code
 status open
 
@@ -682,12 +609,20 @@ stationery
 
 \end_inset
 
-: Sweave, Markdown templates & compiler
+: Reproducible document skeletons with templates, 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+kutils
 \end_layout
 
-\end_deeper
-\end_deeper
-\begin_layout Standard
+\end_inset
+
+: data management strategies)
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -703,6 +638,11 @@ end{frame}
 
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
 \begin_layout Standard
 \begin_inset ERT
 status open
@@ -718,7 +658,9 @@ begin{frame}
 
 
 \backslash
-frametitle{The kutils package for R}
+frametitle{This talk is about $
+\backslash
+ldots$}
 \end_layout
 
 \end_inset
@@ -727,7 +669,14 @@ frametitle{The kutils package for R}
 \end_layout
 
 \begin_layout Itemize
-kutils 
+The kutils package for R 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "RCore"
+
+\end_inset
+
+
 \end_layout
 
 \begin_deeper
@@ -807,14 +756,18 @@ frametitle{Clients, Data Managers and Data Analysts}
 \end_layout
 
 \begin_layout Itemize
-Clients give us rectangular data structures
+Clients give us data structures
 \end_layout
 
-\begin_deeper
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
 \begin_layout Itemize
 Qualtrics (or similar) output, csv, Excel sheets
 \end_layout
 
+\begin_deeper
 \begin_layout Itemize
 Data sets from SPSS, Stata, etc
 \end_layout
@@ -824,33 +777,42 @@ Large surveys distributed by NORC, ICPSR, etc
 \end_layout
 
 \end_deeper
+\end_inset
+
+
+\end_layout
+
 \begin_layout Itemize
 Perhaps there are
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
-many files and 
+many files, various variable names in different files
 \end_layout
 
 \begin_layout Itemize
-desire to 
+data entry errors that need to be corrected
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Data Analysts 
 \begin_inset Quotes eld
 \end_inset
 
-normalize
+fall in a hole
 \begin_inset Quotes erd
 \end_inset
 
- and integrate them (if lucky, 
-\begin_inset Quotes eld
-\end_inset
+.
+ 
+\end_layout
 
-crosswalk file
-\begin_inset Quotes erd
-\end_inset
-
- exists)
+\begin_deeper
+\begin_layout Itemize
+They think they make something that works, but it is difficult to be entirely
+ confident 
 \end_layout
 
 \end_deeper
@@ -871,6 +833,10 @@ end{frame}
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -929,7 +895,7 @@ When we notice something peculiar in the report, we go digging in the archives
  What do we find?
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -938,6 +904,11 @@ status open
 
 \backslash
 end{frame}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -960,7 +931,7 @@ begin{frame}[containsverbatim, allowframebreaks]
 
 
 \backslash
-frametitle{Example 1}
+frametitle{After a few days, they have 1000 lines of code like this}
 \end_layout
 
 \end_inset
@@ -970,509 +941,9 @@ frametitle{Example 1}
 
 \begin_layout Standard
 \begin_inset listings
+lstparams "basicstyle={\scriptsize}"
 inline false
 status open
-
-\begin_layout Plain Layout
-
-## Read in raw data files in .dat format
-\end_layout
-
-\begin_layout Plain Layout
-
-w6 <- read.table("w6.dat", header = TRUE)
-\end_layout
-
-\begin_layout Plain Layout
-
-w7 <- read.table("w7.dat", header = TRUE)
-\end_layout
-
-\begin_layout Plain Layout
-
-w8 <- read.table("w8.dat", header = TRUE)
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-##     Merging Data     ##
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-## Create variable names for merged dataset
-\end_layout
-
-\begin_layout Plain Layout
-
-mnames <- c("distid", "wave", "region", "province", "district", "sec1",
- "sec2", "sec3", "sec4", "sec5","trn1", "trn2", "trn3", "trn4", "crp1",
- "crp2", "crp3", "crp4", "crp5","pgv1", "pgv2", "pgv3", "pgv4", "pgv5","dgv1",
- "dgv2", "dgv3", "dgv4", "dgv5", "dgv6", "rec1", "rec2")
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-## Wave 6 data management
-\end_layout
-
-\begin_layout Plain Layout
-
-w6$wave <- 6
-\end_layout
-
-\begin_layout Plain Layout
-
-w6$fill <- NA
-\end_layout
-
-\begin_layout Plain Layout
-
-w6vars <- c("dist", "wave", "m4b", "m7", "m5", "q1", "q2", "q3", "q9", "q30",
- "q12", "q14", "q20", "q26", "q13", "q21", "q35e", "q36e", "q63", "q35a",
- "q41a", "q41b", "q41c", "q41d", "q36a", "q43a", "q43b","q43c", "q43d",
- "q47c", "q10", "q73")
-\end_layout
-
-\begin_layout Plain Layout
-
-w6 <- w6[w6vars]
-\end_layout
-
-\begin_layout Plain Layout
-
-colnames(w6) <- mnames
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-## Wave 7 data management
-\end_layout
-
-\begin_layout Plain Layout
-
-w7$wave <- 7
-\end_layout
-
-\begin_layout Plain Layout
-
-w7$fill <- NA
-\end_layout
-
-\begin_layout Plain Layout
-
-w7vars <- c("dist", "wave", "m4b", "m7", "m5","q1", "q2", "q3", "q9", "TB_Strngt
-h", "q11", "q12", "q15", "q17", "fill", "q16", "q27e", "q28e", "q60", "Prov_Gvnr
-_Perf", "q34a", "q34b", "q34c", "q35", "Dist_Gvnr_Perf", "q37a", "q37b",
- "q37c", "q38", "q44c", "q10", "q72")
-\end_layout
-
-\begin_layout Plain Layout
-
-w7 <- w7[w7vars]
-\end_layout
-
-\begin_layout Plain Layout
-
-colnames(w7) <- mnames
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-## Wave 8 data management
-\end_layout
-
-\begin_layout Plain Layout
-
-w8$wave <- 8
-\end_layout
-
-\begin_layout Plain Layout
-
-w8$fill <- NA
-\end_layout
-
-\begin_layout Plain Layout
-
-w8vars <- c("dist", "wave", "m4b", "m7", "m5","q1", "q2", "q3", "q5", "TB_Strngt
-h", "q13", "q15", "q18", "q20", "q14", "q19", "q37e", "q38e", "q64", "Prov_Gvnr_
-Perf","q43a", "q43b", "q43c", "q44", "Dist_Gvnr_Perf", "fill", "fill","fill",
- "fill", "fill", "q7", "q76")
-\end_layout
-
-\begin_layout Plain Layout
-
-w8 <- w8[w8vars]
-\end_layout
-
-\begin_layout Plain Layout
-
-colnames(w8) <- mnames
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-## Merge datasets
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata <- rbind(w6, w7, w8)
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata[mdata == -999] <- NA
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-##------------------##
-\end_layout
-
-\begin_layout Plain Layout
-
-##     Recoding     ##
-\end_layout
-
-\begin_layout Plain Layout
-
-##------------------##
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-## "sec1"
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$sec1[mdata$sec1 == 100] <- 1
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$sec1[mdata$sec1 == 101] <- 2
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$sec1[mdata$sec1 == 102] <- 3
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$sec1[mdata$sec1 > 3] <- NA
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-## "sec2"
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$sec2[mdata$sec2 == 100] <- 1
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$sec2[mdata$sec2 == 101] <- 2
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$sec2[mdata$sec2 == 102] <- 3
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$sec2[mdata$sec2 > 3] <- NA
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-## "sec3"
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$sec3[mdata$sec3 == 100] <- 1
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$sec3[mdata$sec3 == 101] <- 2
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$sec3[mdata$sec3 == 102] <- 3
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$sec3[mdata$sec3 > 3] <- NA
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-## "sec4"
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$sec4[mdata$sec4 > 5] <- NA
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$sec4[mdata$sec4 < 1] <- NA
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-## "sec5"
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$sec5[mdata$sec5 > 3] <- NA
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-## "trn1" Recoded
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn1[mdata$trn1 == 100] <- 6
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn1[mdata$trn1 == 101] <- 5
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn1[mdata$trn1 == 102] <- 4
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn1[mdata$trn1 == 103] <- 3
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn1[mdata$trn1 == 104] <- 2
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn1[mdata$trn1 == 7] <- 6
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn1[mdata$trn1 == 7] <- 6
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn1[mdata$trn1 == 105] <- 1
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn1[mdata$trn1 > 6] <- NA
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn1 <- mdata$trn1 + 6
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn1[mdata$trn1 == 7] <- 6
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn1[mdata$trn1 == 8] <- 5
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn1[mdata$trn1 == 9] <- 4
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn1[mdata$trn1 == 10] <- 3
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn1[mdata$trn1 == 11] <- 2
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn1[mdata$trn1 == 12] <- 1
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-## "trn2"
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn2[mdata$trn2 == 100] <- 1
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn2[mdata$trn2 == 101] <- 2
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn2[mdata$trn2 == 102] <- 3
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn2[mdata$trn2 == 103] <- 4
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn2[mdata$trn2 == 104] <- 5
-\end_layout
-
-\begin_layout Plain Layout
-
-mdata$trn2[mdata$trn2 > 5] <- NA
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-end{frame}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-begin{frame}[containsverbatim, allowframebreaks]
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-frametitle{Example 2}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-library(car)
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
 
 \begin_layout Plain Layout
 
@@ -1609,197 +1080,6 @@ dat$Rnp1B5d<-recode(dat$np1B5d, "4=1;3=2;2=3;1=4")
 dat$Rnp1B5e<-recode(dat$np1B5e, "4=1;3=2;2=3;1=4")
 \end_layout
 
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-### student predictors, classroom behavior
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$Rnpr1C4a<-rowMeans(cbind(dat$npr1C4a, dat$npr1D18a, dat$nts1C1a), na.rm=T)
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$Rnpr1C4b<-rowMeans(cbind(dat$npr1C4b, dat$npr1D18b, dat$nts1C1b), na.rm=T)
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$Rnpr1C4c<-rowMeans(cbind(dat$npr1C4c, dat$npr1D18c, dat$nts1C1c), na.rm=T)
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$Rnpr1C4d<-rowMeans(cbind(dat$npr1C4d, dat$npr1D18d, dat$nts1C1d), na.rm=T)
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$Rnpr1C5a<-rowMeans(cbind(dat$npr1C5a, dat$npr1D19a, dat$nts1C6a), na.rm=T)
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$Rnpr1C5b<-rowMeans(cbind(dat$npr1C5b, dat$npr1D19b, dat$nts1C6b), na.rm=T)
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$Rnpr1C5c<-rowMeans(cbind(dat$npr1C5c, dat$npr1D19c, dat$nts1C6c), na.rm=T)
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$npr1C5d2<-recode(dat$npr1C5d, "1=4;2=3;3=2;4=1")
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$npr1D19d2<-recode(dat$npr1D19d, "1=4;2=3;3=2;4=1")
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$nts1C6d2<-recode(dat$nts1C6d, "1=4;2=3;3=2;4=1")
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$Rnpr1C5d<-rowMeans(cbind(dat$npr1C5d2, dat$npr1D19d2, dat$nts1C6d2),
- na.rm=T)
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$Rnpr1C5e<-rowMeans(cbind(dat$npr1C5e, dat$npr1D19e, dat$nts1C6e), na.rm=T)
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-### student predictors, well-being
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$Rnp1D12b<-recode(dat$np1D12b, "4=1;3=2;2=3;1=4")
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$Rnts1C2b<-rowMeans(cbind(dat$nts1C2b, dat$npr1D7b), na.rm=T)
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$Rnts1C2f<-rowMeans(cbind(dat$nts1C2f, dat$npr1D7f), na.rm=T)
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$RndaF1friend<-recode(dat$ndaF1_friend, "2=1;3=2;1=3")
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$RndaF2lonely<-recode(dat$ndaF2_lonely, "2=1;3=2;1=3")
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-## youth outcome, rights
-\end_layout
-
-\begin_layout Plain Layout
-
-## dat$np5P7b_J3b, dat$np5T4l_L4l, np5S3k_S4i_S5j_K6j_K7g_K8h, np5T4a_L4o
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$RTgrpsn <- dat$np5P7b_J3b
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$RTwdis <- dat$np5T4l_L4l
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$RTserps <- dat$np5S3k_S4i_S5j_K6j_K7g_K8h
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$RTseremp <- dat$np5T4o_L4o
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-## youth outcome, societal inclusion
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$SISCRCSV <- (dat$np5T10c_C1b_a + dat$np5T10c_C1b_b + dat$np5T10c_C1b_c
- + dat$np5T10c_C1b_d + dat$np5T10c_C1b_e + dat$np5T10c_C1b_f + dat$np5T10c_C1b_g
- + dat$np5T10c_C1b_h + at$np5T10c_C1b_i + dat$np5T10c_C1b_j + dat$np5T10c_C1b_k
- + dat$np5T10c_C1b_l + dat$np5T10c_C1b_m + dat$np5T10c_C1b_n + dat$np5T10c_C1b_o
- + dat$np5T10c_C1b_p + dat$np5T10c_C1b_q + dat$np5T10c_C1b_r + dat$np5T10c_C1b_s
- + dat$np5T10c_C1b_t + dat$np5T10c_C1b_u + dat$np5T10c_C1b_v)
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$SISCSEMG <- dat$np5C1b_u
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$SISHLPWK <- dat$np5S3i_S4g_S5h_K6h_K7e_K8f
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$SICPCOMA <- dat$np5P6_A4h
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$SICYVCSV <- dat$np5P8_J4
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$SICYRTVT <- dat$np5U9_J16
-\end_layout
-
-\begin_layout Plain Layout
-
-dat$SICPGPAC <- dat$np5A4h
-\end_layout
-
 \end_inset
 
 
@@ -1863,8 +1143,11 @@ programming idioms
 
 \end_deeper
 \begin_layout Itemize
-Costly/time-consuming to create comprehensive report to client about what
- was done to their data
+Difficult to report back to client about everything that was done
+\end_layout
+
+\begin_layout Itemize
+Difficult to coordinate efforts of teammates
 \end_layout
 
 \begin_layout Standard
@@ -1911,8 +1194,7 @@ frametitle{All Involved Parties have a Shared Variable Key}
 \end_layout
 
 \begin_layout Standard
-Coordinate by creating a Variable Key file.
- 
+Coordinate by creating a Variable Key file, a rectangular worksheet
 \end_layout
 
 \begin_layout Standard
@@ -2016,7 +1298,7 @@ value_new
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2027,7 +1309,7 @@ V23419
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2038,7 +1320,7 @@ sex
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2049,7 +1331,7 @@ integer
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2060,7 +1342,7 @@ factor
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2071,7 +1353,7 @@ factor
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2084,7 +1366,7 @@ male|female|neither
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2095,7 +1377,7 @@ V32422
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2106,7 +1388,7 @@ education
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2117,7 +1399,7 @@ integer
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2128,7 +1410,7 @@ ordered
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2139,7 +1421,7 @@ ordered
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2152,7 +1434,7 @@ elem|hs|somecoll|ba|post
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2163,7 +1445,7 @@ V54532
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2174,7 +1456,7 @@ income
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2185,7 +1467,7 @@ numeric
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2196,7 +1478,7 @@ numeric
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2207,7 +1489,7 @@ numeric
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" bottomline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2226,11 +1508,11 @@ numeric
 
 \end_layout
 
-\begin_layout Standard
-Each column in an R data frame is characterized by its class.
- The ones we are focused on are:
+\begin_layout Itemize
+We focus on the most common variable types: 
 \end_layout
 
+\begin_deeper
 \begin_layout Standard
 \begin_inset Flex Code
 status open
@@ -2292,6 +1574,72 @@ ordered
 \end_inset
 
 
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{frame}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{frame}[containsverbatim, allowframebreaks]
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+frametitle{The Key Is A Programmable Codebook}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Team leader–or client–can revise the variable key file without digging into
+ a lot of programming details.
+\end_layout
+
+\begin_layout Itemize
+The implied recodes are 
+\emph on
+automagically
+\emph default
+ implemented (by functions in 
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+code{kutils}
+\end_layout
+
+\end_inset
+
+)
 \end_layout
 
 \begin_layout Standard
@@ -2707,7 +2055,7 @@ numeric
 \end_layout
 
 \begin_layout Itemize
-Ask the client to choose 
+Researchers/clients 
 \begin_inset Flex Code
 status open
 
@@ -2722,16 +2070,12 @@ name_new
 status open
 
 \begin_layout Plain Layout
-values_new
+value_new
 \end_layout
 
 \end_inset
 
- (
-\emph on
-hope
-\emph default
- they can fill out 
+, 
 \begin_inset Flex Code
 status open
 
@@ -2741,7 +2085,15 @@ class_new
 
 \end_inset
 
-, but less likely to succeed)
+
+\end_layout
+
+\begin_layout Itemize
+Discrete variables can have an enumerated list of values
+\end_layout
+
+\begin_layout Itemize
+Numeric variables are treated differently (recodes mentioned below)
 \end_layout
 
 \begin_layout Standard
@@ -2775,28 +2127,12 @@ begin{frame}[containsverbatim, allowframebreaks]
 
 
 \backslash
-frametitle{Client fills in key}
+frametitle{Client or Worker fills in key}
 \end_layout
 
 \end_inset
 
 
-\end_layout
-
-\begin_layout Itemize
-Discrete variables can have an enumerated list of values
-\end_layout
-
-\begin_layout Itemize
-Numeric variables are usually not enumerated, so we leave 
-\begin_inset Quotes eld
-\end_inset
-
-.
-\begin_inset Quotes erd
-\end_inset
-
- in values_old and value_new
 \end_layout
 
 \begin_layout Standard
@@ -3180,17 +2516,7 @@ applies
 \begin_inset Quotes erd
 \end_inset
 
- the key to the data with the 
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-kutils
-\end_layout
-
-\end_inset
-
- function 
+ the key to the data with 
 \begin_inset Flex Code
 status open
 
@@ -3208,11 +2534,12 @@ The variables are renamed, the values are re-aligned
 \end_layout
 
 \begin_layout Itemize
-Profuse variable-by-variable output summarizing changes
+Profuse diagnostic output
 \end_layout
 
 \begin_layout Standard
 \begin_inset listings
+lstparams "basicstyle={\footnotesize}"
 inline false
 status open
 
@@ -3498,11 +2825,6 @@ prediab1f    1    2    3 <NA>
 
 \end_layout
 
-\begin_layout Itemize
-Some details remaining, checking for errors, inspect old and new data comparison
-s
-\end_layout
-
 \begin_layout Standard
 \begin_inset ERT
 status open
@@ -3524,6 +2846,10 @@ Details worth mentioning
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -3559,7 +2885,7 @@ enumerated variables can insert
 \end_layout
 
 \begin_deeper
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset Tabular
 <lyxtabular version="3" rows="2" columns="2">
 <features tabularvalignment="middle">
@@ -3619,14 +2945,13 @@ for numeric variables, we introduce column missing, which allows a limited
 \end_layout
 
 \begin_deeper
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset Tabular
-<lyxtabular version="3" rows="4" columns="2">
+<lyxtabular version="3" rows="4" columns="1">
 <features tabularvalignment="middle">
 <column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3635,18 +2960,9 @@ missing
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3655,18 +2971,9 @@ c(98,99)
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3675,31 +2982,13 @@ c(98,99)
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-</cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-> 99
-\end_layout
-
-\end_inset
-</cell>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-
+> 99
 \end_layout
 
 \end_inset
@@ -3713,7 +3002,7 @@ c(98,99)
 \end_layout
 
 \end_deeper
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -3729,7 +3018,7 @@ end{frame}
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -3753,14 +3042,11 @@ frametitle{Additional Key Column: recode}
 \end_layout
 
 \begin_layout Itemize
-Valid R expressions, where x is a symbol for the variable under consideration
+Write any R commands you like in the recode column, where x is a symbol
+ for the variable under consideration
 \end_layout
 
-\begin_layout Itemize
-examples
-\end_layout
-
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset listings
 inline false
 status open
@@ -3775,7 +3061,7 @@ kutils::reverse(as.ordered(x))
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset listings
 inline false
 status open
@@ -3791,7 +3077,7 @@ cut(x, c(-1, 40, 49, 59, 110), right = FALSE, labels = c("Below 40", "40s",
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -3800,6 +3086,11 @@ status open
 
 \backslash
 end{frame}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -3831,26 +3122,45 @@ frametitle{The "long" key}
 \end_layout
 
 \begin_layout Itemize
-In the Wide Key, editing values is difficult in spreadsheet if values are
- verbose or many
+In the Wide Key, editing values may be difficult in a spreadsheet
 \end_layout
 
-\begin_deeper
-\begin_layout Itemize
-Example: 
-\begin_inset Quotes eld
-\end_inset
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\small}"
+inline false
+status open
 
-low|moderate|medium|luke|tepid|warm|hot|boiling
-\begin_inset Quotes erd
+\begin_layout Plain Layout
+
+"low|moderate|medium|warm|hot|boiling"
+\end_layout
+
 \end_inset
 
 
 \end_layout
 
-\end_deeper
 \begin_layout Itemize
-The Long Key style has one row per value
+The Long Key in an equivalent representation, 
+\emph on
+but with one row per value
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+framebreak
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -3878,8 +3188,8 @@ tabcolsep{2pt}
 \size small
 \begin_inset Tabular
 <lyxtabular version="3" rows="10" columns="6">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top">
+<features islongtable="true" longtabularalignment="center">
+<column alignment="center" valignment="top" width="0pt">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
@@ -3948,6 +3258,342 @@ values_old
 
 \size small
 values_new
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+V22012
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+water
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+character
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+factor
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+low
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+low
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+V22012
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+water
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+character
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+factor
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+moderate
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+moderate
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+V22012
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+water
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+character
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+factor
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+medium
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+medium
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+V22012
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+water
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+character
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+factor
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+warm
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+warm
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+V22012
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+water
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+character
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+factor
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+hot
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+hot
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+V22012
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+water
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+character
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+factor
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+boiling
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+boiling
 \end_layout
 
 \end_inset
@@ -4086,7 +3732,7 @@ female
 </cell>
 </row>
 <row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4097,7 +3743,7 @@ V23419
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4108,7 +3754,7 @@ sex
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4117,7 +3763,7 @@ integer
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4128,7 +3774,7 @@ factor
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4139,7 +3785,7 @@ factor
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4151,423 +3797,11 @@ neither
 \end_inset
 </cell>
 </row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-V32422
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-education
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-integer
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-ordered
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-1
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-elem
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-V32422
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-education
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-integer
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-ordered
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-2
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-hs
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-V32422
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-education
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-integer
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-ordered
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-3
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-somecoll
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-V32422
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-education
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-integer
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-ordered
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-4
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-ba
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-V32422
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-education
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-integer
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-ordered
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-5
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-post
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-V54532
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-income
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-numeric
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-numeric
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-.
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\size small
-.
-\end_layout
-
-\end_inset
-</cell>
-</row>
 </lyxtabular>
 
 \end_inset
 
 
-\end_layout
-
-\begin_layout Itemize
-The 
-\begin_inset Flex Code
-status open
-
-\begin_layout Plain Layout
-keyImport
-\end_layout
-
-\end_inset
-
- function checks on the type and imports the file
 \end_layout
 
 \begin_layout Itemize
@@ -4620,6 +3854,10 @@ end{frame}
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -4627,7 +3865,7 @@ status open
 
 
 \backslash
-begin{frame}[containsverbatim, allowframebreaks]
+begin{frame}
 \end_layout
 
 \begin_layout Plain Layout
@@ -4642,11 +3880,11 @@ frametitle{long key snapshot}
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 The American National Election Study (ANES) 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset Graphics
 	filename anes-long_dta.png
 	width 12cm
@@ -4656,7 +3894,7 @@ The American National Election Study (ANES)
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 [
 \begin_inset Formula $\ldots$
 \end_inset
@@ -4664,7 +3902,7 @@ The American National Election Study (ANES)
  snip many rows]
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -4678,147 +3916,6 @@ end{frame}
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-begin{frame}[containsverbatim, allowframebreaks]
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-frametitle{Key customized to input format}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-SPSS and Stata use 
-\begin_inset Quotes eld
-\end_inset
-
-values
-\begin_inset Quotes erd
-\end_inset
-
- and 
-\begin_inset Quotes eld
-\end_inset
-
-value label
-\begin_inset Quotes erd
-\end_inset
-
- paradigm
-\end_layout
-
-\begin_layout Standard
-Recently, we introduce key format to summarize their value labels.
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-end{frame}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-begin{frame}[containsverbatim, allowframebreaks]
-\end_layout
-
-\begin_layout Plain Layout
-
-
-\backslash
-frametitle{Key depiction of an SPSS data set}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Children of Immigrants (CILS) in wide key format
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-includegraphics[width=12cm]{key-cils-spss-1.png}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-includegraphics[width=12cm]{key-cils-spss-2.png}
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-[
-\begin_inset Formula $\ldots$
-\end_inset
-
- snip many rows]
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status open
-
-\begin_layout Plain Layout
-
-
-\backslash
-end{frame}
 \end_layout
 
 \end_inset
@@ -4903,12 +4000,12 @@ vars
 
 \begin_deeper
 \begin_layout Itemize
-Use Case: Client only wants to use 20 variables from data set that includes
- 1000s of columns
+Use Case: We want to use 20 variables from data set that includes 1000s
+ of columns
 \end_layout
 
 \begin_layout Itemize
-Otherwise, all variables remain, but only 20 in key are recoded.
+Otherwise, all columns remain in data
 \end_layout
 
 \end_deeper
@@ -4955,7 +4052,7 @@ end{frame}
 \end_layout
 
 \begin_layout Section
-Recent Fixes
+Where We Are Now
 \end_layout
 
 \begin_layout Standard
@@ -4973,7 +4070,7 @@ begin{frame}[containsverbatim, allowframebreaks]
 
 
 \backslash
-frametitle{Class Conversion Diagnostics}
+frametitle{It Works!}
 \end_layout
 
 \end_inset
@@ -4982,40 +4079,250 @@ frametitle{Class Conversion Diagnostics}
 \end_layout
 
 \begin_layout Itemize
-6 variable classes, old and new, are accounted for
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+keyTemplate
+\end_layout
+
+\end_inset
+
+, 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+keyImport
+\end_layout
+
+\end_inset
+
+, and 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+keyApply
+\end_layout
+
+\end_inset
+
+ work as intended
+\end_layout
+
+\begin_layout Itemize
+Tested in several projects
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{frame}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{frame}[containsverbatim, allowframebreaks]
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+frametitle{Checking that it 
+\backslash
+emph{REALLY} Does Work}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Validated variable type conversion among the 6 variable types described
+ above.
+\end_layout
+
+\begin_layout Itemize
+Formalized 
+\begin_inset Quotes eld
+\end_inset
+
+unit tests
+\begin_inset Quotes erd
+\end_inset
+
+ implemented in 2017 to validate code updates
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{frame}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{frame}[containsverbatim, allowframebreaks]
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+frametitle{New Feature: Key for SPSS 
+\backslash
+& Stata Data}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Variable Key can summarize the existing coding nomenclature
 \end_layout
 
 \begin_deeper
 \begin_layout Itemize
-Conversion from any value into a categorical (factor or ordered variable)
- is easy
-\end_layout
-
-\begin_deeper
-\begin_layout Itemize
-Integer 
-\begin_inset Formula $\rightarrow$
+\begin_inset Quotes eld
 \end_inset
 
- Factor is easy
+value
+\begin_inset Quotes erd
+\end_inset
+
+ and
 \end_layout
 
 \begin_layout Itemize
-Character
-\begin_inset Formula $\rightarrow$
+\begin_inset Quotes eld
 \end_inset
 
-Factor is easy
+labels
+\begin_inset Quotes erd
+\end_inset
+
+ 
 \end_layout
 
 \end_deeper
-\begin_layout Itemize
-Conversion from categorical to numeric or integer requires type-checking
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{frame}
 \end_layout
 
-\end_deeper
-\begin_layout Itemize
-Unit tests implemented 2017 to validate code updates
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{frame}[containsverbatim, allowframebreaks]
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+frametitle{Key depiction of an SPSS data set}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Children of Immigrants Study in wide key format
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+includegraphics[width=12cm]{key-cils-spss-1.png}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+includegraphics[width=12cm]{key-cils-spss-2.png}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+[
+\begin_inset Formula $\ldots$
+\end_inset
+
+ snip many rows]
 \end_layout
 
 \begin_layout Standard
@@ -5082,11 +4389,15 @@ end{frame}
 
 \end_layout
 
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
 \begin_layout Section
 ANES Example
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5119,7 +4430,7 @@ U.
  ICPSR, NSF funded project, continues since 1956
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5148,7 +4459,7 @@ anes1 <- read.dta("data/04245-0001-Data.dta")
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5164,7 +4475,7 @@ end{frame}
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5187,7 +4498,7 @@ frametitle{Make keys}
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5275,7 +4586,7 @@ xlsx, csv, rds
 
 \end_deeper
 \end_deeper
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5291,7 +4602,11 @@ end{frame}
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5314,7 +4629,7 @@ frametitle{This is the new way CRMDA has developed}
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5338,7 +4653,7 @@ head(keywide)
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5362,7 +4677,7 @@ head(keylong)
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5378,7 +4693,16 @@ end{frame}
 
 \end_layout
 
-\begin_layout Standard
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5455,7 +4779,7 @@ xlsx, csv, rds
 
 \end_deeper
 \end_deeper
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5471,7 +4795,12 @@ end{frame}
 
 \end_layout
 
-\begin_layout Standard
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5510,7 +4839,7 @@ anes-wide.csv
 Re-import that key file
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5539,7 +4868,7 @@ Apply that wide key.
  Diagnostic output will be profuse
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5563,7 +4892,7 @@ anes2 <- keyApply(anes1, key)
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5604,7 +4933,7 @@ kutils::peek
  to scan through the variables
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5628,7 +4957,7 @@ peek(anes2)
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5637,6 +4966,11 @@ status open
 
 \backslash
 end{frame}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
@@ -5696,6 +5030,10 @@ end{frame}
 \end_layout
 
 \begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5710,7 +5048,7 @@ begin{frame}[containsverbatim, allowframebreaks]
 
 
 \backslash
-frametitle{Session}
+frametitle{Replication information}
 \end_layout
 
 \end_inset
@@ -5718,7 +5056,7 @@ frametitle{Session}
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5742,7 +5080,7 @@ sessionInfo()
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5788,7 +5126,7 @@ options(par.orig)
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Plain Layout
 \begin_inset ERT
 status open
 
@@ -5797,6 +5135,11 @@ status open
 
 \backslash
 end{frame}
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_inset
