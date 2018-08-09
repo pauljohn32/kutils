@@ -721,6 +721,9 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
         newdf <- data.frame(col1 = "_CHI2_", row.names = "chisq", stringsAsFactors = FALSE)
         newdf[ , report] <- ""
         ## build response for "chisq"
+        ## 20180809: new problem, sometimes we want test[[2]], which may be
+        ## yuan.bentler or possibly other tests
+        ## match("yuan.bentler", vapply(xxx, function(x) x$test, character(1)))
         chimeas <- object@Fit@test[[1]]
         chimeas$stat <- frnd(chimeas$stat)
         chimeas$pvalue <- frnd(chimeas$pvalue, 3,  3)
