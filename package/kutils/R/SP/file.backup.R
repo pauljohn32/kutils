@@ -10,7 +10,7 @@
 ##' 
 ##' @param name A character string for the name of the file.
 ##' @param fullpath Return the full directory path to the file. Default FALSE
-##' @author Shadi P-H
+##' @author Shadi Pirhosseinloo <shadi@@ku.edu>
 ##' @return The name of the newly created file.
 ##' @importFrom base format
 ##' @importFrom tools file_ext
@@ -56,5 +56,3 @@ file.backup <- function(name, fullpath = FALSE){
   new_name
 }
 
-# data  <- "pj4.txt"
-# new_file <- f_rename(data)
