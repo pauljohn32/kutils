@@ -338,7 +338,8 @@ compareLavaan <- function(models,
 }
 
 
-
+##' A print method for kutable objects
+##' 
 ##' @method print kutable
 ##' @export
 ##' @param x   object to be printed
@@ -349,3 +350,4 @@ print.kutable <- function(x, ...){
     else print(x)
     x
 }
+

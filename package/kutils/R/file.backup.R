@@ -13,8 +13,6 @@
 ##'     file. Default FALSE, return only the file name.
 ##' @param keep.old If FALSE (default), rename the file. Otherwise, keep old copy.
 ##' @param verbose If TRUE, list the files in the output directory
-##' @param keepold Default is FALSE. FALSE means rename the old file.
-##'     TRUE: copy to backup name, leave old version.
 ##' @author Shadi Pirhosseinloo <shadi@@ku.edu> Paul Johnson <pauljohn@@ku.edu>
 ##' @return The name of the newly created file.
 ##' @importFrom tools file_ext
