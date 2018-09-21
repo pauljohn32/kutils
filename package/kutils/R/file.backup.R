@@ -17,7 +17,6 @@
 ##'     TRUE: copy to backup name, leave old version.
 ##' @author Shadi Pirhosseinloo <shadi@@ku.edu> Paul Johnson <pauljohn@@ku.edu>
 ##' @return The name of the newly created file.
-##' @importFrom base format
 ##' @importFrom tools file_ext
 ##' @importFrom tools file_path_sans_ext
 ##' @export
