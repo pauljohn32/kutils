@@ -203,7 +203,8 @@
 ##' cat(markupConvert(attr(fit1.t7, "markedResults"), type = "csv"))
 ##' 
 ##' ## 2 groups
-##' fit1.g <- cfa(HS.model, data = HolzingerSwineford1939, std.lv = TRUE, group = "school")
+##' fit1.g <- cfa(HS.model, data = HolzingerSwineford1939,
+##'                         std.lv = TRUE, group = "school", estimator = "MLR")
 ##' fit1.gt1 <- semTable(fit1.g, columns = c("estsestars", "p"),
 ##'                columnLabels = c(estsestars = "Est w/stars", p = "p-value"),
 ##'                file = file.path(tempdir, "fit1.gt1"))
@@ -720,17 +721,14 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
     getChiSq <- function(object, report){
         newdf <- data.frame(col1 = "_CHI2_", row.names = "chisq", stringsAsFactors = FALSE)
         newdf[ , report] <- ""
-        ## build response for "chisq"
-        ## 20180809: new problem, sometimes we want test[[2]], which may be
-        ## yuan.bentler or possibly other tests
-        ## match("yuan.bentler", vapply(xxx, function(x) x$test, character(1)))
-        chimeas <- object@Fit@test[[1]]
+        ## If there is more than 1 test, use last one, and change label to
+        ## "Scaled chisq"
+        nOfTests <- length(object@Fit@test)
+        chimeas <- object@Fit@test[[nOfTests]]
+        if (nOfTests > 1) newdf[1 , "col1"] <- "Scaled _CHI2_"
         chimeas$stat <- frnd(chimeas$stat)
         chimeas$pvalue <- frnd(chimeas$pvalue, 3,  3)
         chimeas$pvalue <- gsub("0\\.", "\\.", chimeas$pvalue)
-        ##namenew <- paste0("_CHI2_", "(", chimeas$df, ")")
-        ##chisq <- paste0(namenew, "=", chimeas$stat , "(p < ", chimeas$pvalue,")")
-        ##names(chisq) <- "_CHI2_"
         chipstars <- if (any(c("eststars", "estsestars") %in% colnames(newdf))){
                          starsig(chimeas$pvalue, alpha = alpha, symbols = starsymbols)
                      } else {
@@ -1129,7 +1127,7 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
             paramList[[ii]] <- extractParameters(parTableSplit[[ii]],
                                                 colLabels = colLabels,
                                                 modelName = ii)
-            if (!is.null(fits)){
+            if (!is.null(fits) && ii == names(parTableSplit)[1]){
                 paramList[[ii]][["fits"]] <- fitMaker(onemodel, fitsLabeled, colLabels, ii)
             }
         }
