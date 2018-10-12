@@ -1495,6 +1495,7 @@ testtable <- function(tablefile, dir, tmpfn = "tmp.tex"){
 \\usepackage{babel}
 \\usepackage{longtable}
 \\usepackage[normalem]{ulem}
+\\usepackage{siunitx}
 \\begin{document}
 "
     x2 <- paste0("\\include{", tablefile, "}\n")
