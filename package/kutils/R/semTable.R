@@ -105,8 +105,8 @@
 ##'     specify groups as either names of fit objects or as integers
 ##'     for elements of the groups vector.
 ##' @param type Choose "latex", "html", or "csv"
-##' @param file Base name for output file. This function will
-##'     insert suffix, either "tex", "html" and "csv".
+##' @param file Base name for output file. This function will insert
+##'     suffix, either "tex", "html" and "csv".
 ##' @param table.float If TRUE, create a LaTeX floating table object
 ##'     in which the tabular created here will reside. Default is
 ##'     FALSE.
@@ -122,14 +122,17 @@
 ##'     within the session. Otherwise, result is returned silently and
 ##'     user can use \code{cat} to dislay it. Don't use \code{print}
 ##'     because it inserts unwanted decorations.
+##' @param centering Default "siunitx". For method used in previous
+##'     editions, replace with "none".
 ##' @param alpha Thresholds for p-values that determine number of
 ##'     stars.  Defaults as \code{c(0.05, 0.01, 0.001)} for
 ##'     \code{c("*", "**", "***")}.
 ##' @importFrom stats pnorm
 ##' @importFrom lavaan lavInspect
 ##' @importFrom plyr mapvalues
-##' @return Markup for SEM table. Includes an attribute "markedResults", which
-##'     can be converted to other markup formats by the function markupConvert.
+##' @return Markup for SEM table. Includes an attribute
+##'     "markedResults", which can be converted to other markup
+##'     formats by the function markupConvert.
 ##' @export
 ##' @author Ben Kite <bakite@@ku.edu> Paul Johnson <pauljohn@@ku.edu>
 ##' @examples \donttest{
@@ -417,7 +420,8 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                      fitLabels = toupper(fits), varLabels = NULL,
                      groups = NULL, type = "latex", table.float = FALSE,
                      caption = NULL, label = NULL, longtable = FALSE,
-                     print.results = TRUE, alpha =  c(0.05, 0.01, 0.001)) {
+                     print.results = TRUE, centering = "siunitx",
+                     alpha =  c(0.05, 0.01, 0.001)) {
     ## do.call(rbind, alist) unexpectedly converts characters to factors.
     ## it does not accept stringsAsFactors=FALSE,
     ## So set globally to avoid hassle
@@ -530,7 +534,7 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
     getParamTable <- function(onemodel, paramSets, paramSetLabels){
         createEstSE <- function(dframe, se = TRUE, stars = FALSE){
             dframe <- roundSubtable(dframe)
-            separt <- if(se) paste0("(", dframe[ , "se"], ")") else ""
+            separt <- if(se) paste0("{(", dframe[ , "se"], ")}") else ""
             starpart <- if(stars)dframe[ , "starsig"] else ""
             ifelse(dframe[ , "free"] != 0,
                    paste0(dframe[ , "est"], separt,
@@ -734,7 +738,7 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                      } else {
                          ""
                      } 
-        newdf[ , 2] <- paste0(chimeas$stat, "(df=", chimeas$df, ")", chipstars)
+        newdf[ , 2] <- paste0(chimeas$stat, "(", chimeas$df, ")", chipstars)
         if ("p" %in% colnames(newdf)) newdf[ , "p"] <- chimeas$pvalue
         newdf
     }
@@ -1003,9 +1007,9 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                 "residualvariances" = "Residual Variances",
                 "residualcovariances" = "Residual Covariances",
                 "variances" = "Variances",
+                "latentmeans" = "Latent Intercepts",
                 "latentvariances" = "Latent Variances",
                 "latentcovariances" = "Latent Covariances", 
-                "latentmeans" = "Latent Intercepts",
                 "thresholds" = "Thresholds",
                 "constructed" = "Constructed",
                 "fits" = "Fit Indices")
@@ -1203,8 +1207,16 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
     Ncolumns <- length(unname(unlist(columns)))
 
     ## a tabular
-    ttabular <-   paste0("\\\\begin{tabular}{r",
-                              paste0(rep("c", Ncolumns), collapse = ""), "}\n")
+    ttabular <-   paste0("\\\\begin{tabular}{@{}r",
+                         if(centering == "siunitx")paste0("*{Ncolumns}{S[
+                         input-symbols = ( ) +,
+                         group-digits = false,
+                         table-number-alignment = center,
+                         %table-space-text-pre = (,
+                         table-align-text-pre = false,
+                         table-align-text-post = false,
+                         table-space-text-post = {***},
+                         parse-units = false]}") else paste0(rep("c", Ncolumns), collapse = ""), "@{}}\n")
     ## longtable
     if(!longtable && !table.float){
         tcode <- ttabular
@@ -1276,7 +1288,7 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         "_BOMCT3_" = "\\\\multicolumn{3}{c}{",
         "_BOMCT4_" = "\\\\multicolumn{4}{c}{",
         "_HTMLHL_" = "",
-        "_CHI2_" = "$\\\\chi^2$",
+        "_CHI2_" = "$\\\\chi^{2}(\mathrm{df})$",
         "_R2_" = "$R^2$",
         "_LEQ_" = "$\\\\leq$",
         "_SIGMA_" = "$\\\\sigma$",
