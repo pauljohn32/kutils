@@ -1165,7 +1165,7 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
   
     result <- markupConvert(markedResults, type = type, longtable = longtable,
                             table.float = table.float, caption = caption, label = label, file = file,
-                            columns = colLabels)
+                            columns = colLabels, centering = centering)
     attr(result, "markedResults") <- markedResults
     attr(result, "unmarkedResults") <- paramSetsList
     class(result) <- "kutable"    
@@ -1200,7 +1200,7 @@ NULL
 markupConvert <- function(marked, type = c("latex", "html", "csv"),
                           table.float = FALSE, longtable = FALSE,
                           caption = NULL, label = NULL, 
-                          file = NULL, columns)
+                          file = NULL, columns, centering = "siunitx")
 {
     if(missing(columns)) columns <- attr(marked, "colLabels")
     ##num of columns, except for col1
@@ -1208,7 +1208,7 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
 
     ## a tabular
     ttabular <-   paste0("\\\\begin{tabular}{@{}r",
-                         if(centering == "siunitx")paste0("*{Ncolumns}{S[
+                         if(centering == "siunitx")paste0("*{", Ncolumns, "}{S[
                          input-symbols = ( ) +,
                          group-digits = false,
                          table-number-alignment = center,
