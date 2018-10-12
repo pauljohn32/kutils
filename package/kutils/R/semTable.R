@@ -943,7 +943,10 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                                                           })
         results2 <- paste(results2, collapse = "")
         
-        colHeaderRow <- paste("_BR__EOC__BOC_", paste(colHeaderRow, collapse = "_EOC__BOC_"), "_EOC__EOR_\n _HL_\n")
+        ##colHeaderRow <- paste("_BR__EOC__BOC_", paste(colHeaderRow, collapse = "_EOC__BOC_"), "_EOC__EOR_\n _HL_\n")
+        colHeaderRow <- paste0("_BR__EOC_",
+                              paste0("_BOMC1_", paste0(colHeaderRow, collapse = "_EOMC__BOMC1_"), "_EOMC__EOR_\n _HL_\n")
+        
         modelHeaderRow <- paste0("_BR__EOC__BOC_",
                                  paste0("_BOMC", colNameCounts, "_", names(colNameCounts), "_EOMC_", collapse = "_BOC_"),
                                  "_EOR_\n _HL_\n", collapse = " ")
