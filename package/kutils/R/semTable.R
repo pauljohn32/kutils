@@ -1184,19 +1184,23 @@ NULL
 ##'
 ##' The conversion key tables are included in the code of the function.
 ##'
-##' The semTable uses a customized markup framework that uses character
-##' sequences that begin and end with underscores, such as "_BOMC2_ for
-##' "begin of multi-column entity that will use 2 columns". These
-##' special markups need to be converted into "tex", "html", or "csv"
-##' formats.
+##' The semTable uses a customized markup framework that uses
+##' character sequences that begin and end with underscores, such as
+##' "_BOMC2_ for "begin of multi-column entity that will use 2
+##' columns". These special markups need to be converted into "tex", "html", or "csv" formats.
 ##' @param marked A character string
 ##' @param type Output type, latex", "html", or "csv".
 ##' @param table.float TRUE if you want insertion of '\\begin{table}'
-##' @param longtable should a tabular or a longtable object be created?
-##' @param caption A caption to use if either longtable or table is TRUE
+##' @param longtable should a tabular or a longtable object be
+##'     created?
+##' @param caption A caption to use if either longtable or table is
+##'     TRUE
 ##' @param label A LaTeX label for cross-references
-##' @param file A file stub, to which ".tex", ".html", or ".csv" can be added
+##' @param file A file stub, to which ".tex", ".html", or ".csv" can
+##'     be added
 ##' @param columns For SEM table, the list of columns objects
+##' @param centering Default "siunitx". Specify "none" to return to
+##'     behavior of semTable before 1.50.
 ##' @return a list of marked up character objects
 ##' @export
 ##' @author Paul Johnson
