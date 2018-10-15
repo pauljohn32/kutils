@@ -1214,7 +1214,7 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
     Ncolumns <- length(unname(unlist(columns)))
 
     ## a tabular
-    ttabular <-   paste0("\\\\begin{tabular}{@{}r",
+    tabularmarkup <-   paste0("{@{}r",
                          if(centering == "siunitx")paste0("*{", Ncolumns, "}{S[
                          input-symbols = ( ) +,
                          group-digits = false,
@@ -1226,11 +1226,10 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
                          parse-units = false]}") else paste0(rep("c", Ncolumns), collapse = ""), "@{}}\n")
     ## longtable
     if(!longtable && !table.float){
-        tcode <- ttabular
+        tcode <- paste0("\\\\begin{tabular}", ttabular
     } else {
         if(longtable){
-            tcode <-  paste0("\\\\begin{longtable}{r",
-                             paste0(rep("c", Ncolumns), collapse = ""), "}")
+            tcode <-  paste0("\\\\begin{longtable}", tabularmarkup)
             if (!is.null(caption)) tcode <- paste0(tcode, "\n\\\\caption{", caption, "}")
             if (!is.null(label)) tcode <- paste0(tcode, "\n\\\\label{", label, "}")
             tcode <- paste0(tcode, "\n\\\\endfirsthead\n\\\\endhead\n")
@@ -1238,7 +1237,7 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
             tcode <- "\\\\begin{table}\n"
             if (!is.null(caption)) tcode <- paste0(tcode, "\n\\\\caption{", caption, "}")
             if (!is.null(label)) tcode <- paste0(tcode, "\n\\\\label{", label, "}")
-            tcode <- paste0(tcode, ttabular)
+            tcode <- paste0(tcode, tabularmarkup)
         } else {
             MESSG <- "Logic error in markupConvert"
             stop(MESSG)
