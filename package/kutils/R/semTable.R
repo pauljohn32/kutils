@@ -1226,7 +1226,7 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
                          parse-units = false]}") else paste0(rep("c", Ncolumns), collapse = ""), "@{}}\n")
     ## longtable
     if(!longtable && !table.float){
-        tcode <- paste0("\\\\begin{tabular}", ttabular
+        tcode <- paste0("\\\\begin{tabular}", tabularmarkup)
     } else {
         if(longtable){
             tcode <-  paste0("\\\\begin{longtable}", tabularmarkup)
