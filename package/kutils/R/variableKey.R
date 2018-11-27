@@ -1973,8 +1973,8 @@ long2wide <- function(keylong, na.strings = c("\\.", "", "\\s+",  "N/A"),
     kls <- split(keylong, name_old.new, drop = TRUE)
 
     makeOneWide <- function(x){
-        sep_old <- if(unique(x$class_old) == "ordered") "<" else "|"
-        sep_new <- if(unique(x$class_new) == "ordered") "<" else "|"
+        sep_old <- if("ordered" %in% unique(x$class_old)) "<" else "|"
+        sep_new <- if("ordered" %in% unique(x$class_new)) "<" else "|"
         ## Replace "" with NA, then get rid of NAs
         if(is.null(x$missings) || all(is.na(x$missings))){
             missings <- ""
