@@ -2216,8 +2216,9 @@ keyUpdate <- function(key, dframe, append = TRUE,
     keynew2$class_new <- ifelse(keynew2$name_old %in% name.old.new[ , "name_old"],
                                 class.old.new[keynew2$name_old, "class_new"],
                                 keynew2$class_new)
-
-    output <- rbind(key, keynew2)
+    ## 20181127
+    ## output <- rbind(key, keynew2)
+    output <- keysPool(list(key, keynew2))
     ## User expects key returned in same format, keylong or key
     if(!long) {
         output <- long2wide(output)
@@ -2657,7 +2658,8 @@ keyCheck <- function(key,
 keysPool <- function(keylong = NULL, keysplit = NULL,
                         classes = list(c("logical", "integer"),
                                        c("integer", "numeric"),
-                                       c("ordered", "factor")),
+                                       c("ordered", "factor"),
+                                       c("factor", "character")),
                         colnames = c("class_old","class_new"),
                         textre = "TEXT$")
 {
