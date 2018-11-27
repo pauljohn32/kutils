@@ -1,4 +1,4 @@
-%% LyX 2.2.3 created this file.  For more info, see http://www.lyx.org/.
+%% LyX 2.3.0 created this file.  For more info, see http://www.lyx.org/.
 %% Do not edit unless you really know what you are doing.
 \documentclass[english,american,noae]{scrartcl}
 \usepackage{lmodern}
@@ -891,6 +891,7 @@ x6 & x6 & integer & integer & 1$|$2$|$3$|$4$|$5 & 1$|$2$|$3$|$4$|$5 & c(-9) & \\
 }
 \end{table}
 
+
 \subsection{Class conversions}
 
 The problem of recoding a variable, but leaving its class the same,
@@ -967,11 +968,11 @@ recode box open, why not use it to recode your date information?''
 If the variable key template says that a column is ``integer,''
 but you expected a date, then all is likely to be fine if we set the
 origin. One needs to find out what the origin should be and tell R
-about it. The right recode statement is likely to be \code{as.Date(x, origin = \textquotedbl{}1970-01-01\textquotedbl{})}.
+about it. The right recode statement is likely to be \code{as.Date(x, origin = \textquotedbl 1970-01-01\textquotedbl )}.
 On the other hand, if the date information is in text format, with
 values like ``2016-11-19'', then it is necessary to learn the shorthand
 notation for date symbols. The right recode will be something like
-\code{as.Date(x, format = \textquotedbl{}\%Y-\%m-\%d\textquotedbl{})}.
+\code{as.Date(x, format = \textquotedbl\%Y-\%m-\%d\textquotedbl )}.
 
 If one sets \code{class\_new} = \code{Date}, the \code{keyApply}
 function will succeed if the return value from the recode function
