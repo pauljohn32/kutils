@@ -634,7 +634,8 @@ test.keyUpdate <- function() {
     ## check name preservation
     key1$name_new <- c("ScoreVar", "GenderVar")
     key2 <- keyUpdate(key1, dat2)
-    checkEquals(key1$name_new, key2$name_new[1:2])
+    ## Check that all name_new from key1 are still present in key2
+    checkEquals(all(key1[ , "name_new"] %in% key2[ , "name_new"]), TRUE)
 }
 
 
