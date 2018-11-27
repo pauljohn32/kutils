@@ -1412,7 +1412,7 @@ makeKeylist <- function(key,
     ## fails if there is more than one unique nonmissing value
     unique.one <- function(x){
         y <- unique(na.omit(n2NA(zapspace(x))))
-        if (length(y) > 1){
+        if (length(y) != 1){
             messg <- paste("Value of", deparse(substitute(x)), "not unique")
             stop (messg)
         }
