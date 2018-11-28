@@ -1,9 +1,15 @@
+2018-11-28  Paul Johnson  <pauljohn@delllap-16>
+
+	* ../R/importQualtrics.R (importQualtrics): dropText argument used
+
 2018-11-27  Paul Johnson  <pauljohn@delllap-16>
 
-	* ../R/variableKey.R (makeOneWide): don't use "<" for ordered
-	anymore
+	* ../R/variableKey.R (makeOneWide):
 	(unique.one): if != 1, not > 1
 	(keysPool): add factor, character in legal class conversions
+	(makeOneWide): Trying this approach now
+	sep_old <- if("ordered" %in% unique(x$class_old)) "<" else "|"
+        sep_new <- if("ordered" %in% unique(x$class_new)) "<" else "|"
 
 2018-05-31  Paul Johnson  <pauljohn@delllap-16>
 
