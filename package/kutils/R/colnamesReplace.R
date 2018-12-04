@@ -26,10 +26,15 @@
 ##'                    x2 = letters[sample(1:24, 200, replace = TRUE)],
 ##'                    x1 = factor(sample(c("cindy", "bobby", "marsha",
 ##'                                         "greg", "chris"), 200, replace = TRUE)),
+##'                    x11 = 7,
+##'                    x12 = 18,
+##'                    x13 = 33,
 ##'                    stringsAsFactors = FALSE)
 ##' mydf2 <- colnamesReplace(mydf, newnames = c("x4" = "GLOPPY"))
 ##' mydf2 <- colnamesReplace(mydf, newnames = c("x4" = "GLOPPY", "USA" = "Interesting"), verbose = TRUE)
-##' colnames(mydf)
+##' colnames(mydf2)
+##' head(mydf3 <- colnamesReplace(mydf, newnames = c(x11 = "x12", x12 = "x13", x13 = "x20")))
+##' head(mydf4 <- colnamesReplace(mydf, newnames = c(x12 = "x11", x11 = "x99", x13 = "x20")))
 colnamesReplace <- function(dat, newnames, oldnames = NULL, ...,  lowercase = FALSE, verbose = FALSE){
     if (is.null(oldnames)) {
         if (is.null(names(newnames))){
@@ -46,14 +51,20 @@ colnamesReplace <- function(dat, newnames, oldnames = NULL, ...,  lowercase = FA
         names(newnames) <- oldnames
     }
     namez <- colnames(dat)
+
     if (any(oldnames %in% namez)){
-        newnamez <- mgsub(oldnames, newnames, colnames(dat), ...)
-        colnames(dat) <- if (lowercase) tolower(newnamez) else newnamez
+        mapidx <- match(namez, oldnames)
+        mapidxNA <- is.na(mapidx)
+        namez[!mapidxNA] <- newnames[mapidx[!mapidxNA]]
+        ## 20181204: mgsub replaced by mapvalues style code
+        ## newnamez <- mgsub(oldnames, newnames, colnames(dat), ...)
+        colnames(dat) <- if (lowercase) tolower(namez) else namez
         if (verbose){
             cat(paste("colnamesReplace Diagnostic: These names replacements are requested:\n"))
             print(c("oldnames", "newnames"))
             print(cbind(oldnames, newnames ))
-            cat(paste("These names were actually replaced", oldnames[oldnames %in% namez]))
+            cat(paste("These names were actually replaced: ",
+                      paste(oldnames[oldnames %in% namez], collapse=",")))
         }
         return(dat)
     } else {
