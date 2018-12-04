@@ -47,7 +47,7 @@ importQualtrics <- function (file, namerow = 1, skip = 3, questrow = NULL,
         MESSG <- "Unexpected columns in data"
         stop(MESSG)
     }
-    if (dropText){
+    if (dropTEXT){
         ## Remove variable names ending in "_TEXT"
         dat2[ , grep("TEXT$", colnames(dat2), value = TRUE)] <- NULL
     }
