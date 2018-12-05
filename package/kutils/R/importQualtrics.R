@@ -10,7 +10,11 @@
 ##'     a CSV or XLSX file from Qualtrics.
 ##' @param namerow Default 1, the information to be used as column
 ##'     names (the HEADER information in R's read.table function)
-##' @param skip Number of rows to omit because they are not data
+##' @param skip Number of rows to omit because they are not data. Usually
+##'     this is 3, but when cells (usually in row 2) have embedded carriage
+##'     returns, then skip=3 will not be sufficient. This function will
+##'     automatically increase skip until a clean import is obtained,
+##'     so it is not usually necessary to set this parameter.
 ##' @param questrow Row number to be treated as the questions in the
 ##'     survey. Usually 2. Default is NULL, meaning questions are not
 ##'     imported.
@@ -34,12 +38,11 @@ importQualtrics <- function (file, namerow = 1, skip = 3, questrow = NULL,
         ##                  stringsAsFactors = stringsAsFactors,
         ##                  skip = skip, header = FALSE)
 
-        library(data.table)
-        dat1 <- fread(file, header = FALSE)
+        dat1 <- data.table::fread(file, header = FALSE)
         dat1.colnames <- colnames(dat1[1, ])
         dat1.4.1 <- as.character(dat1[4, 1])
 
-        dat2 <- fread(file, skip = 3, header = FALSE)
+        dat2 <- data.table::fread(file, skip = 3, header = FALSE)
         skip.new <- skip
         while(skip.new < NROW(dat1) && !isTRUE(all.equal(dat1.4.1, as.character(dat2[1,1])))){
             skip.new <- skip.new + 1
