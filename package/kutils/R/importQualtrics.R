@@ -19,6 +19,7 @@
 ##' @param stringsAsFactors Default FALSE, same meaning as R's
 ##'     read.csv. Does not affect importation of Excel files.
 ##' @importFrom openxlsx read.xlsx
+##' @importFrom data.table fread
 ##' @export
 ##' @return Data frame that has attribute "questions" if questrow is
 ##'     specified.
@@ -26,12 +27,34 @@
 importQualtrics <- function (file, namerow = 1, skip = 3, questrow = NULL,
                              dropTEXT = TRUE, stringsAsFactors = FALSE){
     if (length(grep("csv$", tolower(file))) > 0) {
-        dat1 <- read.csv(file,
-                         stringsAsFactors = stringsAsFactors,
-                         header = FALSE)
-        dat2 <- read.csv(file,
-                         stringsAsFactors = stringsAsFactors,
-                         skip = skip, header = FALSE)
+        ## dat1 <- read.csv(file,
+        ##                  stringsAsFactors = stringsAsFactors,
+        ##                  header = FALSE)
+        ## dat2 <- read.csv(file,
+        ##                  stringsAsFactors = stringsAsFactors,
+        ##                  skip = skip, header = FALSE)
+
+        library(data.table)
+        dat1 <- fread(file, header = FALSE)
+        dat1.colnames <- colnames(dat1[1, ])
+        dat1.4.1 <- as.character(dat1[4, 1])
+
+        dat2 <- fread(file, skip = 3, header = FALSE)
+        skip.new <- skip
+        while(skip.new < NROW(dat1) && !isTRUE(all.equal(dat1.4.1, as.character(dat2[1,1])))){
+            print(skip.new)
+            print(dat1.4.1)
+            print(dat2[1,1])
+            skip.new <- skip.new + 1
+            dat2 <- fread(file, skip = skip.new, header = FALSE,
+                        strip.white = TRUE, blank.lines.skip = TRUE)
+            print(dat2[1,1])
+        }
+        MESSG1 <- paste("fread required skip = ", skip, "to manage importation")
+        if(skip > 3) warning(MESSG1)
+
+        MESSG2 <- paste("Check number of rows in imported data")
+        if(NROW(dat2) != NROW(dat1) - skip) warning(MESSG2)
     } else {
         startRow <- skip + 1
         dat1 <- read.xlsx(file, skipEmptyCols = FALSE,
