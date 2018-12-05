@@ -6,8 +6,8 @@
 ##' before the real data begins. If the parameter questrow is used, it
 ##' designates a row that is interpreted as the survey questions
 ##' themselves.  Often, this is in row 2.
-##' @param file Character string with file name of a CSV or XLSX file
-##'     from Qualtrics.
+##' @param file file name (including path if in another directory) of
+##'     a CSV or XLSX file from Qualtrics.
 ##' @param namerow Default 1, the information to be used as column
 ##'     names (the HEADER information in R's read.table function)
 ##' @param skip Number of rows to omit because they are not data
@@ -42,19 +42,23 @@ importQualtrics <- function (file, namerow = 1, skip = 3, questrow = NULL,
         dat2 <- fread(file, skip = 3, header = FALSE)
         skip.new <- skip
         while(skip.new < NROW(dat1) && !isTRUE(all.equal(dat1.4.1, as.character(dat2[1,1])))){
-            print(skip.new)
-            print(dat1.4.1)
-            print(dat2[1,1])
             skip.new <- skip.new + 1
             dat2 <- fread(file, skip = skip.new, header = FALSE,
                         strip.white = TRUE, blank.lines.skip = TRUE)
-            print(dat2[1,1])
         }
         MESSG1 <- paste("fread required skip = ", skip, "to manage importation")
         if(skip > 3) warning(MESSG1)
 
-        MESSG2 <- paste("Check number of rows in imported data")
-        if(NROW(dat2) != NROW(dat1) - skip) warning(MESSG2)
+        if(NROW(dat2) != NROW(dat1) - skip){
+            MESSG2 <- paste("Check number of rows in imported data")
+            warning(MESSG2)
+        } else {
+            MESSG3 <- paste("\n NOTE: importQualtrics: The warnings from fread are",
+                            "probably harmless.\n", "Those warnings",
+                            "result when a cell has an embedded carriage return.\n",
+                            "Inspect output carefully.")
+            warning(MESSG3)
+        }
     } else {
         startRow <- skip + 1
         dat1 <- read.xlsx(file, skipEmptyCols = FALSE,
