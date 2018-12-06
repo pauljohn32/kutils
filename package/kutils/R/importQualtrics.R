@@ -62,6 +62,7 @@ importQualtrics <- function (file, namerow = 1, skip = 3, questrow = NULL,
                             "Inspect output carefully.")
             warning(MESSG3)
         }
+        dat2 <- as.data.frame(dat2)
     } else {
         startRow <- skip + 1
         dat1 <- read.xlsx(file, skipEmptyCols = FALSE,
