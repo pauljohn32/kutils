@@ -61,6 +61,11 @@ importQualtrics <- function (file, namerow = 1, questionrow = 2,
                        "re-specify the skip  parameter")
         warning(MESSG)
     }
+
+    if (dropTEXT){
+        ## Remove variable names ending in "_TEXT"
+        dat1[ , grep("TEXT$", colnames(dat1), value = TRUE)] <- NULL
+    } 
     
     meta <- as.data.frame(t(dat1[1:skip, ]), stringsAsFactors = FALSE)
     colnames(meta) <- paste0("row", 1:skip)
@@ -90,10 +95,7 @@ importQualtrics <- function (file, namerow = 1, questionrow = 2,
         warning(MESSG3)
     }
 
-    if (dropTEXT){
-        ## Remove variable names ending in "_TEXT"
-        dat2[ , grep("TEXT$", colnames(dat2), value = TRUE)] <- NULL
-    }
+
     if(!is.null(meta)){
         attr(dat2, "meta") <- meta   
     }
