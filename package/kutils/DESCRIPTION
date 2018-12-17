@@ -1,8 +1,8 @@
 Package: kutils
 Type: Package
 Title: Project Management Tools 
-Version: 1.57
-Date: 2018-12-12
+Version: 1.58
+Date: 2018-12-17
 Authors@R: c(person("Paul","Johnson",email="pauljohn@ku.edu",role = c("aut", "cre")),
 		   person("Benjamin","Kite",email="bakite@ku.edu",role="aut"),
 		   person("Charles","Redmon",email="redmon@ku.edu",role="aut"),
@@ -24,5 +24,5 @@ License: GPL-2
 Depends: R (>= 3.3.0)
 Imports: stats, utils, methods, foreign, xtable, lavaan, plyr, openxlsx, RUnit
 Suggests: rockchalk
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1
 LazyData: TRUE
