@@ -943,23 +943,21 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                                                           })
         results2 <- paste(results2, collapse = "")
         
-        ##colHeaderRow <- paste("_BR__EOC__BOC_", paste(colHeaderRow, collapse = "_EOC__BOC_"), "_EOC__EOR_\n _HL_\n")
         colHeaderRow <- paste0("_BR__EOC_",
-                              paste0("_BOC__BOMC1_", paste0(colHeaderRow, collapse = "_EOMC__BOC__BOMC1_")), "_EOMC__EOR_\n _HL_\n")
+                              paste0("_BOC__BOMC1_", paste0(colHeaderRow, collapse = "_EOMC__BOC__BOMC1_")), "_EOMC__EOR__HL_\n")
         
         modelHeaderRow <- paste0("_BR__EOC__BOC_",
                                  paste0("_BOMC", colNameCounts, "_", names(colNameCounts), "_EOMC_", collapse = "_BOC_"),
-                                 "_EOR_\n _HL_\n", collapse = " ")
+                                 "_EOR_ _HL_\n", collapse = " ")
         starnote <- if (any(c("eststars", "estsestars") %in% sapply(colLabels, names))) {
                         paste0(starsymbols, "p<", alpha, collapse = ", ")
                     } else ""
         fixnote <-  if(TRUE) paste0("_FIXED_", "Fixed parameter") else ""
-        tablesuffix <-  paste0("_LB_",
-                               if(fixnote != "") paste0("_BOML", totalNcolumns, "_", fixnote, "_EOMC__EOR__LB_"),
-                               if(starnote != "") paste0("_BOML", totalNcolumns, "_", starnote, "_EOMC__EOR__LB_"))
+        tablesuffix <-  paste0(if(fixnote != "") paste0("_BR__BOML", totalNcolumns, "_", fixnote, "_EOMC__EOR_"),
+                               if(starnote != "") paste0("_BR__BOML", totalNcolumns, "_", starnote, "_EOMC__EOR_"))
                                
-        resmark <- paste("_BTABULAR_\n", modelHeaderRow, colHeaderRow, results2, "_HL__LB_",
-                         tablesuffix, "_ETABULAR__LB_\n")
+        resmark <- paste0("_BTABULAR_", modelHeaderRow, colHeaderRow, results2, "_HL_",
+                         tablesuffix, "\n_ETABULAR__LB_\n")
         attr(resmark, "colLabels") <- colLabels
         resmark
     }
@@ -1429,6 +1427,7 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         }
     } else if (tolower(type) %in% c("html")){
         result <- mgsub(names(htmlreplace), htmlreplace, marked)
+        result <- gsub("\\{\\((.*)\\)\\}", "(\\1)", result, perl=TRUE)
         if (!is.null(file)){
             if (!isTRUE(grepl(".html$", file))) file <- paste0(file, ".html")
             cat(result, file = file)
