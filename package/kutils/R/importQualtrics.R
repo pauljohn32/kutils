@@ -63,8 +63,8 @@ importQualtrics <- function (file, namerow = 1, questionrow = 2,
     }
 
     if (dropTEXT){
-        ## Remove variable names ending in "_TEXT"
-        dat1[ , grep("TEXT$", colnames(dat1), value = TRUE)] <- NULL
+        ## Remove columns with variable names ending in "_TEXT"
+        dat1[ , grep("TEXT$", dat1[namerow, ])] <- NULL
     } 
     
     meta <- as.data.frame(t(dat1[1:skip, ]), stringsAsFactors = FALSE)
