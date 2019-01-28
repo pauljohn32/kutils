@@ -953,8 +953,8 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                         paste0(starsymbols, "p<", alpha, collapse = ", ")
                     } else ""
         fixnote <-  if(TRUE) paste0("_FIXED_", "Fixed parameter") else ""
-        tablesuffix <-  paste0(if(fixnote != "") paste0("_BR__BOML", totalNcolumns, "_", fixnote, "_EOMC__EOR_"),
-                               if(starnote != "") paste0("_BR__BOML", totalNcolumns, "_", starnote, "_EOMC__EOR_"))
+        tablesuffix <-  paste0(if(fixnote != "") paste0("_BR__BOML", totalNcolumns + 1, "_", fixnote, "_EOMC__EOR_"),
+                               if(starnote != "") paste0("_BR__BOML", totalNcolumns + 1, "_", starnote, "_EOMC__EOR_"))
                                
         resmark <- paste0("_BTABULAR_", modelHeaderRow, colHeaderRow, results2, "_HL_",
                          tablesuffix, "\n_ETABULAR__LB_\n")
@@ -1427,7 +1427,8 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
         }
     } else if (tolower(type) %in% c("html")){
         result <- mgsub(names(htmlreplace), htmlreplace, marked)
-        result <- gsub("\\{\\((.*)\\)\\}", "(\\1)", result, perl=TRUE)
+        result <- gsub("\\{\\(", "(", result)
+        result <- gsub("\\)\\}", ")", result)
         if (!is.null(file)){
             if (!isTRUE(grepl(".html$", file))) file <- paste0(file, ".html")
             cat(result, file = file)
