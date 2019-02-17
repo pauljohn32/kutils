@@ -130,8 +130,6 @@
 ##' @importFrom stats pnorm
 ##' @importFrom lavaan lavInspect
 ##' @importFrom plyr mapvalues
-##' @importFrom kutils checkCoercion
-##' @importFrom kutils modifyVector
 ##' @return Markup for SEM table. Includes an attribute
 ##'     "markedResults", which can be converted to other markup
 ##'     formats by the function markupConvert.
