@@ -130,6 +130,8 @@
 ##' @importFrom stats pnorm
 ##' @importFrom lavaan lavInspect
 ##' @importFrom plyr mapvalues
+##' @importFrom kutils checkCoercion
+##' @importFrom kutils modifyVector
 ##' @return Markup for SEM table. Includes an attribute
 ##'     "markedResults", which can be converted to other markup
 ##'     formats by the function markupConvert.
@@ -1232,9 +1234,10 @@ markupConvert <- function(marked, type = c("latex", "html", "csv"),
             if (!is.null(label)) tcode <- paste0(tcode, "\n\\\\label{", label, "}")
             tcode <- paste0(tcode, "\n\\\\endfirsthead\n\\\\endhead\n")
         } else if (table.float){
-            tcode <- "\\\\begin{table}\n"
+            tcode <- "\\\\begin{table}"
             if (!is.null(caption)) tcode <- paste0(tcode, "\n\\\\caption{", caption, "}")
             if (!is.null(label)) tcode <- paste0(tcode, "\n\\\\label{", label, "}")
+            tcode <- paste0(tcode, "\\\\begin{tabular}")
             tcode <- paste0(tcode, tabularmarkup)
         } else {
             MESSG <- "Logic error in markupConvert"
