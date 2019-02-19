@@ -422,6 +422,11 @@ semTable <- function(object, file = NULL, paramSets = "all", paramSetLabels,
                      caption = NULL, label = NULL, longtable = FALSE,
                      print.results = TRUE, centering = "siunitx",
                      alpha =  c(0.05, 0.01, 0.001)) {
+
+    messg <- paste("This function is moving to the semTable package",
+                   "Please use that package and function in the future.")
+    .Deprecated(new = "semTable", package ="semTable", msg = messg)
+    
     ## do.call(rbind, alist) unexpectedly converts characters to factors.
     ## it does not accept stringsAsFactors=FALSE,
     ## So set globally to avoid hassle
