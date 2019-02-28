@@ -193,6 +193,9 @@ compareLavaan <- function(models,
                        fitmeas = c("chisq", "df",  "pvalue", "rmsea", "cfi", "tli", "srmr", "aic", "bic"),
                        nesting = NULL, scaled = TRUE, chidif = TRUE, digits = 3,  ...)
 {
+    messg <- paste("This function is moving to the semTable package",
+                   "Please use that package and function in the future.")
+    .Deprecated(new = "compareLavaan", package ="semTable", msg = messg)
     dots <- list(...)
     if (!is.null(dots$type)){
         type <- dots$type
@@ -348,6 +351,9 @@ compareLavaan <- function(models,
 ##' @param ... optional arguments, corrently ignored
 ##' @return x unchanged
 print.kutable <- function(x, ...){
+    messg <- paste("This function is moving to the semTable package",
+                   "Please use that package and function in the future.")
+    .Deprecated(new = "print.kutable", package ="semTable", msg = messg)
     if(is.character(x)) cat(x)
     else print(x)
     x
