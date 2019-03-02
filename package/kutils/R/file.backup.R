@@ -12,7 +12,7 @@
 ##' @param fullpath Return the full directory path to the
 ##'     file. Default FALSE, return only the file name.
 ##' @param keep.old If FALSE (default), rename the file. Otherwise, keep old copy.
-##' @param verbose If TRUE, list the files in the output directory
+##' @param verbose If TRUE, output warnings and list the files in the output directory when done.
 ##' @author Shadi Pirhosseinloo <shadi@@ku.edu> Paul Johnson <pauljohn@@ku.edu>
 ##' @return The name of the newly created file.
 ##' @importFrom tools file_ext
@@ -57,7 +57,7 @@ file.backup <- function(name, fullpath = FALSE, keep.old = FALSE, verbose = FALS
     ## Abort if new file name already exists
     if (file.exists(new_name)){
         MESSG <- paste("backup file already exists. No new backup created.")
-        warning(MESSG)
+        if(verbose) warning(MESSG)
         return(new_name)
     }
     ret <- if(keep.old){
@@ -71,7 +71,7 @@ file.backup <- function(name, fullpath = FALSE, keep.old = FALSE, verbose = FALS
         stop(MESSG)
     }
     if(verbose){
-        cat("Full file list of directory:", dir.source, "\n")
+        cat("File list of:", dir.source, "\n")
         print(list.files(dir.source))
         cat("End of file list\n")
     }
