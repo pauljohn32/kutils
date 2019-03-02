@@ -43,7 +43,7 @@
 file.backup <- function(name, fullpath = FALSE, keep.old = FALSE, verbose = FALSE){
     if(!file.exists(name)){
         MESSG <- paste("file", name, "does not exist. No backup created.")
-        warning(MESSG)
+        if(verbose) warning(MESSG)
         return(NULL)
     }
     dir.source <- dirname(normalizePath(name))
