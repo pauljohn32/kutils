@@ -61,7 +61,7 @@ file.backup <- function(name, fullpath = FALSE, keep.old = FALSE, verbose = FALS
         return(new_name)
     }
     ret <- if(keep.old){
-               file.copy(name, new_name, recursive = TRUE, overwrite = TRUE,
+               file.copy(name, new_name, overwrite = TRUE,
                          copy.mode = TRUE, copy.date = TRUE)
            }else{
                file.rename(name, new_name)
