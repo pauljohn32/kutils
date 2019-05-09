@@ -82,7 +82,7 @@ importQualtrics <- function (file, namerow = 1, questionrow = 2,
     }
     
     d2.1 <- dat1[ -(1:skip), ]
-    dat2 <- as.data.frame(lapply(d2.1, type.convert, as.is = TRUE))
+    dat2 <- as.data.frame(lapply(d2.1, type.convert, as.is = TRUE), stringsAsFactors = stringsAsFactors)
                 
     if(NROW(dat2) != NROW(dat1) - skip){
         MESSG2 <- paste("\nNOTE:\n",
