@@ -1,71 +1,65 @@
-##' Show variables, one column at a time.
+##' Show variables, one at a time, QUICKLY and EASILY.
 ##'
 ##' This makes it easy to quickly scan through all of the columns in a
-##' data frame to spot unexpected patterns or data entry
-##' errors. Numeric variables are depiced as histograms, while factor
-##' and character variables are summarized by the R table function and
-##' then presented as barplots. Previous edition of this function was
-##' \code{histOMatic}, intended only for numeric variables.  That
-##' previous name is now an alias for this function.
+##' data frame to spot unexpected patterns or data entry errors.  Numeric variables are depicted as
+##' histograms, while factor and character variables are summarized by
+##' the R table function and then presented as barplots. This is most
+##' useful with a large screen graphic device (try running the function
+##' provided with this package, \code{dev.create(height=7, width=7)})
+##' or any other method you prefer to create a large device. 
 ##'
 ##' @section Try the Defaults: Every effort has been made to make this
 ##'     simple and easy to use. Please run the examples as they are
 ##'     before becoming too concerned about customization.  This
 ##'     function is intended for getting a quick look at each
 ##'     variable, one-by-one, it is not intended to create publication
-##'     quality histograms.  Most users won't need to customize the
-##'     arguments, but for sake of the fastidious few, a lot of
-##'     settings can be adjusted.  This draws histograms for numeric
-##'     variables, and as we all know, the R \code{hist} function
-##'     allows a great many arguments.  It draws barplots for factors
-##'     or character variables, and that brings the \code{table} and
-##'     \code{barplot} functions into the picture.
+##'     quality histograms.  For sake of the fastidious users, a lot
+##'     of settings can be adjusted. Users can control the parameters
+##'     for presentation of histograms (parameters for \code{hist})
+##'     and barplots (parameters for \code{barplot}). The function also
+##'     can create frequency tables (which users can control by providing
+##'     additional named arguments).
 ##'
 ##' @section Style: The histograms are standard, upright histograms.
-##'     The barplots are horizontal. I recognize that is a style
-##'     clash.  I chose to make the bars horizontal because long value
-##'     labels are more easily accomodated on the left axis.  The code
-##'     measures the length (in inches) for strings and the margin is
-##'     increased accordingly.  The examples have a demonstration of
-##'     that effect.
+##'     The barplots are horizontal. I chose to make the bars
+##'     horizontal because long value labels are more easily
+##'     accomodated on the left axis.  The code measures the length
+##'     (in inches) for strings and the margin is increased
+##'     accordingly.  The examples have a demonstration of that
+##'     effect.
 ##' 
-##' @section Dealing with Dots: This has a fairly elaborate setup for
-##'     dealing the the additional arguments, which end up in
-##'     "...". It is necessary to separate the arguments among
-##'     functions \code{table}, \code{pdf}, \code{hist} and
-##'     \code{barplot}. If we send an argument like \code{plot} to the
-##'     \code{table} function, for example, there will be a warning
-##'     that we want to avoid.  \cr \cr The plan is to separate
-##'     arguments as well as possible so that an argument that is
-##'     known to be used only for one function should be sorted and
-##'     used only for that function. These arguments: c("exclude",
-##'     "dnn", "useNA", "deparse.level") and will go to the
-##'     \code{table} function (which is used to make barplots for
-##'     factor and character variables). These arguments are extracted
-##'     and sent to the pdf function: c("width", "height", "onefile",
-##'     "family", "title", "fonts", "version", "paper", "encoding",
-##'     "bg", "fg", "pointsize", "pagecentre", "colormodel",
-##'     "useDingbats", "useKerning", "fillOddEven", "compress"). Any
-##'     other arguments that are unique to \code{hist} or
-##'     \code{barplot} are sorted out and sent only to those
-##'     functions.  \cr \cr Any other arguments, including graphical
-##'     parameters will be sent to both the histogram and barplot
-##'     functions, so it is a convenient way to obtain uniform
+##' @section Dealing with Dots: additional named arguments,
+##'     \code{...}, are inspected and sorted into groups intended to
+##'     control use of R functions \code{hist}, \code{barplot},
+##'     \code{table} and \code{pdf}.  \cr \cr The parameters
+##'     c("exclude", "dnn", "useNA", "deparse.level") and will go to
+##'     the \code{table} function, which is used to make barplots for
+##'     factor and character variables. These named arguments are
+##'     extracted and sent to the pdf function: c("width", "height",
+##'     "onefile", "family", "title", "fonts", "version", "paper",
+##'     "encoding", "bg", "fg", "pointsize", "pagecentre",
+##'     "colormodel", "useDingbats", "useKerning", "fillOddEven",
+##'     "compress"). Any other arguments that are unique to
+##'     \code{hist} or \code{barplot} are sorted out and sent only to
+##'     those functions.  \cr \cr Any other arguments, including
+##'     graphical parameters will be sent to both the histogram and
+##'     barplot functions, so it is a convenient way to obtain uniform
 ##'     appearance. Additional arguments that are common to
 ##'     \code{barplot} and \code{hist} will work, and so will any
 ##'     graphics parameters (named arguments of \code{par}, for
 ##'     example). However, if one wants to target some arguments to
-##'     \code{hist}, then the \code{histargs} list argument should be
-##'     used. Similarly, \code{barargs} should be used to send
-##'     argument to the \code{barplot} function. Warning: the defaults
-##'     for \code{histargs} and \code{barargs} include some settings
-##'     that are needed for the existing design.  If new lists for
-##'     \code{histargs} or \code{barargs} are supplied, the previously
-##'     specified defaults are lost.  Hence, users should include the
-##'     existing members of those lists, possibly with revised values.
-##'     \cr \cr All of this argument sorting effort is done in order
-##'     to reduce a prolific number of warnings that were observed in
-##'     previous editions of this function.
+##'     \code{hist}, but not \code{barplot}, then the \code{histargs}
+##'     list argument should be used. Similarly, \code{barargs} should
+##'     be used to send argument to the \code{barplot}
+##'     function. Warning: the defaults for \code{histargs} and
+##'     \code{barargs} include some settings that are needed for the
+##'     existing design.  If new lists for \code{histargs} or
+##'     \code{barargs} are supplied, the previously specified defaults
+##'     are lost.  Hence, users should include the existing members of
+##'     those lists, possibly with revised values.  \cr \cr All of
+##'     this argument sorting effort is done in order to reduce a
+##'     prolific number of warnings that were observed in previous
+##'     editions of this function.
 ##' 
 ##' @param dat An R data frame or something that can be coerced to a
 ##'     data frame by \code{as.data.frame}
@@ -112,24 +106,18 @@
 ##' ## Insert 16 missings
 ##' mydf$x1[sample(1:150, 16,)] <- NA
 ##' mydf$adate <- as.Date(c("1jan1960", "2jan1960", "31mar1960", "30jul1960"), format = "%d%b%y")
-##' peek(mydf, width = 8, height = 5)
-##' dev.off()
+##' peek(mydf)
 ##' peek(mydf, sort = FALSE)
-##' dev.off()
 ##' ## Demonstrate the dot-dot-dot usage to pass in hist params
 ##' peek(mydf, breaks = 30, ylab = "These are Counts, not Densities", freq = TRUE)
-##' dev.off()
 ##' ## Not Run: file output
 ##' ## peek(mydf, sort = FALSE, file = "three_histograms.pdf")
 ##' ## Use some objects from the datasets package
 ##' library(datasets)
 ##' peek(cars, xlabstub = "R cars data: ")
-##' dev.off()
 ##' peek(EuStockMarkets, xlabstub = "Euro Market Data: ")
-##' dev.off()
 ##' peek(EuStockMarkets, xlabstub = "Euro Market Data: ", breaks = 50,
 ##'      freq = TRUE)
-##' dev.off()
 ##' ## Not run: file output
 ##' ## peek(EuStockMarkets, breaks = 50, file = "myeuro.pdf",
 ##' ##      height = 4, width=3, family = "Times")
@@ -138,11 +126,9 @@
 ##' ## xlab goes into "..." and affects both histograms and barplots
 ##' peek(mydf, breaks = 30, ylab = "These are Counts, not Densities",
 ##'     freq = TRUE)
-##' dev.off()
 ##' ## xlab is added in the barargs list.
 ##' peek(mydf, breaks = 30, ylab = "These are Counts, not Densities",
 ##'     freq = TRUE, barargs = list(horiz = TRUE, las = 1, xlab = "I'm in barargs"))
-##' dev.off()
 ##' peek(mydf, breaks = 30, ylab = "These are Counts, not Densities", freq = TRUE,
 ##'      barargs = list(horiz = TRUE, las = 1, xlim = c(0, 100),
 ##'      xlab = "I'm in barargs, not in histargs"))
@@ -151,8 +137,8 @@
 ##' mydf$x2[1] <- "I forgot what letter"
 ##' peek(mydf, breaks = 30,
 ##'      barargs = list(horiz = TRUE, las = 1))
-##' dev.off()
 ##' }
+  
 peek <-
     function(dat, sort = TRUE, file = NULL, textout = FALSE, ask, ...,
              xlabstub = "kutils peek: ", freq = FALSE,
@@ -291,15 +277,14 @@ peek <-
     if (missing(ask)) {
         if (is.null(file)) ask <- TRUE else ask <- FALSE
     }
-    
+   
+    closeFile <- FALSE 
     if (!is.null(file)){
-        if (!is.character(file)) stop("Sorry, file has to be a character string")
+        if (!is.character(file)) stop("file name should be a character string")
         pdfargs <- list(file = file, onefile = TRUE)
         pdfargz <- modifyList(pdfargs, dotsForPDF)
         do.call("pdf", pdfargz)
-    } else {
-        do.call("dev.create", dotsForDevice)
-        ##do.call("dev.new", dotsForDevice)
+        closeFile <- TRUE
     }
     
     for (i in names(colTypes)){
@@ -311,7 +296,10 @@ peek <-
             if (is.null(file) || isTRUE(ask)) devAskNewPage(TRUE)
         }
     }
-    if(!is.null(file)) dev.off()
+
+    if(isTRUE(closeFile)) {
+        dev.off()
+    }
     namez
 }
 

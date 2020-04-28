@@ -434,16 +434,16 @@ checkValue_old <- function(x, value_old, xname, diagnostic = FALSE){
 ##' @param x Input data vector
 ##' @param na.strings Vector of string values to be considered as
 ##'     missing. Defaults will match values that are equal to ., empty
-##'     string "", any number of white space elements, or charcter
-##'     string "N/A". We do not include "NA" by default because some
-##'     projects use "NA" to mean "not appropriate".
+##'     string, any number of white space elements, or charcter
+##'     string N/A. We do not include `NA` by default because some
+##'     projects use NA to mean "not appropriate".
 ##' @return Logical vector, TRUE if a value is either NA or in
 ##'     na.strings.
-##' @keywords internal
-##' ## @examples
-##' ## x1 <- c("TRUE", "FALSE", FALSE, TRUE, NA, "NA", ".", "N/A", " ", "")
-##' ## x1na <- isNA(x1)
-##' ## cbind(x1, x1na)
+##' @export 
+##' @examples
+##' x1 <- c("TRUE", "FALSE", FALSE, TRUE, NA, "NA", ".", "N/A", " ", "")
+##' x1na <- kutils:::isNA(x1)
+##' cbind(x1, x1na)
 isNA <- function(x, na.strings = c("\\.", "", "\\s+",  "N/A")){
     ismissing <- grepl(paste0("^", paste0(na.strings, collapse="$|^"), "$"), x)
     ismissing[is.na(x)] <- TRUE
@@ -1036,8 +1036,8 @@ NULL
 ##' @author Paul Johnson <pauljohn@@ku.edu>
 ##' @export
 ##' @examples
-##' gg <- c("", " ", "   ", "\t", "\t some", "some\t", " space first")
-##' (zapspace(gg))
+##' x <-  c("", " ", "   ", "\t", "\t some", "some\t", " space first")
+##' zapspace(x)
 zapspace <- function(x){
     if (!is.character(x)){
         return(x)
