@@ -1,5 +1,5 @@
-#LyX 2.2 created this file. For more info see http://www.lyx.org/
-\lyxformat 508
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
 \begin_document
 \begin_header
 \save_transient_properties true
@@ -113,6 +113,8 @@ logicalmkup
 \font_osf false
 \font_sf_scale 100 100
 \font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures false
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -142,6 +144,7 @@ logicalmkup
 \suppress_date false
 \justification true
 \use_refstyle 1
+\use_minted 0
 \index Index
 \shortcut idx
 \color #008000
@@ -154,7 +157,10 @@ logicalmkup
 \tocdepth 3
 \paragraph_separation indent
 \paragraph_indentation default
-\quotes_language english
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
@@ -232,6 +238,7 @@ variable key
 \begin_inset CommandInset citation
 LatexCommand citep
 key "RCore"
+literal "true"
 
 \end_inset
 
@@ -1323,7 +1330,6 @@ max.levels
 status open
 
 \begin_layout Plain Layout
-\noindent
 keyTemplate
 \end_layout
 
@@ -1335,7 +1341,6 @@ keyTemplate
 status open
 
 \begin_layout Plain Layout
-\noindent
 .csv
 \end_layout
 
@@ -1346,7 +1351,6 @@ status open
 status open
 
 \begin_layout Plain Layout
-\noindent
 .xlsx
 \end_layout
 
@@ -1357,7 +1361,6 @@ status open
 status open
 
 \begin_layout Plain Layout
-\noindent
 .rds
 \end_layout
 
@@ -1475,7 +1478,6 @@ value_new
 status open
 
 \begin_layout Plain Layout
-\noindent
 max.levels
 \end_layout
 
@@ -1490,7 +1492,6 @@ max.levels
 status open
 
 \begin_layout Plain Layout
-\noindent
 max.levels
 \end_layout
 
@@ -1502,7 +1503,6 @@ max.levels
 status open
 
 \begin_layout Plain Layout
-\noindent
 x4
 \end_layout
 
@@ -1513,7 +1513,6 @@ x4
 status open
 
 \begin_layout Plain Layout
-\noindent
 x6
 \end_layout
 
@@ -2732,6 +2731,9 @@ The diagnostic will also create a cross tabulation of each new variable
 
 \begin_layout Section
 Editing the variable key
+\end_layout
+
+\begin_layout Standard
 \begin_inset CommandInset label
 LatexCommand label
 name "sec:Editing-the-key"
@@ -5648,6 +5650,7 @@ openxlsx
 \begin_inset CommandInset citation
 LatexCommand citealp
 key "Walker2015"
+literal "true"
 
 \end_inset
 

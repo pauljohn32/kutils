@@ -1,8 +1,8 @@
 Package: kutils
 Type: Package
 Title: Project Management Tools
-Version: 1.72
-Date: 2023-06-25
+Version: 1.73
+Date: 2023-09-17
 Encoding: UTF-8
 Authors@R: c(person("Paul","Johnson",email="pauljohn@ku.edu",role = c("aut", "cre")),
 		   person("Benjamin","Kite",email="bakite@ku.edu",role="aut"),

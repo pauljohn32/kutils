@@ -621,7 +621,9 @@ against its older counterpart. This works very well with discrete
 variables with 10 or so values, but for variables with more values
 it is rather unmanageable. 
 
-\section{Editing the variable key\label{sec:Editing-the-key}}
+\section{Editing the variable key}
+
+\label{sec:Editing-the-key}
 
 The work of revising the variable key can be driven by the separation
 of variables into two type. The variables with enumerated values–the
