@@ -935,7 +935,7 @@ keyRead <- function(file, ..., na.strings = c("\\s+")){
             ## Force columns to be of type "character"
             ## replace NAs with empty strings
             for(i in colnames(key)){
-                if (class(key[ , i]) != "character") key[ , i] <- as.character(key[ , i])
+                if (!inherits(key[ , i], "character")) key[ , i] <- as.character(key[ , i])
                 key[which(is.na(key[ ,i])), i] <- "."
             }
             if ("varlab" %in% sheetNames){

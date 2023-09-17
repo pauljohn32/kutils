@@ -8,7 +8,7 @@
 ##' will not cause failures in the eventual document.
 ##'
 ##' The special in-document LaTeX symbols like percent sign or dollar sign
-##' are "\%" and "\$". *Warning*: In the R
+##' are "%" and "$". *Warning*: In the R
 ##' session, these will appear as double-backslashed symbols, while in
 ##' a saved text file, there will only be the one desired slash.
 ##'
@@ -94,8 +94,8 @@ escape <- function (x, type = "tex"){
 ##' From a text string, keep ASCII letters, numbers, as well as "'",
 ##' " ", "_" "(", ")", "-", and "+". For maximum compatability with
 ##' the cross-platform file-naming standard. Obliterates all
-##' characters that migth be mistaken for shell symbols, like "\^",
-##' "\$", "\@" and so forth.
+##' characters that migth be mistaken for shell symbols, like "^",
+##' "$", "@" and so forth.
 ##'
 ##' Removes trailing spaces.
 ##'
